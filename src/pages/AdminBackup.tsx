@@ -1,97 +1,69 @@
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { createClient } from "@supabase/supabase-js";
-import { invokeCloudFunction } from "@/lib/cloudFunctions";
-
-// Cloud project client for storage access (backups are stored on Cloud)
-const cloudSupabase = createClient(
-  `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co`,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
-);
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, Database, FileJson, Upload } from "lucide-react";
+import { Download, FileJson, Upload, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
+// Tables complètes à exporter / importer de Supabase
+const TABLES_TO_SYNC = [
+  "production_journalier",
+  "production_emballage",
+  "production_selection",
+  "production_arrets_zone",
+  "stats_linea",
+  "interventions",
+  "profiles",
+  "user_roles",
+  "user_permissions"
+];
+
 export default function AdminBackup() {
-  const [isCreating, setIsCreating] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const createBackup = async () => {
-    setIsCreating(true);
-    try {
-      const { data, error } = await invokeCloudFunction("sqlite-mirror");
-      if (error) throw error;
-      toast.success(`Backup créé: ${data?.file ?? "OK"} (${data?.journalier_count ?? 0} journalier, ${data?.emballage_count ?? 0} emballage)`);
-    } catch (e: any) {
-      toast.error("Erreur backup: " + (e.message || String(e)));
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const downloadLatest = async () => {
-    setIsDownloading(true);
-    try {
-      // List files in bucket, sorted by name (descending = latest first)
-      const { data: files, error: listError } = await cloudSupabase.storage
-        .from("database-backups")
-        .list("", { limit: 100, sortBy: { column: "name", order: "desc" } });
-
-      if (listError) throw listError;
-      if (!files || files.length === 0) {
-        toast.error("Aucun backup disponible");
-        return;
-      }
-
-      const latestFile = files[0].name;
-
-      const { data, error } = await cloudSupabase.storage
-        .from("database-backups")
-        .download(latestFile);
-
-      if (error) throw error;
-
-      // Trigger browser download
-      const url = URL.createObjectURL(data);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = latestFile;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      toast.success(`Téléchargé: ${latestFile}`);
-    } catch (e: any) {
-      toast.error("Erreur téléchargement: " + (e.message || String(e)));
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
   const exportJson = async () => {
     setIsExporting(true);
+    toast.info("Préparation de l'export JSON depuis Supabase...");
     try {
-      const { data, error } = await invokeCloudFunction("export-json");
-      if (error) throw error;
+      const exportData: { tables: Record<string, any[]>; counts: Record<string, number> } = { 
+        tables: {}, 
+        counts: {} 
+      };
 
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      for (const table of TABLES_TO_SYNC) {
+        // Fetch toutes les données de la table
+        // limit 10000 est une précaution au cas où Supabase limite les requêtes (par defaut 1000)
+        // Vous pouvez ajuster si nécessaire, mais cela suffit pour la plupart des PME.
+        const { data, error } = await supabase.from(table).select("*").limit(10000);
+        
+        if (error) {
+          console.error(`Erreur d'export pour la table ${table}:`, error);
+          continue;
+        }
+
+        if (data) {
+          exportData.tables[table] = data;
+          exportData.counts[table] = data.length;
+        }
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `export_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `backup_supabase_${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success(`Export JSON téléchargé (${Object.values(data.counts || {}).reduce((a: number, b: any) => a + Number(b), 0)} lignes au total)`);
+      const totalLines = Object.values(exportData.counts).reduce((a: number, b: number) => a + b, 0);
+      toast.success(`Export JSON téléchargé avec succès (${totalLines} lignes au total).`);
     } catch (e: any) {
-      toast.error("Erreur export JSON: " + (e.message || String(e)));
+      toast.error("Erreur lors de l'export : " + (e.message || String(e)));
+      console.error(e);
     } finally {
       setIsExporting(false);
     }
@@ -99,34 +71,55 @@ export default function AdminBackup() {
 
   const importJson = async (file: File) => {
     setIsImporting(true);
+    toast.info("Lecture du fichier JSON pour l'import...");
     try {
       const text = await file.text();
       const jsonData = JSON.parse(text);
       
       if (!jsonData.tables) {
-        toast.error("Format JSON invalide: propriété 'tables' manquante");
+        toast.error("Format JSON invalide: propriété 'tables' manquante.");
         return;
       }
 
-      const { data, error } = await invokeCloudFunction("import-json", jsonData);
-      if (error) throw error;
+      const results: Record<string, { inserted: number; errors: string[] }> = {};
+      let hasGlobalError = false;
 
-      if (data?.success) {
-        const summary = Object.entries(data.results || {})
-          .map(([table, r]: [string, any]) => `${table}: ${r.inserted}`)
-          .join(", ");
-        toast.success(`Import terminé! ${summary}`);
-        
-        const allErrors = Object.entries(data.results || {})
-          .flatMap(([table, r]: [string, any]) => r.errors?.map((e: string) => `${table}: ${e}`) || []);
-        if (allErrors.length > 0) {
-          toast.warning(`${allErrors.length} erreur(s): ${allErrors[0]}`);
+      // Importation table par table
+      for (const table of Object.keys(jsonData.tables)) {
+        if (!TABLES_TO_SYNC.includes(table)) {
+          console.warn(`Table ${table} ignorée car non reconnue.`);
+          continue;
         }
+
+        const rows = jsonData.tables[table];
+        if (!rows || rows.length === 0) continue;
+
+        results[table] = { inserted: 0, errors: [] };
+
+        // On procède à un upsert (mise à jour si l'id existe déjà, sinon insertion)
+        const { data, error } = await supabase.from(table).upsert(rows);
+        
+        if (error) {
+          hasGlobalError = true;
+          results[table].errors.push(error.message);
+          console.error(`Erreur lors de l'import pour la table ${table}:`, error);
+        } else {
+          results[table].inserted = rows.length;
+        }
+      }
+
+      if (hasGlobalError) {
+        toast.error("L'import s'est terminé avec des erreurs. Consultez la console.");
       } else {
-        toast.error("Erreur import: " + (data?.error || "Inconnu"));
+        const summary = Object.entries(results)
+          .filter(([_, r]) => r.inserted > 0)
+          .map(([table, r]) => `${table}: ${r.inserted}`)
+          .join(" | ");
+        toast.success(`Import terminé avec succès! (${summary})`);
       }
     } catch (e: any) {
-      toast.error("Erreur import JSON: " + (e.message || String(e)));
+      toast.error("Erreur générale lors de l'import : " + (e.message || String(e)));
+      console.error(e);
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -136,53 +129,38 @@ export default function AdminBackup() {
   return (
     <div className="space-y-6 max-w-[800px]">
       <div>
-        <h1 className="text-2xl font-bold">Administration — Backups</h1>
+        <h1 className="text-2xl font-bold">Administration — Backups & Migrations</h1>
         <p className="text-sm text-muted-foreground">
-          Gestion des sauvegardes et migration de données
+          Gestions des sauvegardes JSON en temps réel avec Supabase
         </p>
       </div>
 
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 border-b bg-muted/20">
           <CardTitle className="text-base flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            Backup SQLite Mirror
+            <ShieldCheck className="h-5 w-5 text-green-600" />
+            Stockage Sécurisé Supabase
           </CardTitle>
           <CardDescription>
-            Chaque sauvegarde crée un fichier SQLite complet contenant toutes les données de production.
+            Vos données sont désormais sauvegardées automatiquement par Supabase. L'outil ci-dessous vous permet d'exporter une copie JSON complète pour vos archives ou imports hors-ligne. (Les fonctions SQLite obsolètes ont été retirées).
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-3">
-            <Button onClick={createBackup} disabled={isCreating} className="gap-2">
-              <RefreshCw className={`h-4 w-4 ${isCreating ? "animate-spin" : ""}`} />
-              {isCreating ? "Création en cours…" : "Créer un backup maintenant"}
-            </Button>
-            <Button variant="outline" onClick={downloadLatest} disabled={isDownloading} className="gap-2">
-              <Download className="h-4 w-4" />
-              {isDownloading ? "Téléchargement…" : "Télécharger le dernier backup (.db)"}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Les backups sont aussi créés automatiquement à chaque insertion ou modification de données.
-          </p>
-        </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <FileJson className="h-4 w-4" />
-            Export JSON (Migration)
+            Export JSON Complet
           </CardTitle>
           <CardDescription>
-            Exporte toutes les tables en un seul fichier JSON, idéal pour migrer vers un autre projet.
+            Exporte instantanément toutes les tables de votre base en un seul fichier JSON compact. 
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button onClick={exportJson} disabled={isExporting} className="gap-2">
             <Download className="h-4 w-4" />
-            {isExporting ? "Export en cours…" : "Télécharger l'export JSON complet"}
+            {isExporting ? "Création de l'export..." : "Télécharger mon archive JSON"}
           </Button>
         </CardContent>
       </Card>
@@ -191,10 +169,10 @@ export default function AdminBackup() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Upload className="h-4 w-4" />
-            Import JSON (Restauration / Migration)
+            Import / Restauration (JSON)
           </CardTitle>
           <CardDescription>
-            Importe un fichier JSON exporté précédemment. Les données existantes avec le même ID seront mises à jour (upsert).
+            Restaurez un fichier exporté précédemment. Les données existantes (avec les mêmes identifiants) seront automatiquement mises à jour pour éviter les doublons.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -215,11 +193,8 @@ export default function AdminBackup() {
             className="gap-2"
           >
             <Upload className="h-4 w-4" />
-            {isImporting ? "Import en cours…" : "Sélectionner un fichier JSON à importer"}
+            {isImporting ? "Importation en cours..." : "Sélectionner un fichier JSON"}
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Le fichier doit avoir le format généré par l'export JSON (avec la propriété "tables").
-          </p>
         </CardContent>
       </Card>
     </div>

@@ -1,6 +1,7 @@
 import { Wrench } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import InterventionForm from "@/components/InterventionForm";
+import HistoriqueInterventions from "@/components/HistoriqueInterventions";
 
 export default function Maintenance() {
   return (
@@ -15,18 +16,10 @@ export default function Maintenance() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Section en construction</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-sm">
-            Cette section sera bientôt disponible. Elle permettra de gérer les interventions, le planning et le suivi de maintenance.
-          </p>
-        </CardContent>
-      </Card>
+
 
       <InterventionForm />
+      <HistoriqueInterventions />
     </div>
   );
 }

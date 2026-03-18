@@ -1,0 +1,26 @@
+name: DB Backup
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Every night at 2am
+  workflow_dispatch:     # Permet aussi de lancer le backup manuellement depuis GitHub
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Backup Supabase DB
+        run: |
+          pg_dump "${{ secrets.DATABASE_URL }}" \
+            --clean --if-exists \
+            -f backup_$(date +%Y%m%d).sql
+            
+      - name: Commit backup
+        run: |
+          git config user.email "backup@bot.com"
+          git config user.name "Backup Bot"
+          git add backup_*.sql
+          # On évite que le workflow plante s'il n'y a pas eu de changement depuis hier
+          git commit -m "Auto backup $(date +%Y%m%d)" || echo "No changes to commit"
+          git push
