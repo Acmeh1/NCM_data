@@ -1,0 +1,1 @@
+ALTER TABLE public.production_selection DROP COLUMN IF EXISTS numero_rapport;

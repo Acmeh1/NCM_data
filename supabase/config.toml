@@ -1,0 +1,16 @@
+project_id = "brbrlbhmwpekdipwfxci"
+
+[functions.invite-user]
+verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false
+
+[functions.export-json]
+verify_jwt = false
+
+[functions.import-json]
+verify_jwt = false
+
+[functions.sqlite-mirror]
+verify_jwt = false

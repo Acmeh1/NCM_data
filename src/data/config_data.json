@@ -1,0 +1,51 @@
+{
+  "roles_demandeurs": [
+    "Chef de Quart",
+    "Chef de Zone",
+    "Operateur",
+    "R/Methodes",
+    "R/Maintenance",
+    "Ing/Methodes",
+    "Chef Atelier PMP"
+  ],
+  "urgences": ["Mineure", "Majeure", "Critique"],
+  "natures_intervention": [
+    "Préventive",
+    "Curative avec arrêt",
+    "Curative sans arrêt",
+    "Curative planifiée"
+  ],
+  "types_intervention": [
+    "Changement",
+    "Vérification",
+    "Réglage",
+    "Réparation",
+    "Dépannage"
+  ],
+  "zones": [
+    {
+      "id": "CCO",
+      "nom": "Concassage",
+      "equipements": [
+        {"nom": "Broyeur Primaire", "code": "BP-01"},
+        {"nom": "Crible Vibrant", "code": "CV-02"}
+      ]
+    },
+    {
+      "id": "CPMP",
+      "nom": "Préparation Matière Première",
+      "equipements": [
+        {"nom": "Trémie de Stockage N°01", "code": "TS-0101"},
+        {"nom": "Convoyeur à Bande", "code": "CB-05"}
+      ]
+    },
+    {
+      "id": "CPR",
+      "nom": "Pressage & Séchage",
+      "equipements": [
+        {"nom": "Presse PH6200", "code": "PR-01"},
+        {"nom": "Séchoir Vertical", "code": "SV-01"}
+      ]
+    }
+  ]
+}

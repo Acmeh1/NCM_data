@@ -1,0 +1,1964 @@
+[
+    {
+        "Equipements": "Trémie de Stockage N°01",
+        "code d'équipement": "CPMP TS 0101",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Trémie de Stockage N°02",
+        "code d'équipement": "CPMP TS 0202",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Trémie de Stockage N°03",
+        "code d'équipement": "CPMP TS 0303",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Trémie de Stockage N°04",
+        "code d'équipement": "CPMP TS 0404",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Trémie de Stockage N°05",
+        "code d'équipement": "CPMP TS 0505",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Trémie de Stockage N°06",
+        "code d'équipement": "CPMP TS 0606",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 01",
+        "code d'équipement": "CPMP TC 0701",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 02",
+        "code d'équipement": "CPMP TC 0802",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 03",
+        "code d'équipement": "CPMP TC 0903",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 04",
+        "code d'équipement": "CPMP TC 1004",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 05",
+        "code d'équipement": "CPMP TC 1105",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 06",
+        "code d'équipement": "CPMP TC 1206",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "BAlance N°01",
+        "code d'équipement": "CPMP BA 1301",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "BAlance N°02",
+        "code d'équipement": "CPMP BA 1402",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "BAlance N°03",
+        "code d'équipement": "CPMP BA 1503",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "BAlance N°04",
+        "code d'équipement": "CPMP BA 1604",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "BAlance N°05",
+        "code d'équipement": "CPMP BA 1705",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "BAlance N°06",
+        "code d'équipement": "CPMP BA 1806",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 07",
+        "code d'équipement": "CPMP TC 1907",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 08",
+        "code d'équipement": "CPMP TC 2008",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 09",
+        "code d'équipement": "CPMP TC 2109",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 10",
+        "code d'équipement": "CPMP TC 2210",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 11",
+        "code d'équipement": "CPMP TC 2311",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Reservoir d'Argile",
+        "code d'équipement": "CPMP RA 2400",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N° 12",
+        "code d'équipement": "CPMP TC 2512",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Réservoir Deflocculant",
+        "code d'équipement": "CPMP RD 2600",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe Eléctrique",
+        "code d'équipement": "CPMP PE 2700",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Visse sans Fin",
+        "code d'équipement": "CPMP VF 2800",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Reservoir d'Eau",
+        "code d'équipement": "CPMP RE 2900",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "AGitateur N°01",
+        "code d'équipement": "CPMP AG 3000",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "MOdule N°01 (broyeur)",
+        "code d'équipement": "CPMP MO 3101",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "MOdule N°02 (broyeur)",
+        "code d'équipement": "CPMP MO 3202",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°01",
+        "code d'équipement": "CPMP TV 3301",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Reservoir de Barbotine",
+        "code d'équipement": "CPMP RB 3400",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe ABRA",
+        "code d'équipement": "CPMP PA 3500",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°02",
+        "code d'équipement": "CPMP TV 3602",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°03",
+        "code d'équipement": "CPMP TV 3703",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°04",
+        "code d'équipement": "CPMP TV 3804",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°05",
+        "code d'équipement": "CPMP TV 3905",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°06",
+        "code d'équipement": "CPMP TV 4006",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°07",
+        "code d'équipement": "CPMP TV 4107",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°08",
+        "code d'équipement": "CPMP TV 4208",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°09",
+        "code d'équipement": "CPMP TV 4309",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Cuve de Stockage Barbotine N°01",
+        "code d'équipement": "CPMP CSB 4401",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Cuve de Stockage Barbotine N°02",
+        "code d'équipement": "CPMP CSB 4502",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Cuve de Stockage Barbotine N°03",
+        "code d'équipement": "CPMP CSB 4603",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "AGitateur SS12 N°02  (cuve N°01)",
+        "code d'équipement": "CPMP AG 4702",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "AGitateur SS12 N°03 (cuve N°01)",
+        "code d'équipement": "CPMP AG 4803",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "AGitateur SS12 N°04 (cuve N°02)",
+        "code d'équipement": "CPMP AG 4904",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "AGitateur SS12 N°05 (cuve N°02)",
+        "code d'équipement": "CPMP AG 5005",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "AGitateur SS12 N°06 (cuve N°03)",
+        "code d'équipement": "CPMP AG 5106",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe a Memebrane N°01 (charge cuve barbotine N°03",
+        "code d'équipement": "CPMP PM 5201",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe Electrique Ricothe (décharge cuve N°01)",
+        "code d'équipement": "CPMP PER 5300",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe a Membrane  N°02 (décharge cuve N°01)",
+        "code d'équipement": "CPMP PM 5402",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe a Membrane N°03 (décharge cuve N°02)",
+        "code d'équipement": "CPMP PM 5503",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe Electrique Sertech (décharge cuve N°02)",
+        "code d'équipement": "CPMP PES 5600",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe a Membrane  N°04 (décharge cuve N°03)",
+        "code d'équipement": "CPMP PM 5704",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°10 MS37",
+        "code d'équipement": "CPMP TV 5810",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°11 MS38",
+        "code d'équipement": "CPMP TV 5911",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Cuve de Service Atomiseur",
+        "code d'équipement": "CPMP CSA 6000",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "AGitateur SS7 N°07",
+        "code d'équipement": "CPMP AG 6107",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe a Piston N°01",
+        "code d'équipement": "CPMP PP 6201",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe a Piston N°02",
+        "code d'équipement": "CPMP PP 6302",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe a Piston N°03",
+        "code d'équipement": "CPMP PP 6403",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Filtre a Memebrane N°01",
+        "code d'équipement": "CPMP FM 6501",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Filtre a Memebrane N°02",
+        "code d'équipement": "CPMP FM 6602",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Filtre a Memebrane N°03",
+        "code d'équipement": "CPMP FM 6703",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Filtre a Memebrane N°04",
+        "code d'équipement": "CPMP FM 6804",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Réservoir Réruperation d'Eau",
+        "code d'équipement": "CPMP RRE 6900",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "AGitateur SS7 N°08",
+        "code d'équipement": "CPMP AG 7008",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "ATomiseur",
+        "code d'équipement": "CPMP AT 7100",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°13",
+        "code d'équipement": "CPMP TC 7213",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°14",
+        "code d'équipement": "CPMP TC 7314",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°12",
+        "code d'équipement": "CPMP TV 7412",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°15",
+        "code d'équipement": "CPMP TC 7515",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°16",
+        "code d'équipement": "CPMP TC 7616",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°17",
+        "code d'équipement": "CPMP TC 7717",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°18",
+        "code d'équipement": "CPMP TC 7818",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Elevateur a Gaudi N°01",
+        "code d'équipement": "CPMP EG 7901",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Elevateur a Gaudi N°02",
+        "code d'équipement": "CPMP EG 8002",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°19",
+        "code d'équipement": "CPMP TC 8119",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°20",
+        "code d'équipement": "CPMP TC 8220",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°21",
+        "code d'équipement": "CPMP TC  8321",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°22",
+        "code d'équipement": "CPMP TC  8422",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°01",
+        "code d'équipement": "CPMP DV 8501",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°02",
+        "code d'équipement": "CPMP DV 8602",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°03",
+        "code d'équipement": "CPMP DV 8703",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°04",
+        "code d'équipement": "CPMP DV 8804",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°05",
+        "code d'équipement": "CPMP DV 8905",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°06",
+        "code d'équipement": "CPMP DV 9006",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°07",
+        "code d'équipement": "CPMP DV 9107",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°08",
+        "code d'équipement": "CPMP DV 9208",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°09",
+        "code d'équipement": "CPMP DV 9309",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°10",
+        "code d'équipement": "CPMP DV 9410",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°11",
+        "code d'équipement": "CPMP DV 9512",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "DiViateur N°12",
+        "code d'équipement": "CPMP DV 9613",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "VeNtilateur N°01",
+        "code d'équipement": "CPMP VN 9701",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Serveau Moteur ventilateur N°01",
+        "code d'équipement": "CPMP SM 9800",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "BRuleur",
+        "code d'équipement": "CPMP BR 9900",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "VeNtilateur N°02 pour bruleur",
+        "code d'équipement": "CPMP VN 10002",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°01",
+        "code d'équipement": "CPMP SL 10101",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°02",
+        "code d'équipement": "CPMP SL 10202",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°03",
+        "code d'équipement": "CPMP SL 10303",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°04",
+        "code d'équipement": "CPMP SL 10404",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°05",
+        "code d'équipement": "CPMP SL 10505",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°06",
+        "code d'équipement": "CPMP SL 10606",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°07",
+        "code d'équipement": "CPMP SL 10707",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°08",
+        "code d'équipement": "CPMP SL 10808",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°09",
+        "code d'équipement": "CPMP SL 10909",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "SiLo N°10",
+        "code d'équipement": "CPMP SL 11010",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Armoire Electrique N°01 (WSC)",
+        "code d'équipement": "CPMP AE 11101",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Armoire Electrique N°02 (DCM2900)",
+        "code d'équipement": "CPMP AE 11202",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Armoire Electrique N°03 (BA1)",
+        "code d'équipement": "CPMP AE 11303",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Armoire Electrique N°04 (SD 1400)",
+        "code d'équipement": "CPMP AE 11404",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Armoire Electrique N°05 (AT)",
+        "code d'équipement": "CPMP AE 11505",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Armoire Electrique N°06 (SVA Pour bruleur)",
+        "code d'équipement": "CPMP AE 11606",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Variateur de viTesse N°01",
+        "code d'équipement": "CPMP AE 11701",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Variateur de viTesse N°02",
+        "code d'équipement": "CPMP VT 11802",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": "Pompe de Graisse automatique (pour baryeur)",
+        "code d'équipement": "CPMP PG 11900",
+        "code de la zone": "CPMP",
+        "zone": "Préparation Matier Premiere"
+    },
+    {
+        "Equipements": null,
+        "code d'équipement": null,
+        "code de la zone": null,
+        "zone": null
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°01",
+        "code d'équipement": "CPR&SE CL 0101",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°02",
+        "code d'équipement": "CPR&SE CL 0202",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°03",
+        "code d'équipement": "CPR&SE CL 0303",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°04",
+        "code d'équipement": "CPR&SE CL 0404",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°05",
+        "code d'équipement": "CPR&SE CL 0505",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°06",
+        "code d'équipement": "CPR&SE CL 0606",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°07",
+        "code d'équipement": "CPR&SE CL 0707",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°08",
+        "code d'équipement": "CPR&SE CL 0808",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°09",
+        "code d'équipement": "CPR&SE CL 0909",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "CLapet fer/ouv silos N°10",
+        "code d'équipement": "CPR&SE CL 1010",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°01",
+        "code d'équipement": "CPR&SE TC 1101",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Elevateur a Gaudi N°01",
+        "code d'équipement": "CPR&SE EG 1201",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Elevateur a Gaudi N°02",
+        "code d'équipement": "CPR&SE EG 1302",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°01",
+        "code d'équipement": "CPR&SE TV 1401",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tamis Vibrant N°02",
+        "code d'équipement": "CPR&SE TV 1502",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°02",
+        "code d'équipement": "CPR&SE TC 1602",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°03",
+        "code d'équipement": "CPR&SE TC 1703",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°04",
+        "code d'équipement": "CPR&SE TC 1804",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°05",
+        "code d'équipement": "CPR&SE TC 1905",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°06",
+        "code d'équipement": "CPR&SE TC 2006",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°07",
+        "code d'équipement": "CPR&SE TC 2107",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°08",
+        "code d'équipement": "CPR&SE TC 2208",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Tapis Convoyeur N°09",
+        "code d'équipement": "CPR&SE TC 2309",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Trémie Presse N°01",
+        "code d'équipement": "CPR&SE TP 2401",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Trémie Presse N°02",
+        "code d'équipement": "CPR&SE TP 2502",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Chariot Alimentateur presse",
+        "code d'équipement": "CPR&SE CA 2600",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "PResse",
+        "code d'équipement": "CPR&SE PR 2700",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Table  Mobile Sortie  Presse",
+        "code d'équipement": "CPR&SE TM 2800",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Table cUlbuteur Sortie  Presse",
+        "code d'équipement": "CPR&SE TU 2900",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Table Sortie culbuteur",
+        "code d'équipement": "CPR&SE TS 3000",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Table Rouleaux Parking",
+        "code d'équipement": "CPR&SE TRP 3100",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Table Planche Convoyeur",
+        "code d'équipement": "CPR&SE TPC 3200",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Table  Convoyeur Raccord",
+        "code d'équipement": "CPR&SE TCR 3300",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Table  pLanche",
+        "code d'équipement": "CPR&SE TL 3400",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Table  Compacteur Rangé",
+        "code d'équipement": "CPR&SE TCR 3500",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Table  Elevateur",
+        "code d'équipement": "CPR&SE TE 3600",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "SEchoir",
+        "code d'équipement": "CPR&SE SE 3700",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "VeNtilateur N° 01",
+        "code d'équipement": "CPR&SE VE 3801",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "VeNtilateur N° 02",
+        "code d'équipement": "CPR&SE VE 3902",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "VeNtilateur N° 03",
+        "code d'équipement": "CPR&SE VE 4003",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "VeNtilateur N° 04",
+        "code d'équipement": "CPR&SE VE 4104",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "VeNtilateur N° 05",
+        "code d'équipement": "CPR&SE VE 4205",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "VeNtilateur N° 06",
+        "code d'équipement": "CPR&SE VE 4306",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "BRuleur  N° 01",
+        "code d'équipement": "CPR&SE BR 4401",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "BRuleur  N° 02",
+        "code d'équipement": "CPR&SE BR 4502",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "BRuleur  N° 03",
+        "code d'équipement": "CPR&SE BR 4603",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "BRuleur  N° 04",
+        "code d'équipement": "CPR&SE BR 4704",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "BRuleur  N° 05",
+        "code d'équipement": "CPR&SE BR 4805",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "BRuleur  N° 06",
+        "code d'équipement": "CPR&SE BR 4906",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Armoire Electrique N°01",
+        "code d'équipement": "CPR&SE AE 5001",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Armoire Electrique N°02",
+        "code d'équipement": "CPR&SE AE 5102",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Armoire Electrique N°03",
+        "code d'équipement": "CPR&SE AE 5203",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Armoire Electrique N°04",
+        "code d'équipement": "CPR&SE AE 5304",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Armoire Electrique N°05",
+        "code d'équipement": "CPR&SE AE 5405",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": "Armoire Electrique N°06",
+        "code d'équipement": "CPR&SE AE 5506",
+        "code de la zone": "CPR&SE",
+        "zone": "Pressage & Sechage"
+    },
+    {
+        "Equipements": null,
+        "code d'équipement": null,
+        "code de la zone": null,
+        "zone": null
+    },
+    {
+        "Equipements": "Table a 5 Etage sortie séchoir",
+        "code d'équipement": "CLE TE 0100",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "ELevateur sortie sechoir",
+        "code d'équipement": "CLE EL 0200",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Table Cloche sortie séchoir",
+        "code d'équipement": "CLE TC 0300",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°01",
+        "code d'équipement": "CLE VR 0401",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "VirRage",
+        "code d'équipement": "CLE VR 0500",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°02",
+        "code d'équipement": "CLE MT 0602",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Regulteur de Flux de carreaux",
+        "code d'équipement": "CLE RF 0700",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "BRosse",
+        "code d'équipement": "CLE BR 0800",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "ASperateur",
+        "code d'équipement": "CLE AS 0900",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°03",
+        "code d'équipement": "CLE MT 1003",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Cabine d'aRrosage",
+        "code d'équipement": "CLE CR 1100",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°04",
+        "code d'équipement": "CLE MT 1204",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "\"Cloche enGobe ( agitateur tamis",
+        "code d'équipement": "CLE",
+        "code de la zone": "belle contrôle )\"",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°05",
+        "code d'équipement": "CLE MT 1405",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "\"Cloche  eMail( agitateur tamis",
+        "code d'équipement": "CLE",
+        "code de la zone": "belle contrôle )\"",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°06",
+        "code d'équipement": "CLE MT 1606",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°07",
+        "code d'équipement": "CLE MT1707",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°08",
+        "code d'équipement": "CLE MT 1808",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°09",
+        "code d'équipement": "CLE MT 1909",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°10",
+        "code d'équipement": "CLE MT 2010",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "EBarbeuSe FORO N°01",
+        "code d'équipement": "CLE EB 2101",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°11",
+        "code d'équipement": "CLE MT 2211",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°12",
+        "code d'équipement": "CLE MT 2312",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "EBarbeuse rechoth N°02",
+        "code d'équipement": "CLE EB 2402",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Tourne Carreaux N°01",
+        "code d'équipement": "CLE TC 2501",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°13",
+        "code d'équipement": "CLE MT 2613",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "EBarbeuSe foro N°03",
+        "code d'équipement": "CLE EB 2703",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "EBarbeuse rechoth N°04",
+        "code d'équipement": "CLE EB 2804",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Mini Componssateur",
+        "code d'équipement": "CLE MC 2900",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°14",
+        "code d'équipement": "CLE MT3014",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Tourne Carreaux N°02",
+        "code d'équipement": "CLE TC 3102",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "ALignateur",
+        "code d'équipement": "CLE AL 3200",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "SouFleur N°01",
+        "code d'équipement": "CLE SF 3301",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur Traction N°15",
+        "code d'équipement": "CLE SF 3415",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "SouFleur N°02",
+        "code d'équipement": "CLE SF 3502",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "SouFleur N°03",
+        "code d'équipement": "CLE SF 3603",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "SouFleur N°04",
+        "code d'équipement": "CLE SF 3704",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "SouFleur N°05",
+        "code d'équipement": "CLE SF 3805",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Exsy Polar",
+        "code d'équipement": "CLE EP 3900",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "SouFleur N°06",
+        "code d'équipement": "CLE SF 4006",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur Traction N°16",
+        "code d'équipement": "CLE MT 4116",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "ProJecta + pompe d'aspiraion",
+        "code d'équipement": "CLE PJ 4200",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "MelanGeur d'encre",
+        "code d'équipement": "CLE MG 4300",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "MaTrix ( filiere ) + agitateur",
+        "code d'équipement": "CLE MR 440",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de Traction N°17",
+        "code d'équipement": "CLE MT 4517",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "KeraFlex tombeur + agitateur",
+        "code d'équipement": "CLE KF 4600",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°18",
+        "code d'équipement": "CLE MT 4718",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Machine double Disque",
+        "code d'équipement": "CLE MD 4800",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "enGoBeur + agitateur",
+        "code d'équipement": "CLE GB 4900",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de  Traction 19",
+        "code d'équipement": "CLE MT 5019",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Moteur de  Traction 20",
+        "code d'équipement": "CLE MT 5120",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Ligne Transport",
+        "code d'équipement": "CLE MT 5200",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": "Armoire Electrique N°01",
+        "code d'équipement": "CLE AE 5301",
+        "code de la zone": "CLE",
+        "zone": "Ligne d'Emaillage"
+    },
+    {
+        "Equipements": null,
+        "code d'équipement": null,
+        "code de la zone": null,
+        "zone": null
+    },
+    {
+        "Equipements": "Moteur de  Traction N°01",
+        "code d'équipement": "CCU MT 0101",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "COurroie pas a pas",
+        "code d'équipement": "CCU CO 0200",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°02",
+        "code d'équipement": "CCU MT 0302",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "ViRage N°01",
+        "code d'équipement": "CCU VR 0401",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°03",
+        "code d'équipement": "CCU MT 0503",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Table a Rouleaux N°01",
+        "code d'équipement": "CCU TR 0601",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "CoMpansateur N°01",
+        "code d'équipement": "CCU CM 0701",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Table a Rouleaux N°02",
+        "code d'équipement": "CCU TR 0802",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "CoMpansateur N°02",
+        "code d'équipement": "CCU CM 0902",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Table a Rouleaux N°03",
+        "code d'équipement": "CCU TR 1003",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "CouRroie pas pas",
+        "code d'équipement": "CCU CR 1100",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Mini CoMpansateur",
+        "code d'équipement": "CCU MCM 1200",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Table a Rouleaux N° 04",
+        "code d'équipement": "CCU TR 1304",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "BaRriere N°01",
+        "code d'équipement": "CCU BR 1401",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Table a Rouleaux N°05",
+        "code d'équipement": "CCU TR 1505",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Prés Four",
+        "code d'équipement": "CCU PF 1600",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilateur de Reciculation air choud N°01",
+        "code d'équipement": "CCU VR 1701",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilateur Cheminée  Prés four",
+        "code d'équipement": "CCU VCP 1800",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilaeur de Reciculation Air chaud N°02",
+        "code d'équipement": "CCU VR 1902",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "FOUR",
+        "code d'équipement": "CCU FR 2000",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilateur Cheminée",
+        "code d'équipement": "CCU VC 2100",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilateur  Air Combustion",
+        "code d'équipement": "CCU VAB 2200",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilateur Refoidissement Rapid",
+        "code d'équipement": "CCU VRR 2300",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilateur  d'Aspiation N°01",
+        "code d'équipement": "CCU VA 2401",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilateur Coup Final",
+        "code d'équipement": "CCU VCF 2500",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilateur Echange Inlet",
+        "code d'équipement": "CCU VEI 2600",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Ventilateur d'Aspiration  N°02",
+        "code d'équipement": "CCU VA 2702",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Table a Rouleaux N°06",
+        "code d'équipement": "CCU TR 2806",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "BarRiere N°02",
+        "code d'équipement": "CCU BR 2902",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Table a Rouleaux N°07",
+        "code d'équipement": "CCU TR 3007",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "TaPis",
+        "code d'équipement": "CCU TP 3100",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Fli-Flop",
+        "code d'équipement": "CCU FF 3200",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "TaPis de Secoure",
+        "code d'équipement": "CCU TPS 3302",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°03",
+        "code d'équipement": "CCU MT 3403",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "viRrage N°02",
+        "code d'équipement": "CCU VR 3502",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°04",
+        "code d'équipement": "CCU MT 3604",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°05",
+        "code d'équipement": "CCU MT 3705",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°06",
+        "code d'équipement": "CCU MT 3806",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°07",
+        "code d'équipement": "CCU MT 3907",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Armoire Electrique N°01",
+        "code d'équipement": "CCU AE 4001",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Armoire Electrique N°02",
+        "code d'équipement": "CCU AE 4102",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": "Armoire Electrique N°03",
+        "code d'équipement": "CCU AE 4203",
+        "code de la zone": "ccu",
+        "zone": "CUisson"
+    },
+    {
+        "Equipements": null,
+        "code d'équipement": null,
+        "code de la zone": null,
+        "zone": null
+    },
+    {
+        "Equipements": "Moteur de  Traction N°01",
+        "code d'équipement": "CSL MT 0101",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°02",
+        "code d'équipement": "CSL MT 0302",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Fli-Flop",
+        "code d'équipement": "CSL FF 0400",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Courroie de Chargement",
+        "code d'équipement": "CSL CC 0500",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°03",
+        "code d'équipement": "CSL MT 0603",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Table des Rouleaux N°01",
+        "code d'équipement": "CSL TR 0701",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Venteuse  Chargement",
+        "code d'équipement": "CSL VC 0800",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°04",
+        "code d'équipement": "CSL MT 0904",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Venteuse  DeChargement",
+        "code d'équipement": "CSL VD 1000",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Table des Rouleaux 02",
+        "code d'équipement": "CSL TR 1102",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°05",
+        "code d'équipement": "CSL MT 1205",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°06",
+        "code d'équipement": "CSL MT 1306",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°07",
+        "code d'équipement": "CSL MT 1407",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°08",
+        "code d'équipement": "CSL MT 1508",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "CEntreur N°01",
+        "code d'équipement": "CSL CE 1601",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "CaLibreuse",
+        "code d'équipement": "CSL CL 1700",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°09",
+        "code d'équipement": "CSL MT 1809",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "CEntreur N°02",
+        "code d'équipement": "CSL CE 1902",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°10",
+        "code d'équipement": "CSL MT 2010",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "EMpileuse",
+        "code d'équipement": "CSL EM 2100",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "DeViseur",
+        "code d'équipement": "CSL DV 2200",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "POusseur",
+        "code d'équipement": "CSL PO 2300",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "CoNditioneuse",
+        "code d'équipement": "CSL CN 2400",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Apliquation de Colle N°01",
+        "code d'équipement": "CSL AC 2501",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°11",
+        "code d'équipement": "CSL MT 2611",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°12",
+        "code d'équipement": "CSL MT 2712",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "CoPleur",
+        "code d'équipement": "CSL CP 2800",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Apliquation de Colle N°02",
+        "code d'équipement": "CSL AC 2902",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction N°13",
+        "code d'équipement": "CSL MT 3013",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "CeRcleuse",
+        "code d'équipement": "CSL CR 3100",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction 14",
+        "code d'équipement": "CSL MT 3214",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction 15",
+        "code d'équipement": "CSL MT 3315",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction 16",
+        "code d'équipement": "CSL MT 3416",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction 17",
+        "code d'équipement": "CSL MT 3517",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Moteur de  Traction 18",
+        "code d'équipement": "CSL MT 3618",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "ReTourneur",
+        "code d'équipement": "CSL RT 3700",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "PaliTiseur",
+        "code d'équipement": "CSL PT 3800",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "BaNdrouleuse N°01",
+        "code d'équipement": "CSL BN 3901",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "BaNdroulusse N°02",
+        "code d'équipement": "CSL BN 4002",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Armoire Electrique N°01",
+        "code d'équipement": "CSL BN 4003",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Armoire Electrique N°02",
+        "code d'équipement": "CSL BN 4004",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Armoire Electrique N°03",
+        "code d'équipement": "CSL BN 4005",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Armoire Electrique N°04",
+        "code d'équipement": "CSL BN 4006",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "Armoire Electrique N°05",
+        "code d'équipement": "CSL BN 4007",
+        "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": null,
+        "code d'équipement": null,
+        "code de la zone": null,
+        "zone": null
+    },
+    {
+        "Equipements": "ComPresseur N°01",
+        "code d'équipement": "CUT CP 0101",
+        "code de la zone": "CUT",
+        "zone": "UTILITE"
+    },
+    {
+        "Equipements": "ComPresseur N°02",
+        "code d'équipement": "CUT CP 0202",
+        "code de la zone": "CUT",
+        "zone": "UTILITE"
+    },
+    {
+        "Equipements": "ComPresseur N°03",
+        "code d'équipement": "CUT CP 0303",
+        "code de la zone": "CUT",
+        "zone": "UTILITE"
+    },
+    {
+        "Equipements": "ComPresseur N°04",
+        "code d'équipement": "CUT CP 0404",
+        "code de la zone": "CUT",
+        "zone": "UTILITE"
+    },
+    {
+        "Equipements": "Groupe Electrogene 1250 kva",
+        "code d'équipement": "CUT GE 0501",
+        "code de la zone": "CUT",
+        "zone": "UTILITE"
+    },
+    {
+        "Equipements": "Groupe Electrogene four",
+        "code d'équipement": "CUT GE 0602",
+        "code de la zone": "CUT",
+        "zone": "UTILITE"
+    },
+    {
+        "Equipements": "DéPoussierage N°01",
+        "code d'équipement": "CUT DP0701",
+        "code de la zone": "CUT",
+        "zone": "UTILITE"
+    },
+    {
+        "Equipements": "DéPoussierage N°02",
+        "code d'équipement": "CUT DP 0802",
+        "code de la zone": "CUT",
+        "zone": "UTILITE"
+    },
+    {
+        "Equipements": "Station de Pompage",
+        "code d'équipement": "CUT SP 0900",
+        "code de la zone": "CUT",
+        "zone": "UTILITE"
+    }
+]

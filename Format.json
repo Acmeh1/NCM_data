@@ -1,0 +1,52 @@
+[
+    {
+        "Cartons_Palette": "64",
+        "Format_Nominal": "20*60",
+        "Largeur_cm": "20",
+        "Longueur_cm": "60",
+        "M2_Carton": "1.2",
+        "M2_PALETTE": "76.8",
+        "Pcs_Carton": "10",
+        "Surface_CAR_m2": "0.12"
+    },
+    {
+        "Cartons_Palette": "36",
+        "Format_Nominal": "60*60",
+        "Largeur_cm": "60",
+        "Longueur_cm": "60",
+        "M2_Carton": "1.44",
+        "M2_PALETTE": "51.84",
+        "Pcs_Carton": "4",
+        "Surface_CAR_m2": "0.36"
+    },
+    {
+        "Cartons_Palette": "72",
+        "Format_Nominal": "30*60",
+        "Largeur_cm": "30",
+        "Longueur_cm": "60",
+        "M2_Carton": "1.26",
+        "M2_PALETTE": "90.72",
+        "Pcs_Carton": "7",
+        "Surface_CAR_m2": "0.18"
+    },
+    {
+        "Cartons_Palette": "72",
+        "Format_Nominal": "45*45",
+        "Largeur_cm": "45",
+        "Longueur_cm": "45",
+        "M2_Carton": "1.21",
+        "M2_PALETTE": "87.12",
+        "Pcs_Carton": "5,975,308,642",
+        "Surface_CAR_m2": "0.2025"
+    },
+    {
+        "Cartons_Palette": null,
+        "Format_Nominal": "33*33",
+        "Largeur_cm": "33",
+        "Longueur_cm": "33",
+        "M2_Carton": "0",
+        "M2_PALETTE": "0",
+        "Pcs_Carton": "0",
+        "Surface_CAR_m2": "0.1089"
+    }
+]

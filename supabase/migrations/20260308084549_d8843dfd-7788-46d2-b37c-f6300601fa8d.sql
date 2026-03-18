@@ -1,0 +1,1 @@
+ALTER TABLE public.stats_linea DROP COLUMN IF EXISTS minutes_machine_on;

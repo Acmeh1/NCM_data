@@ -1,0 +1,2 @@
+ALTER PUBLICATION supabase_realtime ADD TABLE public.production_journalier;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.production_emballage;
