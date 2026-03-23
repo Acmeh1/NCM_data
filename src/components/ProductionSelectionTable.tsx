@@ -24,7 +24,7 @@ const COLUMNS: { key: keyof SelectionEntry; label: string }[] = [
   { key: "couleur", label: "Couleur" },
   { key: "format", label: "Format" },
   { key: "zone_presse", label: "Z. Presse" },
-  { key: "zone_projecta", label: "Z. Projecta" },
+  { key: "zone_projecta", label: "Z. Projecta m²" },
   { key: "zone_four", label: "Z. Four" },
   { key: "choix_1_m2", label: "1er Choix m²" },
   { key: "choix_1_taux", label: "1er %" },

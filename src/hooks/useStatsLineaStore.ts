@@ -54,6 +54,29 @@ export interface StatsLineaEntry {
   machine_allumee: number;
   machine_en_marche: number;
   production_reelle_m2: number;
+  statut_donnees?: string;
+  motif_incomplet?: string;
+}
+
+// Map DB row to frontend interface
+function fromDb(row: any): StatsLineaEntry {
+  return {
+    ...row,
+    choix1_pieces: Number(row.choix1_pieces),
+    choix2_pieces: Number(row.choix2_pieces),
+    choix3_pieces: Number(row.choix3_pieces),
+    choix1_surface_m2: Number(row.choix1_surface_m2),
+    choix2_surface_m2: Number(row.choix2_surface_m2),
+    choix3_surface_m2: Number(row.choix3_surface_m2),
+    total_pieces: Number(row.total_pieces),
+    total_surface_m2: Number(row.total_surface_m2),
+    vitesse_moyenne_pieces_min: Number(row.vitesse_moyenne_pieces_min),
+    machine_allumee: Number(row.machine_allumee),
+    machine_en_marche: Number(row.machine_en_marche),
+    production_reelle_m2: Number(row.production_reelle_m2),
+    statut_donnees: row.statut_donnees || "Complet",
+    motif_incomplet: row.motif_incomplet || "",
+  };
 }
 
 export function useStatsLineaStore() {
@@ -72,7 +95,7 @@ export function useStatsLineaStore() {
         toast.error("Erreur de chargement des statistiques linea");
         setEntries([]);
       } else {
-        setEntries((data || []) as StatsLineaEntry[]);
+        setEntries((data || []).map(fromDb));
       }
       setIsLoaded(true);
     }

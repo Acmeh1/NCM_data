@@ -89,6 +89,7 @@ export default function ProductionForm({
     Choix_3_m2: "",
     Pressage_m2: "",
     Project_m2: "",
+    Project_pcs: "",
     Emaillage_m2: "",
     Cycle_min: "",
     Nb_Pieces_Four: "",
@@ -152,6 +153,15 @@ export default function ProductionForm({
     return match ? Number(match.Surface_CAR_m2) : 0;
   }, [form.Modele, form.Couleur, form.Format]);
 
+  // Recalculate Project_m2 when Project_pcs or surfaceCAR changes
+  useEffect(() => {
+    const pcs = Number(form.Project_pcs) || 0;
+    const m2 = pcs * surfaceCAR;
+    if (m2 > 0) {
+      setForm((prev) => ({ ...prev, Project_m2: m2.toFixed(4) }));
+    }
+  }, [form.Project_pcs, surfaceCAR]);
+
   const choix1 = Number(form.Choix_1_m2) || 0;
   const choix2 = Number(form.Choix_2_m2) || 0;
   const choix3 = Number(form.Choix_3_m2) || 0;
@@ -183,6 +193,7 @@ export default function ProductionForm({
       Choix_3_m2: String(editingEntry.Choix_3_m2),
       Pressage_m2: String(editingEntry.Pressage_m2),
       Project_m2: String(editingEntry.Project_m2),
+      Project_pcs: editingEntry.Surface_CAR_m2 > 0 ? (editingEntry.Project_m2 / editingEntry.Surface_CAR_m2).toFixed(0) : "",
       Emaillage_m2: String(editingEntry.Emaillage_m2),
       Cycle_min: String(editingEntry.Cycle_min),
       Nb_Pieces_Four: String(editingEntry.Nb_Pieces_Four),
@@ -202,11 +213,11 @@ export default function ProductionForm({
   };
 
   const handleModelChange = (value: string) => {
-    setForm((prev) => ({ ...prev, Modele: value, Couleur: "", Format: "" }));
+    setForm((prev) => ({ ...prev, Modele: value }));
   };
 
   const handleCouleurChange = (value: string) => {
-    setForm((prev) => ({ ...prev, Couleur: value, Format: "" }));
+    setForm((prev) => ({ ...prev, Couleur: value }));
   };
 
   const update = (field: string, value: string) => {
@@ -283,6 +294,7 @@ export default function ProductionForm({
       Choix_3_m2: "",
       Pressage_m2: "",
       Project_m2: "",
+      Project_pcs: "",
       Emaillage_m2: "",
       Cycle_min: "",
       Nb_Pieces_Four: "",
@@ -531,15 +543,20 @@ export default function ProductionForm({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Projecta m²</Label>
+          <Label className="text-xs font-medium text-muted-foreground">Projecta (pièces)</Label>
           <Input
             ref={(el) => { inputRefs.current[7] = el; }}
             type="number"
-            value={form.Project_m2}
-            onChange={(e) => update("Project_m2", e.target.value)}
+            value={form.Project_pcs}
+            onChange={(e) => update("Project_pcs", e.target.value)}
             onKeyDown={(e) => handleKeyDown(e, 7)}
             placeholder="0"
           />
+          {surfaceCAR > 0 && form.Project_pcs && (
+            <p className="text-[10px] text-primary font-medium">
+              = {form.Project_m2} m²
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-medium text-muted-foreground">Emaillage m²</Label>

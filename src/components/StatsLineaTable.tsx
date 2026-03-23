@@ -19,6 +19,7 @@ const FILTER_CONFIGS = [
   { key: "Date", label: "Date", type: "date" as const },
   { key: "Groupe", label: "Groupe", type: "select" as const },
   { key: "Horaire", label: "Horaire", type: "select" as const },
+  { key: "Statut", label: "Statut", type: "select" as const },
 ];
 
 export default function StatsLineaTable({ stats, productions, onEdit, onDelete }: Props) {
@@ -30,6 +31,8 @@ export default function StatsLineaTable({ stats, productions, onEdit, onDelete }
       Groupe: prod?.Groupe ?? "—",
       Modele: prod?.Modele ?? "—",
       Format: prod?.Format ?? "—",
+      Statut: s.statut_donnees || "Complet",
+      Motif: s.motif_incomplet || "—",
       "Choix1 Pièces": s.choix1_pieces,
       "Choix1 Surface m²": s.choix1_surface_m2,
       "Choix1 %": s.choix1_pourcentage,
@@ -59,8 +62,8 @@ export default function StatsLineaTable({ stats, productions, onEdit, onDelete }
       "C3 Planar %": s.choix3_planar_pourcentage,
       "C3 Calibre pcs": s.choix3_calibre_pieces,
       "C3 Calibre %": s.choix3_calibre_pourcentage,
-       "Min. Absence Alim.": s.minutes_absence_alimentation,
-       "Min. Urgence Man.": s.minutes_urgence_manuelle,
+      "Min. Absence Alim.": s.minutes_absence_alimentation,
+      "Min. Urgence Man.": s.minutes_urgence_manuelle,
       "Min. Machine Saturée": s.minutes_machine_saturee,
       "Min. Total Machine": s.minutes_total_machine,
       "Vitesse moy. (pcs/min)": s.vitesse_moyenne_pieces_min,
@@ -125,8 +128,15 @@ export default function StatsLineaTable({ stats, productions, onEdit, onDelete }
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.slice().reverse().map((row, idx) => (
-              <TableRow key={idx} className="group">
+            {filteredData.slice().reverse().map((row, idx) => {
+              const isIncomplet = row.Statut === "Incomplet";
+              const isNonSaisi = row.Statut === "Non saisi";
+
+              return (
+                <TableRow 
+                  key={idx} 
+                  className={`group ${isIncomplet ? "bg-destructive/5 text-destructive italic" : isNonSaisi ? "opacity-50 grayscale" : ""}`}
+                >
                 <TableCell className="flex gap-1">
                   <Button variant="ghost" size="icon"
                     className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -142,16 +152,20 @@ export default function StatsLineaTable({ stats, productions, onEdit, onDelete }
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </TableCell>
-                {headers.map((h) => {
-                  const v = row[h];
-                  return (
-                    <TableCell key={h} className="font-mono text-xs whitespace-nowrap">
-                      {typeof v === "number" ? v.toFixed(2) : String(v ?? "—")}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))}
+                  {headers.map((h) => {
+                    const v = row[h];
+                    return (
+                      <TableCell 
+                        key={h} 
+                        className={`font-mono text-xs whitespace-nowrap ${h === "Statut" && isIncomplet ? "font-bold text-destructive" : ""}`}
+                      >
+                        {typeof v === "number" ? v.toFixed(2) : String(v ?? "—")}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

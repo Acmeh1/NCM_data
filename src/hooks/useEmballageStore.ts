@@ -68,14 +68,6 @@ function groupRows(rows: any[], journalierEntries: any[]): EmballageEntry[] {
   return entries;
 }
 
-async function triggerBackup() {
-  try {
-    const { invokeCloudFunction } = await import("@/lib/cloudFunctions");
-    await invokeCloudFunction("sqlite-mirror");
-  } catch (e) {
-    console.warn("Backup trigger failed:", e);
-  }
-}
 
 export function useEmballageStore() {
   const [entries, setEntries] = useState<EmballageEntry[]>([]);
@@ -124,7 +116,6 @@ export function useEmballageStore() {
 
     // Reload to get fresh grouping
     await loadEntries();
-    triggerBackup();
     return entry;
   }, [loadEntries]);
 
@@ -162,7 +153,6 @@ export function useEmballageStore() {
     }
 
     await loadEntries();
-    triggerBackup();
     return entry;
   }, [loadEntries]);
 
@@ -178,7 +168,6 @@ export function useEmballageStore() {
       return;
     }
     setEntries((prev) => prev.filter((e) => e.id !== id));
-    triggerBackup();
   }, []);
 
   return { entries, isLoaded, addEntry, updateEntry, deleteEntry };

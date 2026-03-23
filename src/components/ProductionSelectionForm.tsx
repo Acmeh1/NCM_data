@@ -56,6 +56,7 @@ export default function ProductionSelectionForm({
     groupe: "", chef_equipe: "",
     modele: "", couleur: "", format: "",
     zone_presse: "", zone_projecta: "", zone_four: "",
+    surface_car_m2: 0,
     choix_1_m2: "", choix_2_m2: "", choix_3_m2: "",
     calibre_taux: "", calibre_cause: "",
     planeite_taux: "", planeite_cause: "",
@@ -99,6 +100,7 @@ export default function ProductionSelectionForm({
       intervention_maintenance: editingEntry.intervention_maintenance,
       duree_vide_production: String(editingEntry.duree_vide_production),
       intervention_production: editingEntry.intervention_production,
+      surface_car_m2: 0,
     });
     setArrets(
       editingEntry.arrets.map((a) => ({
@@ -109,14 +111,29 @@ export default function ProductionSelectionForm({
         vide_four: a.vide_four,
       }))
     );
-  }, [editingEntry]);
+
+    // Try to find matching journalier to get surface
+    const matchingJ = journalierEntries.find(j => 
+      j.Date === editingEntry.date && 
+      j.Groupe === editingEntry.groupe && 
+      j.Horaire === editingEntry.horaire &&
+      j.Modele === editingEntry.modele
+    );
+    if (matchingJ) {
+      const surface = matchingJ.Surface_CAR_m2 || 0;
+      setForm(p => ({
+        ...p,
+        surface_car_m2: surface,
+      }));
+    }
+  }, [editingEntry, journalierEntries]);
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
   const handleJournalierChange = (id: string) => {
     const selected = journalierEntries.find((j) => j.id === id);
     if (!selected) {
-      setForm((p) => ({ ...p, journalier_id: id }));
+      setForm((p) => ({ ...p, journalier_id: id, surface_car_m2: 0 }));
       return;
     }
     setForm((p) => ({
@@ -131,8 +148,10 @@ export default function ProductionSelectionForm({
       modele: selected.Modele,
       couleur: selected.Couleur,
       format: selected.Format,
+      surface_car_m2: selected.Surface_CAR_m2 || 0,
     }));
   };
+
 
   // Calculations
   const zoneFour = Number(form.zone_four) || 0;
@@ -268,6 +287,7 @@ export default function ProductionSelectionForm({
         intervention_maintenance: "",
         duree_vide_production: "",
         intervention_production: "",
+        surface_car_m2: 0,
       }));
       setArrets([]);
     }
@@ -443,7 +463,12 @@ export default function ProductionSelectionForm({
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">Zone Projecta m²</Label>
-              <Input type="number" value={form.zone_projecta} onChange={(e) => update("zone_projecta", e.target.value)} placeholder="0" />
+              <Input 
+                type="number" 
+                value={form.zone_projecta} 
+                onChange={(e) => update("zone_projecta", e.target.value)} 
+                placeholder="0" 
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">Zone Four m²</Label>

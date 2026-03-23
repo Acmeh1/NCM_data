@@ -50,7 +50,7 @@ function fromDb(row: any): ProductionEntry {
     Total_m2: Number(row.total_m2),
     Pressage_m2: Number(row.pressage_m2),
     Project_m2: Number(row.Project_m2 ?? row.project_m2 ?? 0),
-    Emaillage_m2: Number(row.emaillage_m2),
+    Emaillage_m2: Number(row.emaillage_m2 ?? row.Emaillage_m2 ?? 0),
     Cycle_min: Number(row.cycle_min),
     Nb_Pieces_Four: Number(row.nb_pieces_four),
     Surface_CAR_m2: Number(row.surface_car_m2),
@@ -60,15 +60,6 @@ function fromDb(row: any): ProductionEntry {
   };
 }
 
-async function triggerBackup() {
-  try {
-    const { invokeCloudFunction } = await import("@/lib/cloudFunctions");
-    const { error } = await invokeCloudFunction("sqlite-mirror");
-    if (error) console.warn("Backup warning:", error.message);
-  } catch (e) {
-    console.warn("Backup trigger failed:", e);
-  }
-}
 
 export function useProductionStore() {
   const [entries, setEntries] = useState<ProductionEntry[]>([]);
@@ -149,7 +140,6 @@ export function useProductionStore() {
 
     const newEntry = fromDb(data);
     setEntries((prev) => [...prev, newEntry]);
-    triggerBackup();
     return newEntry;
   }, []);
 
@@ -192,7 +182,6 @@ export function useProductionStore() {
 
     const updated = fromDb(data);
     setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
-    triggerBackup();
     return updated;
   }, []);
 
@@ -207,7 +196,6 @@ export function useProductionStore() {
       return;
     }
     setEntries((prev) => prev.filter((e) => e.id !== entry.id));
-    triggerBackup();
   }, []);
 
   const clearAll = useCallback(async () => {
