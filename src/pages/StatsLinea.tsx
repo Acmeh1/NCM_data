@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { AlertTriangle, BarChart3, ChevronDown, ChevronRight, Eye, Info, Plus, Save, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import refProduit from "@/data/REF_PRODUIT.json";
 import StatsLineaTable from "@/components/StatsLineaTable";
@@ -40,6 +41,8 @@ type FormValues = {
   machine_allumee: NumericField;
   machine_en_marche: NumericField;
   production_reelle_m2: NumericField;
+  statut_donnees: string;
+  motif_incomplet: string;
 };
 
 export default function StatsLinea() {
@@ -77,8 +80,12 @@ export default function StatsLinea() {
       machine_allumee: "",
       machine_en_marche: "",
       production_reelle_m2: "",
+      statut_donnees: "Complet",
+      motif_incomplet: "",
     },
   });
+
+  const statutDonnees = watch("statut_donnees");
 
   const selectedProductionId = watch("production_id");
   const selectedProduction = useMemo(
@@ -226,6 +233,8 @@ export default function StatsLinea() {
       machine_allumee: editingEntry.machine_allumee,
       machine_en_marche: editingEntry.machine_en_marche,
       production_reelle_m2: editingEntry.production_reelle_m2,
+      statut_donnees: editingEntry.statut_donnees || "Complet",
+      motif_incomplet: editingEntry.motif_incomplet || "",
     });
   }, [editingEntry, reset]);
 
@@ -233,6 +242,11 @@ export default function StatsLinea() {
     try {
       if (!selectedProduction) {
         toast.error("Sélectionnez d'abord une production.");
+        return;
+      }
+
+      if (values.statut_donnees === "Incomplet" && !values.motif_incomplet.trim()) {
+        toast.error("Veuillez saisir un motif pour le statut Incomplet.");
         return;
       }
 
@@ -281,6 +295,8 @@ export default function StatsLinea() {
         machine_allumee,
         machine_en_marche,
         production_reelle_m2,
+        statut_donnees: values.statut_donnees,
+        motif_incomplet: values.motif_incomplet,
       };
 
       if (editingEntry) {
@@ -431,8 +447,57 @@ export default function StatsLinea() {
                 </div>
               </div>
             )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Statut données</Label>
+                <Controller
+                  control={control}
+                  name="statut_donnees"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner le statut..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Complet">Complet (8h de données)</SelectItem>
+                        <SelectItem value="Incomplet">Incomplet (Moins de 8h)</SelectItem>
+                        <SelectItem value="Non saisi">Non saisi (Quart non renseigné)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+
+              {statutDonnees === "Incomplet" && (
+                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                  <Label className="text-xs font-medium text-destructive">Motif de saisie incomplète</Label>
+                  <Controller
+                    control={control}
+                    name="motif_incomplet"
+                    render={({ field }) => (
+                      <Input 
+                        {...field} 
+                        placeholder="Ex: manque de saisie, pas une perte..." 
+                        className="border-destructive/50 focus-visible:ring-destructive"
+                      />
+                    )}
+                  />
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
+
+        {statutDonnees === "Incomplet" && (
+          <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 animate-in fade-in slide-in-from-top-2">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Données Incomplètes</AlertTitle>
+            <AlertDescription>
+              Cette saisie est marquée comme incomplète : {watch("motif_incomplet") || "aucun motif renseigné."}
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* 2. Statistiques Production & Tri + Qualité */}
         <Card>
@@ -475,8 +540,8 @@ export default function StatsLinea() {
                       row.field === "choix1"
                         ? choix1_pct
                         : row.field === "choix2"
-                        ? choix2_pct
-                        : choix3_pct;
+                          ? choix2_pct
+                          : choix3_pct;
                     return (
                       <tr key={row.field} className="border-t">
                         <td className="px-2 py-1">{row.label}</td>
@@ -523,8 +588,8 @@ export default function StatsLinea() {
                             row.field === "choix1"
                               ? c1_op_pct
                               : row.field === "choix2"
-                              ? c2_op_pct
-                              : c3_op_pct
+                                ? c2_op_pct
+                                : c3_op_pct
                           ).toFixed(2)} %
                         </td>
                         <td className="px-2 py-1 text-right">
@@ -548,8 +613,8 @@ export default function StatsLinea() {
                             row.field === "choix1"
                               ? c1_planar_pct
                               : row.field === "choix2"
-                              ? c2_planar_pct
-                              : c3_planar_pct
+                                ? c2_planar_pct
+                                : c3_planar_pct
                           ).toFixed(2)} %
                         </td>
                         <td className="px-2 py-1 text-right">
@@ -573,8 +638,8 @@ export default function StatsLinea() {
                             row.field === "choix1"
                               ? c1_calibre_pct
                               : row.field === "choix2"
-                              ? c2_calibre_pct
-                              : c3_calibre_pct
+                                ? c2_calibre_pct
+                                : c3_calibre_pct
                           ).toFixed(2)} %
                         </td>
                       </tr>

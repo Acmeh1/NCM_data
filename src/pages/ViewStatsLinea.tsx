@@ -32,6 +32,8 @@ const STAT_FIELDS: { key: string; label: string; type: "number" }[] = [
   { key: "minutes_urgence_manuelle", label: "Min. Urgence Man.", type: "number" },
   { key: "minutes_machine_saturee", label: "Min. Machine Saturée", type: "number" },
   { key: "minutes_total_machine", label: "Min. Total Machine", type: "number" },
+  { key: "statut_donnees", label: "Statut", type: "string" as any },
+  { key: "motif_incomplet", label: "Motif", type: "string" as any },
 ];
 
 const EDIT_COLUMNS: EditColumn[] = STAT_FIELDS.map((f) => ({ key: f.key, label: f.label, type: f.type }));
@@ -59,6 +61,7 @@ export default function ViewStatsLinea() {
         Horaire: prod?.Horaire ?? "—",
         Groupe: prod?.Groupe ?? "—",
         Modele: prod?.Modele ?? "—",
+        Statut: s.statut_donnees || "Complet",
       };
       STAT_FIELDS.forEach((f) => { row[f.label] = (s as any)[f.key]; });
       return row;
@@ -123,21 +126,32 @@ export default function ViewStatsLinea() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.map((row, idx) => (
-              <TableRow key={idx} className="group">
-                <TableCell>
+            {filteredData.map((row, idx) => {
+              const isIncomplet = row.Statut === "Incomplet";
+              const isNonSaisi = row.Statut === "Non saisi";
+
+              return (
+                <TableRow 
+                  key={idx} 
+                  className={`group ${isIncomplet ? "bg-destructive/5 text-destructive italic" : isNonSaisi ? "opacity-50 grayscale" : ""}`}
+                >
+                  <TableCell>
                   <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => handleRowClick(row)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                </TableCell>
-                {DISPLAY_HEADERS.map((h) => (
-                  <TableCell key={h} className="font-mono text-xs whitespace-nowrap">
-                    {typeof row[h] === "number" ? row[h].toFixed(2) : String(row[h] ?? "—")}
                   </TableCell>
-                ))}
-              </TableRow>
-            ))}
+                  {DISPLAY_HEADERS.map((h) => (
+                    <TableCell 
+                      key={h} 
+                      className={`font-mono text-xs whitespace-nowrap ${h === "Statut" && isIncomplet ? "font-bold text-destructive" : ""}`}
+                    >
+                      {typeof row[h] === "number" ? row[h].toFixed(2) : String(row[h] ?? "—")}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

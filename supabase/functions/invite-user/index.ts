@@ -30,7 +30,8 @@ Deno.serve(async (req) => {
     const callerClient = createClient(callerUrl, callerKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user: caller } } = await callerClient.auth.getUser();
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user: caller } } = await callerClient.auth.getUser(jwt);
     if (!caller) {
       return new Response(JSON.stringify({ error: "Not authorized" }), {
         status: 401,

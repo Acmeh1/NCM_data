@@ -1,4 +1,6 @@
+// @ts-nocheck
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,7 +32,8 @@ Deno.serve(async (req) => {
     const callerClient = createClient(callerUrl, callerKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user: caller } } = await callerClient.auth.getUser();
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user: caller } } = await callerClient.auth.getUser(jwt);
     if (!caller) {
       return new Response(JSON.stringify({ error: "Not authorized" }), {
         status: 401,

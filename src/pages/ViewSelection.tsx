@@ -17,7 +17,7 @@ const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
   { key: "heure_debut", label: "H. Début" }, { key: "heure_fin", label: "H. Fin" },
   { key: "chef_equipe", label: "Chef Éq." }, { key: "modele", label: "Modèle" },
   { key: "couleur", label: "Couleur" }, { key: "format", label: "Format" },
-  { key: "zone_presse", label: "Z. Presse", type: "number" }, { key: "zone_projecta", label: "Z. Projecta", type: "number" },
+  { key: "zone_presse", label: "Z. Presse", type: "number" }, { key: "zone_projecta", label: "Z. Projecta m²", type: "number" },
   { key: "zone_four", label: "Z. Four", type: "number" },
   { key: "choix_1_m2", label: "1er Choix m²", type: "number" }, { key: "choix_1_taux", label: "1er %", type: "number" },
   { key: "choix_2_m2", label: "2ème Choix m²", type: "number" }, { key: "choix_2_taux", label: "2ème %", type: "number" },

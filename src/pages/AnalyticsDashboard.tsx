@@ -18,8 +18,12 @@ import {
 } from "recharts";
 import {
   Factory, TrendingUp, Package, BarChart3,
-  Activity, Layers, Target, Settings2,
+  Activity, Layers, Target, Settings2, CalendarDays
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MonthlyComparisonView from "@/components/MonthlyComparisonView";
+import AnalyticsFilterBar, { type AggregationType, type DisplayType } from "@/components/AnalyticsFilterBar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const COLORS = [
   "hsl(210, 70%, 55%)",
@@ -92,12 +96,12 @@ export default function AnalyticsDashboard() {
   const { dashboard, isAdmin, loading: permLoading } = usePermissions();
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
-  const [selectedTrimestre, setSelectedTrimestre] = useState<string>("all");
   const [selectedWeek, setSelectedWeek] = useState<string>("all");
   const [dayFrom, setDayFrom] = useState<string>("");
   const [dayTo, setDayTo] = useState<string>("");
-  const [groupeFilter, setGroupeFilter] = useState("all");
   const [period, setPeriod] = useState<AggPeriod>("day");
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [displayType, setDisplayType] = useState<DisplayType>("Graphiques");
   const [choixCompare, setChoixCompare] = useState<ChoixCompare>("choix1");
   const [visibleWidgets, setVisibleWidgets] = useState<Set<WidgetId>>(
     new Set(["kpis", "trend", "groupe", "choix", "comparaison"])
@@ -167,14 +171,10 @@ export default function AnalyticsDashboard() {
       const m = parseInt(d.slice(5, 7), 10);
       return String(m);
     }))].sort((a, b) => parseInt(a) - parseInt(b));
-    const trimestres = [...new Set(allDates.map((d) => {
-      const m = parseInt(d.slice(5, 7), 10);
-      return String(Math.ceil(m / 3));
-    }))].sort();
     const weeks = [...new Set(allDates.map((d) => getWeek(d)))].sort();
     const days = [...new Set(allDates)].sort();
 
-    return { years, months, trimestres, weeks, days };
+    return { years, months, weeks, days };
   }, [journalier, emballage]);
 
   // Filter helper: check if date matches selected slicers
@@ -184,7 +184,6 @@ export default function AnalyticsDashboard() {
     const y = dateStr.slice(0, 4);
     if (selectedYear !== "all" && y !== selectedYear) return false;
     if (selectedMonth !== "all" && String(m) !== selectedMonth) return false;
-    if (selectedTrimestre !== "all" && String(Math.ceil(m / 3)) !== selectedTrimestre) return false;
     if (selectedWeek !== "all" && getWeek(dateStr) !== selectedWeek) return false;
     if (dayFrom && dateStr < dayFrom) return false;
     if (dayTo && dateStr > dayTo) return false;
@@ -202,17 +201,17 @@ export default function AnalyticsDashboard() {
   const filteredJournalier = useMemo(() => {
     return journalier.filter((r) => {
       if (!matchesSlicers(r.date)) return false;
-      if (groupeFilter !== "all" && r.groupe !== groupeFilter) return false;
+      if (selectedGroups.length > 0 && !selectedGroups.includes(r.groupe)) return false;
       return true;
     });
-  }, [journalier, selectedYear, selectedMonth, selectedTrimestre, selectedWeek, dayFrom, dayTo, groupeFilter]);
+  }, [journalier, selectedYear, selectedMonth, selectedWeek, dayFrom, dayTo, selectedGroups]);
 
   const filteredEmballage = useMemo(() => {
     return emballage.filter((r) => {
       if (!matchesSlicers(r.date)) return false;
       return true;
     });
-  }, [emballage, selectedYear, selectedMonth, selectedTrimestre, selectedWeek, dayFrom, dayTo]);
+  }, [emballage, selectedYear, selectedMonth, selectedWeek, dayFrom, dayTo]);
 
   // KPIs
   const totalProductionM2 = filteredJournalier.reduce((s, r) => s + (r.total_m2 || 0), 0);
@@ -370,147 +369,42 @@ export default function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <BarChart3 className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Tableau de Bord</h1>
-            <p className="text-sm text-muted-foreground">Vue d'ensemble de la production</p>
+      <Tabs defaultValue="realtime" className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <BarChart3 className="h-6 w-6 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold">Analytics</h1>
+              <p className="text-sm text-muted-foreground">Vue d'ensemble de la production</p>
+            </div>
           </div>
+          <TabsList>
+            <TabsTrigger value="realtime" className="gap-2">
+              <Activity className="h-4 w-4" /> Vue Temps Réel
+            </TabsTrigger>
+            <TabsTrigger value="monthly" className="gap-2">
+              <CalendarDays className="h-4 w-4" /> Comparaison Mensuelle
+            </TabsTrigger>
+          </TabsList>
         </div>
-      </div>
 
-      {/* Dynamic Slicers Panel */}
-      <Card>
-        <CardContent className="pt-4 space-y-4">
-          {/* Row 1: Year / Month / Trimestre / Week slicers */}
-          <div className="flex flex-wrap gap-4 items-end">
-            {/* Année */}
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Année</Label>
-              <ToggleGroup type="single" value={selectedYear} onValueChange={(v) => { setSelectedYear(v || "all"); setSelectedMonth("all"); setSelectedTrimestre("all"); setSelectedWeek("all"); setDayFrom(""); setDayTo(""); }}>
-                <ToggleGroupItem value="all" className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">Tous</ToggleGroupItem>
-                {calendarSlicers.years.map((y) => (
-                  <ToggleGroupItem key={y} value={y} className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">{y}</ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
+        <TabsContent value="realtime" className="space-y-6 mt-0">
+          <AnalyticsFilterBar 
+            dateFrom={dayFrom}
+            onDateFromChange={setDayFrom}
+            dateTo={dayTo}
+            onDateToChange={setDayTo}
+            aggregation={period}
+            onAggregationChange={(p) => setPeriod(p)}
+            selectedGroups={selectedGroups}
+            onGroupsChange={setSelectedGroups}
+            displayType={displayType}
+            onDisplayTypeChange={setDisplayType}
+          />
 
-            {/* Trimestre */}
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Trimestre</Label>
-              <ToggleGroup type="single" value={selectedTrimestre} onValueChange={(v) => { setSelectedTrimestre(v || "all"); setSelectedMonth("all"); setSelectedWeek("all"); setDayFrom(""); setDayTo(""); }}>
-                <ToggleGroupItem value="all" className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">Tous</ToggleGroupItem>
-                {calendarSlicers.trimestres.map((t) => (
-                  <ToggleGroupItem key={t} value={t} className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">T{t}</ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-
-            {/* Mois */}
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Mois</Label>
-              <ToggleGroup type="single" value={selectedMonth} onValueChange={(v) => { setSelectedMonth(v || "all"); setSelectedWeek("all"); setDayFrom(""); setDayTo(""); }}>
-                <ToggleGroupItem value="all" className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">Tous</ToggleGroupItem>
-                {calendarSlicers.months.map((m) => (
-                  <ToggleGroupItem key={m} value={m} className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">{MONTH_NAMES[parseInt(m) - 1]?.slice(0, 3)}</ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-          </div>
-
-          {/* Row 2: Semaine / Groupe / Période / Widgets */}
-          <div className="flex flex-wrap gap-4 items-end">
-            {/* Semaine */}
-            {calendarSlicers.weeks.length <= 20 && (
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Semaine</Label>
-                <Select value={selectedWeek} onValueChange={(v) => { setSelectedWeek(v); setDayFrom(""); setDayTo(""); }}>
-                  <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Toutes</SelectItem>
-                    {calendarSlicers.weeks.map((w) => <SelectItem key={w} value={w}>{w}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Jour (intervalle) */}
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Jour</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="date"
-                  className="w-36 h-8 text-xs"
-                  value={dayFrom}
-                  max={dayTo || undefined}
-                  onChange={(e) => setDayFrom(e.target.value)}
-                />
-                <span className="text-xs text-muted-foreground">→</span>
-                <Input
-                  type="date"
-                  className="w-36 h-8 text-xs"
-                  value={dayTo}
-                  min={dayFrom || undefined}
-                  onChange={(e) => setDayTo(e.target.value)}
-                />
-              </div>
-              <p className="text-[11px] text-muted-foreground">Laissez vide pour “tous les jours”.</p>
-            </div>
-
-            {/* Groupe */}
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Groupe</Label>
-              <ToggleGroup type="single" value={groupeFilter} onValueChange={(v) => setGroupeFilter(v || "all")}>
-                <ToggleGroupItem value="all" className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">Tous</ToggleGroupItem>
-                {groupes.map((g) => (
-                  <ToggleGroupItem key={g} value={g} className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">{g}</ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-            </div>
-
-            {/* Période d'agrégation */}
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Agrégation</Label>
-              <ToggleGroup type="single" value={period} onValueChange={(v) => v && setPeriod(v as AggPeriod)}>
-                <ToggleGroupItem value="day" className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">Jour</ToggleGroupItem>
-                <ToggleGroupItem value="week" className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">Semaine</ToggleGroupItem>
-                <ToggleGroupItem value="month" className="text-xs h-8 px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">Mois</ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-
-            {/* Widget settings */}
-            <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 h-8">
-                  <Settings2 className="h-4 w-4" />
-                  Widgets
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="absolute z-10 mt-2 p-3 bg-card border rounded-lg shadow-lg space-y-2 min-w-[260px]">
-                {WIDGET_OPTIONS.map((w) => (
-                  <label key={w.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Checkbox checked={visibleWidgets.has(w.id)} onCheckedChange={() => toggleWidget(w.id)} />
-                    {w.label}
-                  </label>
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
-
-            {/* Reset button */}
-            {(selectedYear !== "all" || selectedMonth !== "all" || selectedTrimestre !== "all" || selectedWeek !== "all" || !!dayFrom || !!dayTo || groupeFilter !== "all") && (
-              <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => { setSelectedYear("all"); setSelectedMonth("all"); setSelectedTrimestre("all"); setSelectedWeek("all"); setDayFrom(""); setDayTo(""); setGroupeFilter("all"); }}>
-                ✕ Réinitialiser
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* KPIs */}
-      {visibleWidgets.has("kpis") && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {/* KPIs */}
+          {(displayType === "KPIs" || displayType === "Graphiques") && visibleWidgets.has("kpis") && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
           {kpis.map((kpi) => (
             <Card key={kpi.label}>
               <CardContent className="pt-4 pb-3 px-4">
@@ -525,176 +419,227 @@ export default function AnalyticsDashboard() {
         </div>
       )}
 
-      {/* Production (m²) vs Objectif */}
-      {visibleWidgets.has("trend") && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Production (m²) par {periodLabel(period)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="period" tick={{ fontSize: 10 }} angle={period === "day" ? -45 : 0} textAnchor={period === "day" ? "end" : "middle"} height={period === "day" ? 60 : 30} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip formatter={(v: number) => v.toLocaleString("fr-FR") + " m²"} />
-                <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="total_m2" name="Total m² (Journalier)" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
-                <Line type="monotone" dataKey="objectif" name="Objectif" stroke="#ef4444" strokeWidth={2} dot={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-            <p className="text-xs text-muted-foreground mt-2">
-              Objectif: {DAILY_M2_OBJECTIVE.toLocaleString("fr-FR")} m² / jour (ajusté selon la période).
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Production by Groupe */}
-        {visibleWidgets.has("groupe") && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Production par Groupe (m²)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={groupeData}>
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis dataKey="groupe" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip />
-                  <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="total_m2" name="Total m²" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="choix1" name="Choix 1" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="choix2" name="Choix 2" fill={COLORS[2]} radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="choix3" name="Choix 3" fill={COLORS[3]} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Quality Choix */}
-        {visibleWidgets.has("choix") && (
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Répartition Qualité — Choix 1 / 2 / 3</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center gap-4">
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={choixPieData}
-                      cx="50%" cy="50%"
-                      innerRadius={40} outerRadius={70}
-                      paddingAngle={3} dataKey="value"
-                      label={false}
-                    >
-                      {choixPieData.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i + 1]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => `${v.toFixed(1)} m²`} />
-                  </PieChart>
+        {/* Charts Section */}
+      {displayType === "Graphiques" && (
+        <>
+          {/* Production (m²) vs Objectif */}
+          {visibleWidgets.has("trend") && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Production (m²) par {periodLabel(period)}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <ComposedChart data={trendData}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="period" tick={{ fontSize: 10 }} angle={period === "day" ? -45 : 0} textAnchor={period === "day" ? "end" : "middle"} height={period === "day" ? 60 : 30} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip formatter={(v: number) => v.toLocaleString("fr-FR") + " m²"} />
+                    <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="total_m2" name="Total m² (Journalier)" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
+                    <Line type="monotone" dataKey="objectif" name="Objectif" stroke="#ef4444" strokeWidth={2} dot={false} />
+                  </ComposedChart>
                 </ResponsiveContainer>
-                <div className="w-full space-y-2">
-                  {choixPieData.map((c, i) => (
-                    <div key={c.name} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: COLORS[i + 1] }} />
-                        <span>{c.name}</span>
-                      </div>
-                      <span className="font-semibold">{c.value.toFixed(0)} m² <span className="text-xs text-muted-foreground">({c.pct}%)</span></span>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Objectif: {DAILY_M2_OBJECTIVE.toLocaleString("fr-FR")} m² / jour (ajusté selon la période).
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Production by Groupe */}
+            {visibleWidgets.has("groupe") && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Production par Groupe (m²)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={groupeData}>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis dataKey="groupe" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
+                      <Tooltip />
+                      <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                      <Bar dataKey="total_m2" name="Total m²" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="choix1" name="Choix 1" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="choix2" name="Choix 2" fill={COLORS[2]} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="choix3" name="Choix 3" fill={COLORS[3]} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Quality Choix */}
+            {visibleWidgets.has("choix") && (
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Répartition Qualité — Choix 1 / 2 / 3</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center gap-4">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={choixPieData}
+                          cx="50%" cy="50%"
+                          innerRadius={40} outerRadius={70}
+                          paddingAngle={3} dataKey="value"
+                          label={false}
+                        >
+                          {choixPieData.map((_, i) => (
+                            <Cell key={i} fill={COLORS[i + 1]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(v: number) => `${v.toFixed(1)} m²`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="w-full space-y-2">
+                      {choixPieData.map((c, i) => (
+                        <div key={c.name} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: COLORS[i + 1] }} />
+                            <span>{c.name}</span>
+                          </div>
+                          <span className="font-semibold">{c.value.toFixed(0)} m² <span className="text-xs text-muted-foreground">({c.pct}%)</span></span>
+                        </div>
+                      ))}
+                    <div className="border-t pt-2 flex items-center justify-between text-sm font-semibold">
+                      <span>Total</span>
+                      <span>{choixTotal.toFixed(0)} m²</span>
                     </div>
-                  ))}
-                  <div className="border-t pt-2 flex items-center justify-between text-sm font-semibold">
-                    <span>Total</span>
-                    <span>{choixTotal.toFixed(0)} m²</span>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-      {/* Choix by period */}
-      {visibleWidgets.has("choix") && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Choix 1 / 2 / 3 par {periodLabel(period)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={choixByPeriod}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="period" tick={{ fontSize: 10 }} angle={period === "day" ? -45 : 0} textAnchor={period === "day" ? "end" : "middle"} height={period === "day" ? 60 : 30} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip />
-                <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="choix1" name="Choix 1" fill={COLORS[1]} stackId="a" />
-                <Bar dataKey="choix2" name="Choix 2" fill={COLORS[2]} stackId="a" />
-                <Bar dataKey="choix3" name="Choix 3" fill={COLORS[3]} stackId="a" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          {/* Choix by period */}
+          {visibleWidgets.has("choix") && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Choix 1 / 2 / 3 par {periodLabel(period)}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={choixByPeriod}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="period" tick={{ fontSize: 10 }} angle={period === "day" ? -45 : 0} textAnchor={period === "day" ? "end" : "middle"} height={period === "day" ? 60 : 30} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip />
+                    <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="choix1" name="Choix 1" fill={COLORS[1]} stackId="a" />
+                    <Bar dataKey="choix2" name="Choix 2" fill={COLORS[2]} stackId="a" />
+                    <Bar dataKey="choix3" name="Choix 3" fill={COLORS[3]} stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Comparaison Production vs Emballage */}
+          {visibleWidgets.has("comparaison") && (
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <CardTitle className="text-sm">Comparaison Production vs Emballage par {periodLabel(period)}</CardTitle>
+                  <Select value={choixCompare} onValueChange={(v) => setChoixCompare(v as ChoixCompare)}>
+                    <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="choix1">1er Choix (A+B+C+D)</SelectItem>
+                      <SelectItem value="choix2">2ème Choix (Commercial)</SelectItem>
+                      <SelectItem value="choix3">3ème Choix (Déclassé)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground">{choixCompareLabels[choixCompare]}</p>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={comparaisonData}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="period" tick={{ fontSize: 10 }} angle={period === "day" ? -45 : 0} textAnchor={period === "day" ? "end" : "middle"} height={period === "day" ? 60 : 30} />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip />
+                    <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+                    {choixCompare === "choix1" && (
+                      <>
+                        <Area type="monotone" dataKey="prod_c1" name="Production 1er Choix (m²)" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
+                        <Area type="monotone" dataKey="emb_c1" name="Emballage 1er Choix (m²)" stroke={COLORS[3]} fill={COLORS[3]} fillOpacity={0.15} strokeWidth={2} />
+                      </>
+                    )}
+                    {choixCompare === "choix2" && (
+                      <>
+                        <Area type="monotone" dataKey="prod_c2" name="Production 2ème Choix (m²)" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
+                        <Area type="monotone" dataKey="emb_c2" name="Emballage 2ème Choix (m²)" stroke={COLORS[3]} fill={COLORS[3]} fillOpacity={0.15} strokeWidth={2} />
+                      </>
+                    )}
+                    {choixCompare === "choix3" && (
+                      <>
+                        <Area type="monotone" dataKey="prod_c3" name="Production 3ème Choix (m²)" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
+                        <Area type="monotone" dataKey="emb_c3" name="Emballage 3ème Choix (m²)" stroke={COLORS[3]} fill={COLORS[3]} fillOpacity={0.15} strokeWidth={2} />
+                      </>
+                    )}
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
-      {/* Comparaison Production vs Emballage */}
-      {visibleWidgets.has("comparaison") && (
+      {/* Tableau View */}
+      {displayType === "Tableau" && (
         <Card>
           <CardHeader className="pb-2">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <CardTitle className="text-sm">Comparaison Production vs Emballage par {periodLabel(period)}</CardTitle>
-              <Select value={choixCompare} onValueChange={(v) => setChoixCompare(v as ChoixCompare)}>
-                <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="choix1">1er Choix (A+B+C+D)</SelectItem>
-                  <SelectItem value="choix2">2ème Choix (Commercial)</SelectItem>
-                  <SelectItem value="choix3">3ème Choix (Déclassé)</SelectItem>
-                </SelectContent>
-              </Select>
+            <CardTitle className="text-sm">Données détaillées par {periodLabel(period)}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader className="bg-muted/50 text-[11px] uppercase tracking-wider">
+                  <TableRow>
+                    <TableHead className="w-[120px] font-bold">Période</TableHead>
+                    <TableHead className="text-right font-bold">Production (m²)</TableHead>
+                    <TableHead className="text-right font-bold">Choix 1 (m²)</TableHead>
+                    <TableHead className="text-right font-bold">Choix 2 (m²)</TableHead>
+                    <TableHead className="text-right font-bold">Choix 3 (m²)</TableHead>
+                    <TableHead className="text-right font-bold">Objectif (m²)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {choixByPeriod.map((row) => {
+                    const trendRow = trendData.find(t => t.period === row.period);
+                    return (
+                      <TableRow key={row.period} className="hover:bg-muted/30">
+                        <TableCell className="text-xs font-medium">{row.period}</TableCell>
+                        <TableCell className="text-right text-xs font-semibold">{(trendRow?.total_m2 || 0).toLocaleString("fr-FR")} </TableCell>
+                        <TableCell className="text-right text-xs text-emerald-600 font-medium">{row.choix1.toLocaleString("fr-FR")}</TableCell>
+                        <TableCell className="text-right text-xs text-orange-600">{row.choix2.toLocaleString("fr-FR")}</TableCell>
+                        <TableCell className="text-right text-xs text-rose-600">{row.choix3.toLocaleString("fr-FR")}</TableCell>
+                        <TableCell className="text-right text-xs text-muted-foreground italic">{(trendRow?.objectif || 0).toLocaleString("fr-FR")}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
-            <p className="text-xs text-muted-foreground">{choixCompareLabels[choixCompare]}</p>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={comparaisonData}>
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis dataKey="period" tick={{ fontSize: 10 }} angle={period === "day" ? -45 : 0} textAnchor={period === "day" ? "end" : "middle"} height={period === "day" ? 60 : 30} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip />
-                <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                {choixCompare === "choix1" && (
-                  <>
-                    <Area type="monotone" dataKey="prod_c1" name="Production 1er Choix (m²)" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
-                    <Area type="monotone" dataKey="emb_c1" name="Emballage 1er Choix (m²)" stroke={COLORS[3]} fill={COLORS[3]} fillOpacity={0.15} strokeWidth={2} />
-                  </>
-                )}
-                {choixCompare === "choix2" && (
-                  <>
-                    <Area type="monotone" dataKey="prod_c2" name="Production 2ème Choix (m²)" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
-                    <Area type="monotone" dataKey="emb_c2" name="Emballage 2ème Choix (m²)" stroke={COLORS[3]} fill={COLORS[3]} fillOpacity={0.15} strokeWidth={2} />
-                  </>
-                )}
-                {choixCompare === "choix3" && (
-                  <>
-                    <Area type="monotone" dataKey="prod_c3" name="Production 3ème Choix (m²)" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
-                    <Area type="monotone" dataKey="emb_c3" name="Emballage 3ème Choix (m²)" stroke={COLORS[3]} fill={COLORS[3]} fillOpacity={0.15} strokeWidth={2} />
-                  </>
-                )}
-              </AreaChart>
-            </ResponsiveContainer>
           </CardContent>
         </Card>
       )}
 
-      <p className="text-xs text-muted-foreground text-center">
-        {filteredJournalier.length} enregistrements · Agrégation: {periodLabel(period)}
-      </p>
+          <p className="text-xs text-muted-foreground text-center">
+            {filteredJournalier.length} enregistrements · Agrégation: {periodLabel(period)}
+          </p>
+        </TabsContent>
+
+        <TabsContent value="monthly" className="mt-0">
+          <MonthlyComparisonView />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
