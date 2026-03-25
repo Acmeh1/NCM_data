@@ -25,12 +25,20 @@ const FILTER_CONFIGS = [
 export default function StatsLineaTable({ stats, productions, onEdit, onDelete }: Props) {
   const rows = stats.map((s) => {
     const prod = productions.find((p) => p.id === s.production_id);
+    // Find all production entries sharing the same Date+Groupe+Horaire
+    const groupProds = prod
+      ? productions.filter(
+          (p) => p.Date === prod.Date && p.Groupe === prod.Groupe && p.Horaire === prod.Horaire
+        )
+      : [];
+    const mergedModeles = [...new Set(groupProds.map((p) => p.Modele))].join(", ") || "—";
+    const mergedFormats = [...new Set(groupProds.map((p) => p.Format))].join(", ") || "—";
     return {
       Date: prod?.Date ?? "—",
       Horaire: prod?.Horaire ?? "—",
       Groupe: prod?.Groupe ?? "—",
-      Modele: prod?.Modele ?? "—",
-      Format: prod?.Format ?? "—",
+      Modele: mergedModeles,
+      Format: mergedFormats,
       Statut: s.statut_donnees || "Complet",
       Motif: s.motif_incomplet || "—",
       "Choix1 Pièces": s.choix1_pieces,

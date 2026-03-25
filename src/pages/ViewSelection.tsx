@@ -21,9 +21,6 @@ const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
   { key: "zone_four", label: "Z. Four", type: "number" },
   { key: "choix_1_m2", label: "1er Choix m²", type: "number" }, { key: "choix_1_taux", label: "1er %", type: "number" },
   { key: "choix_2_m2", label: "2ème Choix m²", type: "number" }, { key: "choix_2_taux", label: "2ème %", type: "number" },
-  { key: "choix_3_m2", label: "3ème Choix m²", type: "number" }, { key: "choix_3_taux", label: "3ème %", type: "number" },
-  { key: "calibre_taux", label: "Calibre %", type: "number" }, { key: "planeite_taux", label: "Planéité %", type: "number" },
-  { key: "operateur_aspect_taux", label: "Aspect %", type: "number" }, { key: "tonalite_taux", label: "Tonalité %", type: "number" },
 ];
 
 const EDIT_COLUMNS: EditColumn[] = COLUMNS.map((c) => ({ key: c.key, label: c.label, type: c.type ?? "text" }));

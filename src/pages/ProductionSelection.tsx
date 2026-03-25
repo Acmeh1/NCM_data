@@ -33,14 +33,44 @@ export default function ProductionSelection() {
   );
 
   // Deduplicate journalier by Date+Groupe+Horaire (one representative per combo)
-  const seen = new Set<string>();
-  const selectableJournalier = journalierEntries.filter((j) => {
+  // BUT with concatenated models/couleurs/formats and summed surface
+  const groupedJournalierMap = new Map<string, any>();
+  
+  journalierEntries.forEach((j) => {
     const key = `${j.Date}||${j.Groupe}||${j.Horaire}`;
-    if (doneKeys.has(key)) return false;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
+    if (doneKeys.has(key)) return;
+    
+    if (!groupedJournalierMap.has(key)) {
+      groupedJournalierMap.set(key, {
+        ...j,
+        Modele: j.Modele,
+        Couleur: j.Couleur,
+        Format: j.Format,
+        Surface_CAR_m2: j.Surface_CAR_m2 || 0,
+        modelesList: [j.Modele],
+        couleursList: [j.Couleur],
+        formatsList: [j.Format],
+        id: key, // Use key as ID for selection consistency
+      });
+    } else {
+      const existing = groupedJournalierMap.get(key);
+      if (!existing.modelesList.includes(j.Modele)) {
+        existing.modelesList.push(j.Modele);
+        existing.Modele = existing.modelesList.join(", ");
+      }
+      if (!existing.couleursList.includes(j.Couleur)) {
+        existing.couleursList.push(j.Couleur);
+        existing.Couleur = existing.couleursList.join(", ");
+      }
+      if (!existing.formatsList.includes(j.Format)) {
+        existing.formatsList.push(j.Format);
+        existing.Format = existing.formatsList.join(", ");
+      }
+      existing.Surface_CAR_m2 += (j.Surface_CAR_m2 || 0);
+    }
   });
+
+  const selectableJournalier = Array.from(groupedJournalierMap.values());
 
   return (
     <div className="space-y-6 max-w-[1400px]">

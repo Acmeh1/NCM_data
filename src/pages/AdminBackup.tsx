@@ -10,7 +10,6 @@ const TABLES_TO_SYNC = [
   "production_journalier",
   "production_emballage",
   "production_selection",
-  "production_arrets_zone",
   "stats_linea",
   "interventions",
   "profiles",

@@ -113,19 +113,40 @@ export default function StatsLinea() {
   }, [prodEntries, statsEntries, editingEntry]);
 
   // Filter: keep only productions whose date+groupe+horaire combo is NOT done
-  // Then deduplicate to show one entry per unique combo
+  // Then group by date+groupe+horaire to show all models
   const availableProductions = useMemo(() => {
     const filtered = prodEntries.filter(
       (p) => !doneKeys.has(`${p.Date}||${p.Groupe}||${p.Horaire}`)
     );
-    // Deduplicate by date+groupe+horaire – show only the first model as representative
-    const seen = new Set<string>();
-    return filtered.filter((p) => {
+    
+    const groupsMap = new Map<string, any>();
+    filtered.forEach((p) => {
       const key = `${p.Date}||${p.Groupe}||${p.Horaire}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
+      if (!groupsMap.has(key)) {
+        groupsMap.set(key, {
+          ...p,
+          modelesList: [p.Modele],
+          couleursList: [p.Couleur],
+          formatsList: [p.Format],
+        });
+      } else {
+        const existing = groupsMap.get(key);
+        if (!existing.modelesList.includes(p.Modele)) {
+          existing.modelesList.push(p.Modele);
+          existing.Modele = existing.modelesList.join(", ");
+        }
+        if (!existing.couleursList.includes(p.Couleur)) {
+          existing.couleursList.push(p.Couleur);
+          existing.Couleur = existing.couleursList.join(", ");
+        }
+        if (!existing.formatsList.includes(p.Format)) {
+          existing.formatsList.push(p.Format);
+          existing.Format = existing.formatsList.join(", ");
+        }
+      }
     });
+
+    return Array.from(groupsMap.values());
   }, [prodEntries, doneKeys]);
 
   // Surface CAR m² depuis REF_PRODUIT.json (comme ProductionForm)
@@ -141,11 +162,15 @@ export default function StatsLinea() {
         p.Surface_CAR_m2 !== "#N/A" &&
         Number(p.Surface_CAR_m2) > 0
     );
+    const firstModel = (selectedProduction as any).modelesList?.[0] || selectedProduction.Modele;
+    const firstColor = (selectedProduction as any).couleursList?.[0] || selectedProduction.Couleur;
+    const firstFormat = (selectedProduction as any).formatsList?.[0] || selectedProduction.Format;
+
     const match = validProducts.find(
       (p) =>
-        p.Nom_Commercial === selectedProduction.Modele &&
-        (!selectedProduction.Couleur || p.Couleur === selectedProduction.Couleur) &&
-        p.Format_Nominal === selectedProduction.Format
+        p.Nom_Commercial === firstModel &&
+        (!firstColor || p.Couleur === firstColor) &&
+        p.Format_Nominal === firstFormat
     );
     return match ? Number(match.Surface_CAR_m2) : 0;
   }, [selectedProduction]);
@@ -424,7 +449,7 @@ export default function StatsLinea() {
             </div>
 
             {selectedProduction && (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Date</Label>
                   <Input value={selectedProduction.Date} readOnly className="bg-muted text-xs" />
@@ -436,14 +461,6 @@ export default function StatsLinea() {
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Équipe</Label>
                   <Input value={selectedProduction.Groupe} readOnly className="bg-muted text-xs" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Produit</Label>
-                  <Input value={selectedProduction.Modele} readOnly className="bg-muted text-xs" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Format</Label>
-                  <Input value={selectedProduction.Format} readOnly className="bg-muted text-xs" />
                 </div>
               </div>
             )}

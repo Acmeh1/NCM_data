@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
-  PieChart, Pie, Cell 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus, Target, Factory, Award, AlertCircle } from "lucide-react";
 
@@ -23,6 +23,7 @@ const COLORS = {
 };
 
 const DAILY_M2_OBJECTIVE = 8000;
+const MONTHLY_M2_OBJECTIVE = 240000; // Objectif mensuel fixe
 
 interface MonthlyData {
   month: string; // YYYY-MM
@@ -36,12 +37,11 @@ interface MonthlyData {
   pertesFour: number;
   pertesTriage: number;
   totalLosses: number;
-  poudreAtomisee: number; // Placeholder/Tonne
-  poudrePressee: number; // Placeholder/Tonne
-  poudrePertes: number; // Placeholder/Tonne
-  emailEngobe: number; // Placeholder/Tonne
+  poudreAtomisee: number;
+  poudrePressee: number;
+  poudrePertes: number;
+  emailEngobe: number;
   cycleFour: number;
-  arretPresse: number; // Sum of arrets where zone is Presse
 }
 
 const MONTH_NAMES = [
@@ -50,17 +50,12 @@ const MONTH_NAMES = [
 ];
 
 // --- Helper Functions ---
-function getDaysInMonth(yyyyMm: string): number {
-  const [y, m] = yyyyMm.split("-").map(Number);
-  return new Date(y, m, 0).getDate();
-}
-
 function calculateTrend(current: number, previous: number, lowerIsBetter = false) {
   if (!previous) return null;
   const diff = current - previous;
   if (Math.abs(diff) < 0.001) return "stable";
   if (lowerIsBetter) {
-    return diff < 0 ? "up" : "down"; // diff < 0 means improvement
+    return diff < 0 ? "up" : "down";
   }
   return diff > 0 ? "up" : "down";
 }
@@ -72,7 +67,6 @@ export default function MonthlyComparisonView() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  // Fetch all necessary data
   const { data: journalier = [] } = useQuery({
     queryKey: ["monthly-journalier"],
     queryFn: async () => {
@@ -91,16 +85,8 @@ export default function MonthlyComparisonView() {
     }
   });
 
-  const { data: arrets = [] } = useQuery({
-    queryKey: ["monthly-arrets"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("production_arrets_zone").select("*");
-      if (error) throw error;
-      return data || [];
-    }
-  });
 
-  // Process data for the selected month and the two previous months
+
   const processedData = useMemo(() => {
     const months: MonthlyData[] = [];
     const [year, month] = selectedMonth.split("-").map(Number);
@@ -108,14 +94,29 @@ export default function MonthlyComparisonView() {
     for (let i = 2; i >= 0; i--) {
       const d = new Date(year, month - 1 - i, 1);
       const mStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      
+
       const prodInMonth = journalier.filter(r => r.date.startsWith(mStr));
       const selectionInMonth = selection.filter(r => r.date.startsWith(mStr));
-      
+
       const actualProd = prodInMonth.reduce((acc, r) => acc + (Number(r.total_m2) || 0), 0);
-      const objective = DAILY_M2_OBJECTIVE * getDaysInMonth(mStr);
-      
-      const totalPieces = prodInMonth.reduce((acc, r) => acc + (Number(r.nb_pieces_four) || 0), 0);
+
+      let sumDailyObjForShifts = 0;
+      prodInMonth.forEach(r => {
+        const format = String(r.format || r.Format || r.modele || r.Modele || "").trim();
+        let dailyObj = 8000; // default (e.g. 60*60)
+        if (format.includes("45*45")) dailyObj = 8500;
+        else if (format.includes("60*30") || format.includes("30*60")) dailyObj = 9100;
+        
+        sumDailyObjForShifts += dailyObj;
+      });
+
+      // Calcul de l'objectif mensuel dynamique : on fait la moyenne des objectifs journaliers (selon les formats produits) x 30 jours.
+      let objective = MONTHLY_M2_OBJECTIVE; // Fallback à 240 000
+      if (prodInMonth.length > 0) {
+        const avgDailyObj = sumDailyObjForShifts / prodInMonth.length;
+        objective = avgDailyObj * 30;
+      }
+
       const totalChoix1 = prodInMonth.reduce((acc, r) => acc + (Number(r.choix_1_m2) || 0), 0);
       const totalChoix2 = prodInMonth.reduce((acc, r) => acc + (Number(r.choix_2_m2) || 0), 0);
       const totalChoix3 = prodInMonth.reduce((acc, r) => acc + (Number(r.choix_3_m2) || 0), 0);
@@ -125,24 +126,16 @@ export default function MonthlyComparisonView() {
       const pertesFour = selectionInMonth.reduce((acc, r) => acc + (Number(r.zone_four) || 0), 0);
       const pertesTriage = selectionInMonth.reduce((acc, r) => acc + (Number(r.zone_projecta) || 0), 0);
 
-      // Placeholder TONNE calculations (as discussed in plan)
-      // Proxy: 1 m2 pressé ~= 0.02 Tonne powder
-      const poudreAtomisee = (prodInMonth.reduce((acc, r) => acc + (Number(r.pressage_m2) || 0), 0) * 1.05) * 0.02; 
+      const poudreAtomisee = (prodInMonth.reduce((acc, r) => acc + (Number(r.pressage_m2) || 0), 0) * 1.05) * 0.02;
       const poudrePressee = prodInMonth.reduce((acc, r) => acc + (Number(r.pressage_m2) || 0), 0) * 0.02;
       const poudrePertes = poudreAtomisee - poudrePressee;
-
-      // Proxy: 1 m2 emaillé ~= 0.001 Tonne email/engobe
       const emailEngobe = prodInMonth.reduce((acc, r) => acc + (Number(r.emaillage_m2 ?? r.Emaillage_m2) || 0), 0) * 0.001;
 
       const avgCycle = prodInMonth.length > 0
         ? prodInMonth.reduce((acc, r) => acc + (Number(r.cycle_min) || 0), 0) / prodInMonth.length
         : 0;
 
-      // Calc arrets presse
-      const monthSelectionIds = new Set(selectionInMonth.map(s => s.id));
-      const arretPresse = arrets
-        .filter(a => monthSelectionIds.has(a.selection_id) && a.zone.toLowerCase().includes("presse"))
-        .reduce((acc, a) => acc + (Number(a.duree_min) || 0), 0);
+
 
       months.push({
         month: mStr,
@@ -160,17 +153,15 @@ export default function MonthlyComparisonView() {
         poudrePressee,
         poudrePertes,
         emailEngobe,
-        cycleFour: avgCycle,
-        arretPresse
+        cycleFour: avgCycle
       });
     }
     return months;
-  }, [selectedMonth, journalier, selection, arrets]);
+  }, [selectedMonth, journalier, selection]);
 
   const currentMonthData = processedData[2];
   const prevMonthData = processedData[1];
 
-  // --- Render Helpers ---
   const formatMonth = (mStr: string) => {
     const [y, m] = mStr.split("-").map(Number);
     return `${MONTH_NAMES[m - 1]} ${y}`;
@@ -213,7 +204,7 @@ export default function MonthlyComparisonView() {
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Production Réelle</p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-xl font-bold">{currentMonthData.actualProd.toFixed(0)} m²</p>
-                  <span className="text-[10px] text-muted-foreground">/ {currentMonthData.objective.toFixed(0)}</span>
+                  <span className="text-[10px] text-muted-foreground">/ {currentMonthData.objective.toLocaleString("fr-FR", {maximumFractionDigits: 0})}</span>
                 </div>
               </div>
             </div>
@@ -262,9 +253,8 @@ export default function MonthlyComparisonView() {
         </Card>
       </div>
 
-      {/* Section 2: Charts (2x2 Grid) */}
+      {/* Section 2: Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Chart 1: Actual vs Objective per month */}
         <Card>
           <CardHeader><CardTitle className="text-sm">Production Réelle vs Objectif (m²)</CardTitle></CardHeader>
           <CardContent>
@@ -282,7 +272,6 @@ export default function MonthlyComparisonView() {
           </CardContent>
         </Card>
 
-        {/* Chart 2: Quality Distribution */}
         <Card>
           <CardHeader><CardTitle className="text-sm">Répartition Qualité (%)</CardTitle></CardHeader>
           <CardContent>
@@ -301,7 +290,6 @@ export default function MonthlyComparisonView() {
           </CardContent>
         </Card>
 
-        {/* Chart 3: Losses by Type */}
         <Card>
           <CardHeader><CardTitle className="text-sm">Pertes par type (m²)</CardTitle></CardHeader>
           <CardContent>
@@ -320,7 +308,6 @@ export default function MonthlyComparisonView() {
           </CardContent>
         </Card>
 
-        {/* Chart 4: Matière première */}
         <Card>
           <CardHeader><CardTitle className="text-sm">Matière première (Tonne Estimation)</CardTitle></CardHeader>
           <CardContent>
@@ -358,7 +345,6 @@ export default function MonthlyComparisonView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {/* Production */}
                 <TableRow className="bg-blue-50/20 font-medium">
                   <TableCell className="py-2 text-xs">Production réelle (m²)</TableCell>
                   <TableCell className="py-2 text-right text-xs">{processedData[0].actualProd.toFixed(0)}</TableCell>
@@ -377,7 +363,6 @@ export default function MonthlyComparisonView() {
                     <TrendIcon current={processedData[2].realizationRate} previous={processedData[1].realizationRate} />
                   </TableCell>
                 </TableRow>
-                {/* Qualité */}
                 <TableRow>
                   <TableCell className="py-2 text-xs">1er choix (%)</TableCell>
                   <TableCell className="py-2 text-right text-xs font-semibold text-emerald-600">{processedData[0].choix1Rate.toFixed(1)}%</TableCell>
@@ -405,7 +390,6 @@ export default function MonthlyComparisonView() {
                     <TrendIcon current={processedData[2].choix3Rate} previous={processedData[1].choix3Rate} lowerIsBetter />
                   </TableCell>
                 </TableRow>
-                {/* Pertes */}
                 <TableRow className="bg-rose-50/20 font-medium">
                   <TableCell className="py-2 text-xs">Pertes Presse (m²)</TableCell>
                   <TableCell className="py-2 text-right text-xs">{processedData[0].pertesPresse.toFixed(0)}</TableCell>
@@ -433,7 +417,6 @@ export default function MonthlyComparisonView() {
                     <TrendIcon current={processedData[2].pertesTriage} previous={processedData[1].pertesTriage} lowerIsBetter />
                   </TableCell>
                 </TableRow>
-                {/* Matière */}
                 <TableRow className="bg-purple-50/20 font-medium">
                   <TableCell className="py-2 text-xs">Poudre Atomisée (Tonne)</TableCell>
                   <TableCell className="py-2 text-right text-xs">{processedData[0].poudreAtomisee.toFixed(2)}</TableCell>
@@ -461,7 +444,6 @@ export default function MonthlyComparisonView() {
                     <TrendIcon current={processedData[2].emailEngobe} previous={processedData[1].emailEngobe} lowerIsBetter />
                   </TableCell>
                 </TableRow>
-                {/* Process */}
                 <TableRow className="bg-slate-50/50 font-medium">
                   <TableCell className="py-2 text-xs">Cycle Four (min)</TableCell>
                   <TableCell className="py-2 text-right text-xs">{processedData[0].cycleFour.toFixed(1)}</TableCell>
@@ -471,23 +453,15 @@ export default function MonthlyComparisonView() {
                     <TrendIcon current={processedData[2].cycleFour} previous={processedData[1].cycleFour} />
                   </TableCell>
                 </TableRow>
-                <TableRow>
-                  <TableCell className="py-2 text-xs">Arrêt Presse (min/total mois)</TableCell>
-                  <TableCell className="py-2 text-right text-xs">{processedData[0].arretPresse.toFixed(0)}</TableCell>
-                  <TableCell className="py-2 text-right text-xs">{processedData[1].arretPresse.toFixed(0)}</TableCell>
-                  <TableCell className="py-2 text-right text-xs">{processedData[2].arretPresse.toFixed(0)}</TableCell>
-                  <TableCell className="py-2 text-center">
-                    <TrendIcon current={processedData[2].arretPresse} previous={processedData[1].arretPresse} lowerIsBetter />
-                  </TableCell>
-                </TableRow>
+
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
-      
+
       <p className="text-[10px] text-muted-foreground text-center italic">
-        Note: Les tonnages de matière première et d'émail sont des estimations basées sur les surfaces (m²) déclarées.
+        Note: Les tonnages de matière première et d'émail sont des estimations basées sur les surfaces (m²) déclarées. Objectif mensuel : {currentMonthData.objective.toLocaleString("fr-FR", {maximumFractionDigits: 0})} m².
       </p>
     </div>
   );

@@ -32,14 +32,7 @@ const COLUMNS: { key: keyof SelectionEntry; label: string }[] = [
   { key: "choix_2_taux", label: "2ème %" },
   { key: "choix_3_m2", label: "3ème Choix m²" },
   { key: "choix_3_taux", label: "3ème %" },
-  { key: "calibre_taux", label: "Calibre %" },
-  { key: "calibre_cause", label: "Calibre Cause" },
-  { key: "planeite_taux", label: "Planéité %" },
-  { key: "planeite_cause", label: "Planéité Cause" },
-  { key: "operateur_aspect_taux", label: "Aspect %" },
-  { key: "operateur_aspect_cause", label: "Aspect Cause" },
-  { key: "tonalite_taux", label: "Tonalité %" },
-  { key: "tonalite_cause", label: "Tonalité Cause" },
+
   { key: "duree_vide_maintenance", label: "Vide Maint. (min)" },
   { key: "intervention_maintenance", label: "Intervention Maint." },
   { key: "duree_vide_production", label: "Vide Prod. (min)" },
@@ -81,10 +74,6 @@ export default function ProductionSelectionTable({ entries, onDelete, onEdit }: 
   const exportData = filteredEntries.map((e) => {
     const row: Record<string, any> = {};
     COLUMNS.forEach((c) => { row[c.label] = e[c.key]; });
-    // Also add arrets info
-    if (e.arrets && e.arrets.length > 0) {
-      row["Arrêts"] = e.arrets.map((a) => `${a.zone}: ${a.duree_min}min - ${a.intervention_cause}`).join(" | ");
-    }
     return row;
   });
 

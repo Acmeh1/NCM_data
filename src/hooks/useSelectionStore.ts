@@ -4,14 +4,6 @@ import { toast } from "sonner";
 import { handleDbError } from "@/lib/permissionError";
 import { uuidv4 } from "@/lib/uuid";
 
-export interface ArretZone {
-  id?: string;
-  zone: string;
-  intervention_cause: string;
-  duree_min: number;
-  vide_four: boolean;
-}
-
 export interface SelectionEntry {
   id: string;
   date: string;
@@ -32,19 +24,10 @@ export interface SelectionEntry {
   choix_2_taux: number;
   choix_3_m2: number;
   choix_3_taux: number;
-  calibre_taux: number;
-  calibre_cause: string;
-  planeite_taux: number;
-  planeite_cause: string;
-  operateur_aspect_taux: number;
-  operateur_aspect_cause: string;
-  tonalite_taux: number;
-  tonalite_cause: string;
   duree_vide_maintenance: number;
   intervention_maintenance: string;
   duree_vide_production: number;
   intervention_production: string;
-  arrets: ArretZone[];
 }
 
 function fromDb(row: any, arrets: any[]): SelectionEntry {
@@ -68,27 +51,10 @@ function fromDb(row: any, arrets: any[]): SelectionEntry {
     choix_2_taux: Number(row.choix_2_taux),
     choix_3_m2: Number(row.choix_3_m2),
     choix_3_taux: Number(row.choix_3_taux),
-    calibre_taux: Number(row.calibre_taux),
-    calibre_cause: row.calibre_cause || "",
-    planeite_taux: Number(row.planeite_taux),
-    planeite_cause: row.planeite_cause || "",
-    operateur_aspect_taux: Number(row.operateur_aspect_taux),
-    operateur_aspect_cause: row.operateur_aspect_cause || "",
-    tonalite_taux: Number(row.tonalite_taux),
-    tonalite_cause: row.tonalite_cause || "",
     duree_vide_maintenance: Number(row.duree_vide_maintenance),
     intervention_maintenance: row.intervention_maintenance || "",
     duree_vide_production: Number(row.duree_vide_production),
     intervention_production: row.intervention_production || "",
-    arrets: arrets
-      .filter((a: any) => a.selection_id === row.id)
-      .map((a: any) => ({
-        id: a.id,
-        zone: a.zone,
-        intervention_cause: a.intervention_cause || "",
-        duree_min: Number(a.duree_min),
-        vide_four: a.vide_four,
-      })),
   };
 }
 
@@ -98,17 +64,13 @@ export function useSelectionStore() {
 
   useEffect(() => {
     async function load() {
-      const [selRes, arrRes] = await Promise.all([
-        supabase.from("production_selection").select("*").order("created_at", { ascending: true }),
-        supabase.from("production_arrets_zone").select("*"),
-      ]);
-      if (selRes.error) {
-        console.error("Load error:", selRes.error);
+      const { data, error } = await supabase.from("production_selection").select("*").order("created_at", { ascending: true });
+      if (error) {
+        console.error("Load error:", error);
         toast.error("Erreur de chargement des données sélection");
         setEntries([]);
       } else {
-        const arrets = arrRes.data || [];
-        setEntries((selRes.data || []).map((r: any) => fromDb(r, arrets)));
+        setEntries((data || []).map((r: any) => fromDb(r, [])));
       }
       setIsLoaded(true);
     }
@@ -116,16 +78,12 @@ export function useSelectionStore() {
   }, []);
 
   const reload = useCallback(async () => {
-    const [selRes, arrRes] = await Promise.all([
-      supabase.from("production_selection").select("*").order("created_at", { ascending: true }),
-      supabase.from("production_arrets_zone").select("*"),
-    ]);
-    if (selRes.error) {
-      console.error("Reload error:", selRes.error);
-    } else {
-      const arrets = arrRes.data || [];
-      setEntries((selRes.data || []).map((r: any) => fromDb(r, arrets)));
-    }
+      const { data, error } = await supabase.from("production_selection").select("*").order("created_at", { ascending: true });
+      if (error) {
+        console.error("Reload error:", error);
+      } else {
+        setEntries((data || []).map((r: any) => fromDb(r, [])));
+      }
   }, []);
 
   useEffect(() => {
@@ -153,11 +111,10 @@ export function useSelectionStore() {
       return null;
     }
 
-    const { arrets, ...selectionData } = entry;
     const selectionId = uuidv4();
     const { data, error } = await supabase
       .from("production_selection")
-      .insert({ ...selectionData, id: selectionId } as any)
+      .insert({ ...entry, id: selectionId } as any)
       .select()
       .single();
 
@@ -166,32 +123,7 @@ export function useSelectionStore() {
       return null;
     }
 
-    // Insert arrets
-    let savedArrets: ArretZone[] = [];
-    if (arrets.length > 0) {
-      const arretRows = arrets.map((a) => ({
-        id: uuidv4(),
-        selection_id: data.id,
-        zone: a.zone,
-        intervention_cause: a.intervention_cause,
-        duree_min: a.duree_min,
-        vide_four: a.vide_four,
-      }));
-      const { data: arrData, error: arrErr } = await supabase
-        .from("production_arrets_zone")
-        .insert(arretRows as any)
-        .select();
-      if (arrErr) console.warn("Arrets insert warning:", arrErr.message);
-      savedArrets = (arrData || []).map((a: any) => ({
-        id: a.id,
-        zone: a.zone,
-        intervention_cause: a.intervention_cause || "",
-        duree_min: Number(a.duree_min),
-        vide_four: a.vide_four,
-      }));
-    }
-
-    const newEntry = fromDb(data, savedArrets.map((a) => ({ ...a, selection_id: data.id })));
+    const newEntry = fromDb(data, []);
     setEntries((prev) => [...prev, newEntry]);
     return newEntry;
   }, [checkDuplicate]);
@@ -220,7 +152,7 @@ export function useSelectionStore() {
   }, []);
 
   const updateEntry = useCallback(async (entry: SelectionEntry) => {
-    const { id, arrets, ...selectionData } = entry;
+    const { id, ...selectionData } = entry;
 
     const { data, error } = await supabase
       .from("production_selection")
@@ -234,34 +166,7 @@ export function useSelectionStore() {
       return null;
     }
 
-    // Remplacer les arrêts existants par les nouveaux
-    await supabase.from("production_arrets_zone").delete().eq("selection_id", id);
-
-    let savedArrets: ArretZone[] = [];
-    if (arrets.length > 0) {
-      const arretRows = arrets.map((a) => ({
-        id: uuidv4(),
-        selection_id: id,
-        zone: a.zone,
-        intervention_cause: a.intervention_cause,
-        duree_min: a.duree_min,
-        vide_four: a.vide_four,
-      }));
-      const { data: arrData, error: arrErr } = await supabase
-        .from("production_arrets_zone")
-        .insert(arretRows as any)
-        .select();
-      if (arrErr) console.warn("Arrets update warning:", arrErr.message);
-      savedArrets = (arrData || []).map((a: any) => ({
-        id: a.id,
-        zone: a.zone,
-        intervention_cause: a.intervention_cause || "",
-        duree_min: Number(a.duree_min),
-        vide_four: a.vide_four,
-      }));
-    }
-
-    const updated = fromDb(data, savedArrets.map((a) => ({ ...a, selection_id: id })));
+    const updated = fromDb(data, []);
     setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
     return updated;
   }, []);
