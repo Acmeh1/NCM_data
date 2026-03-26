@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useProductionStore, type ProductionEntry } from "@/hooks/useProductionStore";
 import { useSelectionStore, type SelectionEntry } from "@/hooks/useSelectionStore";
 import { usePermissions } from "@/hooks/usePermissions";
-import ProductionForm, { type VideFourValues } from "@/components/ProductionForm";
+import ProductionForm from "@/components/ProductionForm";
 import ProductionTable from "@/components/ProductionTable";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,7 @@ export default function ProductionJournalier() {
   const { entries: selectionEntries, isLoaded: selectionLoaded, updateEntry: updateSelectionEntry, deleteByKey } = useSelectionStore();
   const { productionEdit, loading: permLoading } = usePermissions();
   const [editingEntry, setEditingEntry] = useState<ProductionEntry | null>(null);
-  const [videFour, setVideFour] = useState<VideFourValues>({
-    duree_vide_maintenance: "0",
-    intervention_maintenance: "",
-    duree_vide_production: "0",
-    intervention_production: "",
-  });
+
   const handleDelete = useCallback(async (entry: ProductionEntry) => {
     await deleteEntry(entry);
     await deleteByKey(entry.Date, entry.Groupe, entry.Horaire);
@@ -37,17 +32,7 @@ export default function ProductionJournalier() {
     return m;
   }, [selectionEntries]);
 
-  useEffect(() => {
-    if (!editingEntry) return;
-    const sel = selectionByKey.get(buildKey(editingEntry.Date, editingEntry.Groupe, editingEntry.Horaire));
-    if (!sel) return;
-    setVideFour({
-      duree_vide_maintenance: String(sel.duree_vide_maintenance ?? 0),
-      intervention_maintenance: String(sel.intervention_maintenance ?? ""),
-      duree_vide_production: String(sel.duree_vide_production ?? 0),
-      intervention_production: String(sel.intervention_production ?? ""),
-    });
-  }, [editingEntry, selectionByKey]);
+
 
   if (!isLoaded || !selectionLoaded) {
     return (
@@ -79,50 +64,18 @@ export default function ProductionJournalier() {
               onSubmit={async (entry) => {
                 const result = await addEntry(entry);
                 if (result) {
-                  const sel = selectionByKey.get(buildKey(entry.Date, entry.Groupe, entry.Horaire));
-                  if (sel) {
-                    await updateSelectionEntry({
-                      ...sel,
-                      duree_vide_maintenance: Number(videFour.duree_vide_maintenance) || 0,
-                      intervention_maintenance: videFour.intervention_maintenance,
-                      duree_vide_production: Number(videFour.duree_vide_production) || 0,
-                      intervention_production: videFour.intervention_production,
-                    });
-                  } else {
-                    toast.warning("Vide Four: aucun rapport Sélection & Qualité correspondant (Date/Groupe/Horaire)");
-                  }
                   toast.success("Entrée ajoutée");
-                  setVideFour({
-                    duree_vide_maintenance: "0",
-                    intervention_maintenance: "",
-                    duree_vide_production: "0",
-                    intervention_production: "",
-                  });
                 }
               }}
               editingEntry={editingEntry}
               onUpdate={async (entry) => {
                 const result = await updateEntry(entry);
                 if (result) {
-                  const sel = selectionByKey.get(buildKey(entry.Date, entry.Groupe, entry.Horaire));
-                  if (sel) {
-                    await updateSelectionEntry({
-                      ...sel,
-                      duree_vide_maintenance: Number(videFour.duree_vide_maintenance) || 0,
-                      intervention_maintenance: videFour.intervention_maintenance,
-                      duree_vide_production: Number(videFour.duree_vide_production) || 0,
-                      intervention_production: videFour.intervention_production,
-                    });
-                  } else {
-                    toast.warning("Vide Four: aucun rapport Sélection & Qualité correspondant (Date/Groupe/Horaire)");
-                  }
                   toast.success("Entrée mise à jour");
                   setEditingEntry(null);
                 }
               }}
               onCancelEdit={() => setEditingEntry(null)}
-              videFour={videFour}
-              onVideFourChange={setVideFour}
             />
           </CardContent>
         </Card>

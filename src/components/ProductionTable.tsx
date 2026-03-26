@@ -40,12 +40,7 @@ const COLUMNS: { key: keyof ProductionEntry; label: string }[] = [
   { key: "Four_Consommation_Kwh", label: "Consommation Four kW/h" },
 ];
 
-const EXTRA_SELECTION_COLUMNS: { key: keyof SelectionEntry; label: string }[] = [
-  { key: "duree_vide_maintenance", label: "Vide Maint. (min)" },
-  { key: "intervention_maintenance", label: "Intervention Maint." },
-  { key: "duree_vide_production", label: "Vide Prod. (min)" },
-  { key: "intervention_production", label: "Cause production" },
-];
+const EXTRA_SELECTION_COLUMNS: { key: keyof SelectionEntry; label: string }[] = [];
 
 const FILTER_CONFIGS = [
   { key: "_f_Date", label: "Date", type: "date" as const },

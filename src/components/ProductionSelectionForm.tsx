@@ -46,8 +46,6 @@ export default function ProductionSelectionForm({
     zone_presse: "", zone_projecta: "", zone_four: "",
     surface_car_m2: 0,
     choix_1_m2: "", choix_2_m2: "", choix_3_m2: "",
-    duree_vide_maintenance: "", intervention_maintenance: "",
-    duree_vide_production: "", intervention_production: "",
   });
 
   // Hydrate form when an entry is selected for edition
@@ -70,10 +68,6 @@ export default function ProductionSelectionForm({
       choix_1_m2: String(editingEntry.choix_1_m2),
       choix_2_m2: String(editingEntry.choix_2_m2),
       choix_3_m2: String(editingEntry.choix_3_m2),
-      duree_vide_maintenance: String(editingEntry.duree_vide_maintenance),
-      intervention_maintenance: editingEntry.intervention_maintenance,
-      duree_vide_production: String(editingEntry.duree_vide_production),
-      intervention_production: editingEntry.intervention_production,
       surface_car_m2: 0,
     });
 
@@ -129,18 +123,6 @@ export default function ProductionSelectionForm({
   const choix3Taux = totalChoix > 0 ? (choix3 / totalChoix) * 100 : 0;
 
   const submitForm = () => {
-    // Validation: comments required if duration > 0
-    const durMaint = Number(form.duree_vide_maintenance) || 0;
-    const durProd = Number(form.duree_vide_production) || 0;
-    if (durMaint > 0 && !form.intervention_maintenance.trim()) {
-      toast.error("L'intervention maintenance est obligatoire si une durée est saisie");
-      return;
-    }
-    if (durProd > 0 && !form.intervention_production.trim()) {
-      toast.error("L'intervention production est obligatoire si une durée est saisie");
-      return;
-    }
-
     if (isEditMode && editingEntry && onUpdate) {
       onUpdate({
         id: editingEntry.id,
@@ -162,10 +144,6 @@ export default function ProductionSelectionForm({
         choix_2_taux: Math.round(choix2Taux * 100) / 100,
         choix_3_m2: choix3,
         choix_3_taux: Math.round(choix3Taux * 100) / 100,
-        duree_vide_maintenance: durMaint,
-        intervention_maintenance: form.intervention_maintenance,
-        duree_vide_production: durProd,
-        intervention_production: form.intervention_production,
       });
       return;
     }
@@ -189,10 +167,6 @@ export default function ProductionSelectionForm({
       choix_2_taux: Math.round(choix2Taux * 100) / 100,
       choix_3_m2: choix3,
       choix_3_taux: Math.round(choix3Taux * 100) / 100,
-      duree_vide_maintenance: durMaint,
-      intervention_maintenance: form.intervention_maintenance,
-      duree_vide_production: durProd,
-      intervention_production: form.intervention_production,
     });
 
     if (!isEditMode) {
@@ -215,10 +189,6 @@ export default function ProductionSelectionForm({
         choix_1_m2: "",
         choix_2_m2: "",
         choix_3_m2: "",
-        duree_vide_maintenance: "",
-        intervention_maintenance: "",
-        duree_vide_production: "",
-        intervention_production: "",
         surface_car_m2: 0,
       }));
     }

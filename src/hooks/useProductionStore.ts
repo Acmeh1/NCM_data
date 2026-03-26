@@ -71,6 +71,7 @@ export function useProductionStore() {
       const { data, error } = await supabase
         .from("production_journalier")
         .select("*")
+        .limit(999999)
         .order("created_at", { ascending: true });
       if (error) {
         console.error("Load error:", error);
@@ -88,6 +89,7 @@ export function useProductionStore() {
     const { data, error } = await supabase
       .from("production_journalier")
       .select("*")
+      .limit(999999)
       .order("created_at", { ascending: true });
     if (error) {
       console.error("Reload error:", error);

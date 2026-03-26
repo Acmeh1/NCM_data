@@ -362,7 +362,6 @@ export default function AnalyticsDashboard() {
     { label: "2ème Choix", value: `${totalDeuxiemeChoixM2.toFixed(0)} m²`, icon: Activity, color: "text-orange-600" },
     { label: "3ème Choix", value: `${totalTroisiemeChoixM2.toFixed(0)} m²`, icon: Package, color: "text-purple-600" },
     { label: "Palettes", value: totalPalettes.toFixed(0), icon: Target, color: "text-rose-600" },
-    { label: "Cycle moyen", value: `${avgCycleMin.toFixed(1)} min`, icon: TrendingUp, color: "text-teal-600" },
   ];
 
   if (permLoading) return <p className="text-muted-foreground p-8">Chargement…</p>;

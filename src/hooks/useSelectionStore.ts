@@ -24,10 +24,6 @@ export interface SelectionEntry {
   choix_2_taux: number;
   choix_3_m2: number;
   choix_3_taux: number;
-  duree_vide_maintenance: number;
-  intervention_maintenance: string;
-  duree_vide_production: number;
-  intervention_production: string;
 }
 
 function fromDb(row: any, arrets: any[]): SelectionEntry {
@@ -51,10 +47,6 @@ function fromDb(row: any, arrets: any[]): SelectionEntry {
     choix_2_taux: Number(row.choix_2_taux),
     choix_3_m2: Number(row.choix_3_m2),
     choix_3_taux: Number(row.choix_3_taux),
-    duree_vide_maintenance: Number(row.duree_vide_maintenance),
-    intervention_maintenance: row.intervention_maintenance || "",
-    duree_vide_production: Number(row.duree_vide_production),
-    intervention_production: row.intervention_production || "",
   };
 }
 
@@ -64,10 +56,14 @@ export function useSelectionStore() {
 
   useEffect(() => {
     async function load() {
-      const { data, error } = await supabase.from("production_selection").select("*").order("created_at", { ascending: true });
+      const { data, error } = await supabase
+        .from("production_selection")
+        .select("*")
+        .limit(999999)
+        .order("created_at", { ascending: true });
       if (error) {
         console.error("Load error:", error);
-        toast.error("Erreur de chargement des données sélection");
+        toast.error("Erreur de chargement des donnees selection");
         setEntries([]);
       } else {
         setEntries((data || []).map((r: any) => fromDb(r, [])));
@@ -78,18 +74,22 @@ export function useSelectionStore() {
   }, []);
 
   const reload = useCallback(async () => {
-      const { data, error } = await supabase.from("production_selection").select("*").order("created_at", { ascending: true });
-      if (error) {
-        console.error("Reload error:", error);
-      } else {
-        setEntries((data || []).map((r: any) => fromDb(r, [])));
-      }
+    const { data, error } = await supabase
+      .from("production_selection")
+      .select("*")
+      .limit(999999)
+      .order("created_at", { ascending: true });
+    if (error) {
+      console.error("Reload error:", error);
+    } else {
+      setEntries((data || []).map((r: any) => fromDb(r, [])));
+    }
   }, []);
 
   useEffect(() => {
     const handleFocus = () => reload();
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, [reload]);
 
   const checkDuplicate = useCallback(async (date: string, groupe: string, horaire: string) => {
@@ -100,14 +100,13 @@ export function useSelectionStore() {
       .eq("groupe", groupe)
       .eq("horaire", horaire)
       .limit(1);
-    return (data && data.length > 0);
+    return data && data.length > 0;
   }, []);
 
   const addEntry = useCallback(async (entry: Omit<SelectionEntry, "id">) => {
-    // Anti-doublon
     const exists = await checkDuplicate(entry.date, entry.groupe, entry.horaire);
     if (exists) {
-      toast.error("Un rapport existe déjà pour cette combinaison Date + Groupe + Horaire");
+      toast.error("Un rapport existe deja pour cette combinaison Date + Groupe + Horaire");
       return null;
     }
 
@@ -119,7 +118,7 @@ export function useSelectionStore() {
       .single();
 
     if (error) {
-      toast.error(handleDbError(error, "Erreur d'enregistrement"));
+      toast.error(handleDbError(error, "Erreur d enregistrement"));
       return null;
     }
 
@@ -148,7 +147,9 @@ export function useSelectionStore() {
       console.error("Error deleting selection by key:", error);
       return;
     }
-    setEntries((prev) => prev.filter((e) => !(e.date === date && e.groupe === groupe && e.horaire === horaire)));
+    setEntries((prev) =>
+      prev.filter((e) => !(e.date === date && e.groupe === groupe && e.horaire === horaire))
+    );
   }, []);
 
   const updateEntry = useCallback(async (entry: SelectionEntry) => {
@@ -162,7 +163,7 @@ export function useSelectionStore() {
       .single();
 
     if (error) {
-      toast.error(handleDbError(error, "Erreur de mise à jour"));
+      toast.error(handleDbError(error, "Erreur de mise a jour"));
       return null;
     }
 

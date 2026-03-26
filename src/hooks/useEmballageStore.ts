@@ -75,8 +75,8 @@ export function useEmballageStore() {
 
   const loadEntries = useCallback(async () => {
     const [embRes, jourRes] = await Promise.all([
-      supabase.from("production_emballage").select("*").order("created_at", { ascending: true }),
-      supabase.from("production_journalier").select("*"),
+      supabase.from("production_emballage").select("*").limit(999999).order("created_at", { ascending: true }),
+      supabase.from("production_journalier").select("*").limit(999999),
     ]);
 
     if (embRes.error) {

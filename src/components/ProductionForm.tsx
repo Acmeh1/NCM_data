@@ -14,20 +14,11 @@ import { Plus } from "lucide-react";
 import refProduit from "@/data/REF_PRODUIT.json";
 import { useProductionStore, type ProductionEntry } from "@/hooks/useProductionStore";
 
-export type VideFourValues = {
-  duree_vide_maintenance: string;
-  intervention_maintenance: string;
-  duree_vide_production: string;
-  intervention_production: string;
-};
-
 interface Props {
   onSubmit: (entry: Omit<ProductionEntry, "id">) => void;
   editingEntry?: ProductionEntry | null;
   onUpdate?: (entry: ProductionEntry) => void;
   onCancelEdit?: () => void;
-  videFour?: VideFourValues;
-  onVideFourChange?: (next: VideFourValues) => void;
 }
 
 const HORAIRES = [
@@ -55,8 +46,6 @@ export default function ProductionForm({
   editingEntry,
   onUpdate,
   onCancelEdit,
-  videFour,
-  onVideFourChange,
 }: Props) {
   const isEditMode = !!editingEntry && !!onUpdate;
 
@@ -630,63 +619,6 @@ export default function ProductionForm({
         </div>
       </div>
 
-      {videFour && onVideFourChange && (
-        <div className="space-y-3 rounded-lg border p-3">
-          <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Vide Four Provoqué</h4>
-
-          <div className="space-y-3">
-            <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Maintenance</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Durée (min)</Label>
-                <Input
-                  type="number"
-                  value={videFour.duree_vide_maintenance}
-                  onChange={(e) => onVideFourChange({ ...videFour, duree_vide_maintenance: e.target.value })}
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Intervention réalisée {Number(videFour.duree_vide_maintenance) > 0 && <span className="text-destructive">*</span>}
-                </Label>
-                <Textarea
-                  value={videFour.intervention_maintenance}
-                  onChange={(e) => onVideFourChange({ ...videFour, intervention_maintenance: e.target.value })}
-                  placeholder="Détails de l'intervention maintenance..."
-                  rows={2}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Production</h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Durée (min)</Label>
-                <Input
-                  type="number"
-                  value={videFour.duree_vide_production}
-                  onChange={(e) => onVideFourChange({ ...videFour, duree_vide_production: e.target.value })}
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Cause production {Number(videFour.duree_vide_production) > 0 && <span className="text-destructive">*</span>}
-                </Label>
-                <Textarea
-                  value={videFour.intervention_production}
-                  onChange={(e) => onVideFourChange({ ...videFour, intervention_production: e.target.value })}
-                  placeholder="Ex: manque matière, changement format..."
-                  rows={2}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex items-center gap-3">
         {isEditMode && onCancelEdit && (

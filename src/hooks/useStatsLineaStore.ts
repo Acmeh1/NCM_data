@@ -88,6 +88,7 @@ export function useStatsLineaStore() {
       const { data, error } = await supabase
         .from("stats_linea")
         .select("*")
+        .limit(999999)
         .order("created_at", { ascending: true });
 
       if (error) {

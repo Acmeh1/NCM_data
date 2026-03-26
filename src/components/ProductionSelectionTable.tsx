@@ -33,10 +33,6 @@ const COLUMNS: { key: keyof SelectionEntry; label: string }[] = [
   { key: "choix_3_m2", label: "3ème Choix m²" },
   { key: "choix_3_taux", label: "3ème %" },
 
-  { key: "duree_vide_maintenance", label: "Vide Maint. (min)" },
-  { key: "intervention_maintenance", label: "Intervention Maint." },
-  { key: "duree_vide_production", label: "Vide Prod. (min)" },
-  { key: "intervention_production", label: "Intervention Prod." },
 ];
 
 const FILTER_CONFIGS = [

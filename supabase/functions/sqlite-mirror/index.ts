@@ -113,8 +113,6 @@ Deno.serve(async (req) => {
         tonalite_cause TEXT,
         duree_vide_maintenance REAL DEFAULT 0,
         intervention_maintenance TEXT,
-        duree_vide_production REAL DEFAULT 0,
-        intervention_production TEXT,
         created_at TEXT
       );
 
@@ -237,9 +235,8 @@ Deno.serve(async (req) => {
         calibre_taux, calibre_cause, planeite_taux, planeite_cause,
         operateur_aspect_taux, operateur_aspect_cause, tonalite_taux, tonalite_cause,
         duree_vide_maintenance, intervention_maintenance,
-        duree_vide_production, intervention_production,
         created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
     for (const r of selRes.data || []) {
       stmtS.execute([
@@ -273,8 +270,6 @@ Deno.serve(async (req) => {
         r.tonalite_cause ?? null,
         r.duree_vide_maintenance ?? 0,
         r.intervention_maintenance ?? null,
-        r.duree_vide_production ?? 0,
-        r.intervention_production ?? null,
         r.created_at,
       ]);
     }

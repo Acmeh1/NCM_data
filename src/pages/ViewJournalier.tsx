@@ -38,12 +38,7 @@ const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
   { key: "Four_Consommation_Kwh", label: "Consommation Four kW/h", type: "number" },
 ];
 
-const EXTRA_SELECTION_COLUMNS: { key: keyof SelectionEntry; label: string; type?: "text" | "number" }[] = [
-  { key: "duree_vide_maintenance", label: "Vide Maint. (min)", type: "number" },
-  { key: "intervention_maintenance", label: "Intervention Maint.", type: "text" },
-  { key: "duree_vide_production", label: "Vide Prod. (min)", type: "number" },
-  { key: "intervention_production", label: "Cause production", type: "text" },
-];
+const EXTRA_SELECTION_COLUMNS: { key: keyof SelectionEntry; label: string; type?: "text" | "number" }[] = [];
 
 const EDIT_COLUMNS: EditColumn[] = COLUMNS.map((c) => ({
   key: c.key,
