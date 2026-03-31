@@ -48,7 +48,7 @@ function CustomTooltip({ active, payload, label }: any) {
         Groupe {d.groupe}
       </p>
       <p style={{ color: "#6B7280" }}>Métrage : <strong style={{ color: "#111" }}>{fmt(d.total_surface_m2)} m²</strong></p>
-      <p style={{ color: "#6B7280" }}>Score : <strong style={{ color: "#111" }}>{d.score}/100</strong></p>
+      <p style={{ color: "#6B7280" }}>Rotations : <strong style={{ color: "#111" }}>{d.rotations}</strong></p>
     </div>
   );
 }
@@ -69,41 +69,48 @@ export default function MonthlyGroupDashboard() {
 
       const { data, error } = await supabase
         .from("production_journalier")
-        .select("groupe, total_m2")
+        .select("groupe, total_m2, date, horaire")
         .gte("date", from)
         .lte("date", to);
 
       if (error) throw error;
       
-      // Map to the format the UI expects
       return (data || []).map((row: any) => ({
         group: row.groupe,
-        total_surface_m2: row.total_m2
+        total_surface_m2: row.total_m2,
+        date: row.date,
+        horaire: row.horaire
       }));
     },
   });
 
   // ── aggregate ──────────────────────────────────────────────────────────────
   const groupData = useMemo(() => {
-    const map: Record<string, number> = {};
+    const mapM2: Record<string, number> = {};
+    const mapShifts: Record<string, Set<string>> = {};
+    
     rows.forEach((r: any) => {
       const g = r.group || "?";
-      map[g] = (map[g] || 0) + (Number(r.total_surface_m2) || 0);
+      mapM2[g] = (mapM2[g] || 0) + (Number(r.total_surface_m2) || 0);
+      
+      if (!mapShifts[g]) mapShifts[g] = new Set();
+      if (r.date && r.horaire) {
+        mapShifts[g].add(`${r.date}_${r.horaire}`);
+      }
     });
 
-    const maxM2 = Math.max(...Object.values(map), 1);
-
-    return Object.entries(map)
+    return Object.entries(mapM2)
       .map(([groupe, total_surface_m2]) => ({
         groupe,
         total_surface_m2,
-        score: Math.round((total_surface_m2 / maxM2) * 100),
+        rotations: mapShifts[groupe]?.size || 0,
       }))
       .sort((a, b) => b.total_surface_m2 - a.total_surface_m2);
   }, [rows]);
 
   const winner = groupData[0];
   const totalM2 = groupData.reduce((s, d) => s + d.total_surface_m2, 0);
+  const maxRotations = Math.max(...groupData.map(d => d.rotations), 1);
 
   // ── year options ───────────────────────────────────────────────────────────
   const years = Array.from({ length: 4 }, (_, i) => now.getFullYear() - i);
@@ -250,11 +257,11 @@ export default function MonthlyGroupDashboard() {
                     {fmt(d.total_surface_m2)} m²
                   </div>
                   <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
-                    Score : {d.score}/100
+                    Rotations : {d.rotations}
                   </div>
                   {/* mini bar */}
                   <div style={{ marginTop: 8, height: 5, background: "rgba(0,0,0,0.08)", borderRadius: 4, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${d.score}%`, background: color, borderRadius: 4, transition: "width .5s" }} />
+                    <div style={{ height: "100%", width: `${(d.rotations / maxRotations) * 100}%`, background: color, borderRadius: 4, transition: "width .5s" }} />
                   </div>
                 </div>
               );
@@ -295,7 +302,7 @@ export default function MonthlyGroupDashboard() {
                   <th style={{ padding: "10px 14px", textAlign: "left", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Groupe</th>
                   <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Métrage (m²)</th>
                   <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Part %</th>
-                  <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Score</th>
+                  <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Rotations</th>
                   <th style={{ padding: "10px 14px", textAlign: "left", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em", width: 120 }}>Performance</th>
                 </tr>
               </thead>
@@ -337,11 +344,11 @@ export default function MonthlyGroupDashboard() {
                         {pct}%
                       </td>
                       <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700, color }}>
-                        {d.score}
+                        {d.rotations}
                       </td>
                       <td style={{ padding: "10px 14px" }}>
                         <div style={{ background: "#F3F4F6", borderRadius: 4, height: 8, overflow: "hidden" }}>
-                          <div style={{ width: `${d.score}%`, height: "100%", background: color, borderRadius: 4, transition: "width .5s" }} />
+                          <div style={{ width: `${(d.rotations / maxRotations) * 100}%`, height: "100%", background: color, borderRadius: 4, transition: "width .5s" }} />
                         </div>
                       </td>
                     </tr>
