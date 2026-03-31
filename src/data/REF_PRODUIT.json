@@ -3826,7 +3826,7 @@
     {
         "CATEGORIE": "SOL",
         "Cartons_Palette": "36",
-        "Couleur": "BEIGE",
+        "Couleur": "",
         "Finition": "",
         "Format_Nominal": "60*60",
         "ID_Modele": "MOD-309",
@@ -3834,7 +3834,7 @@
         "Longueur_cm": "60",
         "M2_Carton": "1.44",
         "M2_PALETTE": "51.84",
-        "Nom_Commercial": "ELMAR",
+        "Nom_Commercial": "BLANC BRILLANT",
         "Pcs_Carton": "4",
         "Surface_CAR_m2": "0.36",
         "Type_Decor": ""

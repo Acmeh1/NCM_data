@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MonthlyComparisonView from "@/components/MonthlyComparisonView";
+import MonthlyGroupDashboard from "@/components/MonthlyGroupDashboard";
 import AnalyticsFilterBar, { type AggregationType, type DisplayType } from "@/components/AnalyticsFilterBar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -450,71 +451,16 @@ export default function AnalyticsDashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Production by Groupe */}
                 {visibleWidgets.has("groupe") && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Production par Groupe (m²)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ResponsiveContainer width="100%" height={280}>
-                        <BarChart data={groupeData}>
-                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                          <XAxis dataKey="groupe" tick={{ fontSize: 11 }} />
-                          <YAxis tick={{ fontSize: 10 }} />
-                          <Tooltip />
-                          <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                          <Bar dataKey="total_m2" name="Total m²" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="choix1" name="Choix 1" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="choix2" name="Choix 2" fill={COLORS[2]} radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="choix3" name="Choix 3" fill={COLORS[3]} radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
+                  <div className="col-span-1 lg:col-span-2">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <MonthlyGroupDashboard />
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
 
-                {/* Quality Choix */}
-                {visibleWidgets.has("choix") && (
-                  <Card className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Répartition Qualité — Choix 1 / 2 / 3</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-col items-center gap-4">
-                        <ResponsiveContainer width="100%" height={200}>
-                          <PieChart>
-                            <Pie
-                              data={choixPieData}
-                              cx="50%" cy="50%"
-                              innerRadius={40} outerRadius={70}
-                              paddingAngle={3} dataKey="value"
-                              label={false}
-                            >
-                              {choixPieData.map((_, i) => (
-                                <Cell key={i} fill={COLORS[i + 1]} />
-                              ))}
-                            </Pie>
-                            <Tooltip formatter={(v: number) => `${v.toFixed(1)} m²`} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <div className="w-full space-y-2">
-                          {choixPieData.map((c, i) => (
-                            <div key={c.name} className="flex items-center justify-between text-sm">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: COLORS[i + 1] }} />
-                                <span>{c.name}</span>
-                              </div>
-                              <span className="font-semibold">{c.value.toFixed(0)} m² <span className="text-xs text-muted-foreground">({c.pct}%)</span></span>
-                            </div>
-                          ))}
-                          <div className="border-t pt-2 flex items-center justify-between text-sm font-semibold">
-                            <span>Total</span>
-                            <span>{choixTotal.toFixed(0)} m²</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+
               </div>
 
               {/* Choix by period */}
