@@ -70,7 +70,16 @@ export default function MonthlyComparisonView() {
   const { data: journalier = [] } = useQuery({
     queryKey: ["monthly-journalier"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("production_journalier").select("*");
+      const { data, error } = await supabase
+        .from("production_journalier")
+        .select(`
+          id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
+          modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
+          total_m2, pressage_m2, Project_m2, emaillage_m2, 
+          cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
+          four_minutes_vides, four_consommation_kwh, created_at
+        `)
+        .limit(5000);
       if (error) throw error;
       return data || [];
     }
@@ -102,7 +111,7 @@ export default function MonthlyComparisonView() {
 
       let sumDailyObjForShifts = 0;
       prodInMonth.forEach(r => {
-        const format = String(r.format || r.Format || r.modele || r.Modele || "").trim();
+        const format = String(r.format || r.modele || "").trim();
         let dailyObj = 8000; // default (e.g. 60*60)
         if (format.includes("45*45")) dailyObj = 8500;
         else if (format.includes("60*30") || format.includes("30*60")) dailyObj = 9100;
@@ -129,7 +138,7 @@ export default function MonthlyComparisonView() {
       const poudreAtomisee = (prodInMonth.reduce((acc, r) => acc + (Number(r.pressage_m2) || 0), 0) * 1.05) * 0.02;
       const poudrePressee = prodInMonth.reduce((acc, r) => acc + (Number(r.pressage_m2) || 0), 0) * 0.02;
       const poudrePertes = poudreAtomisee - poudrePressee;
-      const emailEngobe = prodInMonth.reduce((acc, r) => acc + (Number(r.emaillage_m2 ?? r.Emaillage_m2) || 0), 0) * 0.001;
+      const emailEngobe = prodInMonth.reduce((acc, r) => acc + (Number(r.emaillage_m2) || 0), 0) * 0.001;
 
       const avgCycle = prodInMonth.length > 0
         ? prodInMonth.reduce((acc, r) => acc + (Number(r.cycle_min) || 0), 0) / prodInMonth.length

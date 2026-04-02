@@ -137,7 +137,14 @@ export default function AnalyticsDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("production_journalier")
-        .select("*")
+        .select(`
+          id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
+          modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
+          total_m2, pressage_m2, Project_m2, emaillage_m2, 
+          cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
+          four_minutes_vides, four_consommation_kwh, created_at
+        `)
+        .limit(5000)
         .order("date", { ascending: true });
       if (error) throw error;
       return data || [];
@@ -149,7 +156,7 @@ export default function AnalyticsDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("production_emballage")
-        .select("*")
+        .select("id, date, choice_type, surface_totale_m2, reste_m2, nb_palette")
         .order("date", { ascending: true });
       if (error) throw error;
       return data || [];
@@ -284,7 +291,7 @@ export default function AnalyticsDashboard() {
       }
       map[key].total_m2 += Number(r.total_m2) || 0;
       
-      const format = String(r.format || r.Format || r.modele || r.Modele || "").trim();
+      const format = String(r.format || r.modele || "").trim();
       let dailyObj = 8000;
       if (format.includes("45*45")) dailyObj = 8500;
       else if (format.includes("60*30") || format.includes("30*60")) dailyObj = 9100;
@@ -358,10 +365,10 @@ export default function AnalyticsDashboard() {
   const groupes = [...new Set(journalier.map((r) => r.groupe))].filter(Boolean).sort();
 
   const kpis = [
-    { label: "Production totale", value: `${totalProductionM2.toFixed(0)} m²`, icon: Factory, color: "text-blue-600" },
-    { label: "1er Choix", value: `${totalPressageM2.toFixed(0)} m²`, icon: Layers, color: "text-emerald-600" },
-    { label: "2ème Choix", value: `${totalDeuxiemeChoixM2.toFixed(0)} m²`, icon: Activity, color: "text-orange-600" },
-    { label: "3ème Choix", value: `${totalTroisiemeChoixM2.toFixed(0)} m²`, icon: Package, color: "text-purple-600" },
+    { label: "Production totale", value: `${totalProductionM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Factory, color: "text-blue-600" },
+    { label: "1er Choix", value: `${totalPressageM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Layers, color: "text-emerald-600" },
+    { label: "2ème Choix", value: `${totalDeuxiemeChoixM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Activity, color: "text-orange-600" },
+    { label: "3ème Choix", value: `${totalTroisiemeChoixM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Package, color: "text-purple-600" },
     { label: "Palettes", value: totalPalettes.toFixed(0), icon: Target, color: "text-rose-600" },
   ];
 

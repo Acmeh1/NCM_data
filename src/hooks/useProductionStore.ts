@@ -70,8 +70,14 @@ export function useProductionStore() {
     async function load() {
       const { data, error } = await supabase
         .from("production_journalier")
-        .select("*")
-        .limit(999999)
+        .select(`
+          id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
+          modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
+          total_m2, pressage_m2, Project_m2, emaillage_m2, 
+          cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
+          four_minutes_vides, four_consommation_kwh, created_at
+        `)
+        .limit(5000)
         .order("created_at", { ascending: true });
       if (error) {
         console.error("Load error:", error);
@@ -88,8 +94,14 @@ export function useProductionStore() {
   const reload = useCallback(async () => {
     const { data, error } = await supabase
       .from("production_journalier")
-      .select("*")
-      .limit(999999)
+      .select(`
+        id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
+        modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
+        total_m2, pressage_m2, Project_m2, emaillage_m2, 
+        cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
+        four_minutes_vides, four_consommation_kwh, created_at
+      `)
+      .limit(5000)
       .order("created_at", { ascending: true });
     if (error) {
       console.error("Reload error:", error);
@@ -118,21 +130,27 @@ export function useProductionStore() {
         modele: entry.Modele,
         couleur: entry.Couleur,
         format: entry.Format,
-        choix_1_m2: Math.round(Number(entry.Choix_1_m2) || 0),
-        choix_2_m2: Math.round(Number(entry.Choix_2_m2) || 0),
-        choix_3_m2: Math.round(Number(entry.Choix_3_m2) || 0),
-        total_m2: Math.round(Number(entry.Total_m2) || 0),
-        pressage_m2: Math.round(Number(entry.Pressage_m2) || 0),
-        Project_m2: Math.round(Number(entry.Project_m2) || 0),
-        emaillage_m2: Math.round(Number(entry.Emaillage_m2) || 0),
-        cycle_min: Math.round(Number(entry.Cycle_min) || 0),
-        nb_pieces_four: Math.round(Number(entry.Nb_Pieces_Four) || 0),
-        surface_car_m2: Math.round(Number(entry.Surface_CAR_m2) || 0),
-        cuisson_m2: Math.round(Number(entry.Cuisson_M2) || 0),
-        four_minutes_vides: Math.round(Number(entry.Four_Minutes_Vides) || 0),
-        four_consommation_kwh: Math.round(Number(entry.Four_Consommation_Kwh) || 0),
+        choix_1_m2: Number(entry.Choix_1_m2) || 0,
+        choix_2_m2: Number(entry.Choix_2_m2) || 0,
+        choix_3_m2: Number(entry.Choix_3_m2) || 0,
+        total_m2: Number(entry.Total_m2) || 0,
+        pressage_m2: Number(entry.Pressage_m2) || 0,
+        Project_m2: Number(entry.Project_m2) || 0,
+        emaillage_m2: Number(entry.Emaillage_m2) || 0,
+        cycle_min: Number(entry.Cycle_min) || 0,
+        nb_pieces_four: Number(entry.Nb_Pieces_Four) || 0,
+        surface_car_m2: Number(entry.Surface_CAR_m2) || 0,
+        cuisson_m2: Number(entry.Cuisson_M2) || 0,
+        four_minutes_vides: Number(entry.Four_Minutes_Vides) || 0,
+        four_consommation_kwh: Number(entry.Four_Consommation_Kwh) || 0,
       })
-      .select()
+      .select(`
+        id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
+        modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
+        total_m2, pressage_m2, Project_m2, emaillage_m2, 
+        cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
+        four_minutes_vides, four_consommation_kwh, created_at
+      `)
       .single();
 
     if (error) {
@@ -159,22 +177,28 @@ export function useProductionStore() {
         modele: rest.Modele,
         couleur: rest.Couleur,
         format: rest.Format,
-        choix_1_m2: Math.round(Number(rest.Choix_1_m2) || 0),
-        choix_2_m2: Math.round(Number(rest.Choix_2_m2) || 0),
-        choix_3_m2: Math.round(Number(rest.Choix_3_m2) || 0),
-        total_m2: Math.round(Number(rest.Total_m2) || 0),
-        pressage_m2: Math.round(Number(rest.Pressage_m2) || 0),
-        Project_m2: Math.round(Number(rest.Project_m2) || 0),
-        emaillage_m2: Math.round(Number(rest.Emaillage_m2) || 0),
-        cycle_min: Math.round(Number(rest.Cycle_min) || 0),
-        nb_pieces_four: Math.round(Number(rest.Nb_Pieces_Four) || 0),
-        surface_car_m2: Math.round(Number(rest.Surface_CAR_m2) || 0),
-        cuisson_m2: Math.round(Number(rest.Cuisson_M2) || 0),
-        four_minutes_vides: Math.round(Number(rest.Four_Minutes_Vides) || 0),
-        four_consommation_kwh: Math.round(Number(rest.Four_Consommation_Kwh) || 0),
+        choix_1_m2: Number(rest.Choix_1_m2) || 0,
+        choix_2_m2: Number(rest.Choix_2_m2) || 0,
+        choix_3_m2: Number(rest.Choix_3_m2) || 0,
+        total_m2: Number(rest.Total_m2) || 0,
+        pressage_m2: Number(rest.Pressage_m2) || 0,
+        Project_m2: Number(rest.Project_m2) || 0,
+        emaillage_m2: Number(rest.Emaillage_m2) || 0,
+        cycle_min: Number(rest.Cycle_min) || 0,
+        nb_pieces_four: Number(rest.Nb_Pieces_Four) || 0,
+        surface_car_m2: Number(rest.Surface_CAR_m2) || 0,
+        cuisson_m2: Number(rest.Cuisson_M2) || 0,
+        four_minutes_vides: Number(rest.Four_Minutes_Vides) || 0,
+        four_consommation_kwh: Number(rest.Four_Consommation_Kwh) || 0,
       })
       .eq("id", id)
-      .select()
+      .select(`
+        id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
+        modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
+        total_m2, pressage_m2, Project_m2, emaillage_m2, 
+        cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
+        four_minutes_vides, four_consommation_kwh, created_at
+      `)
       .single();
 
     if (error) {

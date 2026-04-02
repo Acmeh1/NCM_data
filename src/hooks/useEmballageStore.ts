@@ -75,8 +75,14 @@ export function useEmballageStore() {
 
   const loadEntries = useCallback(async () => {
     const [embRes, jourRes] = await Promise.all([
-      supabase.from("production_emballage").select("*").limit(999999).order("created_at", { ascending: true }),
-      supabase.from("production_journalier").select("*").limit(999999),
+      supabase.from("production_emballage").select("*").limit(5000).order("created_at", { ascending: true }),
+      supabase.from("production_journalier").select(`
+        id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
+        modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
+        total_m2, pressage_m2, Project_m2, emaillage_m2, 
+        cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
+        four_minutes_vides, four_consommation_kwh, created_at
+      `).limit(5000),
     ]);
 
     if (embRes.error) {
