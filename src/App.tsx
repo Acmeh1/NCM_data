@@ -16,6 +16,7 @@ import ViewStatsLinea from "@/pages/ViewStatsLinea";
 import AdminBackup from "@/pages/AdminBackup";
 import AdminUsers from "@/pages/AdminUsers";
 import Maintenance from "@/pages/Maintenance";
+import ViewInterventions from "@/pages/ViewInterventions";
 import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/production/stats-linea/view" element={<ViewStatsLinea />} />
               <Route path="/analytics" element={<AnalyticsDashboard />} />
               <Route path="/maintenance" element={<Maintenance />} />
+              <Route path="/maintenance/view" element={<ViewInterventions />} />
               <Route path="/admin/backup" element={<AdminBackup />} />
               <Route path="/admin/users" element={<AdminUsers />} />
             </Route>

@@ -16,13 +16,18 @@ import { useToast } from '@/hooks/use-toast';
 
 // Parse raw equipment data to unique zones
 const equipementsData = equipementsDataRaw as any[];
-const zonesList = Array.from(
-  new Set(
-    equipementsData
-      .filter((e) => e.zone && e["code de la zone"])
-      .map((e) => JSON.stringify({ id: e["code de la zone"], nom: e.zone }))
-  )
-).map((s) => JSON.parse(s));
+const uniqueZonesMap = new Map();
+equipementsData.forEach((e) => {
+  if (e.zone && e["code de la zone"]) {
+    const id = e["code de la zone"].trim();
+    const nom = e.zone.trim();
+    if (!uniqueZonesMap.has(id)) {
+      uniqueZonesMap.set(id, nom);
+    }
+  }
+});
+
+const zonesList = Array.from(uniqueZonesMap.entries()).map(([id, nom]) => ({ id, nom }));
 
 const getEquipementsForZone = (zoneId: string) => {
   return equipementsData
@@ -73,7 +78,12 @@ const interventionSchema = z.object({
 
 type InterventionFormData = z.infer<typeof interventionSchema>;
 
-export default function InterventionForm() {
+interface Props {
+  initialData?: any;
+  onSuccess?: () => void;
+}
+
+export default function InterventionForm({ initialData, onSuccess }: Props) {
   const { toast } = useToast();
   const [selectedZone, setSelectedZone] = useState<string>('');
   const [equipements, setEquipements] = useState<any[]>([]);
@@ -105,6 +115,40 @@ export default function InterventionForm() {
       pdr_consommables: [],
     }
   });
+
+  React.useEffect(() => {
+    if (initialData) {
+      reset({
+        numero: initialData.numero || '',
+        date_intervention: initialData.date_intervention || '',
+        heure_demande: initialData.heure_demande || '',
+        equipe: initialData.equipe || undefined,
+        demandeur: initialData.demandeur || '',
+        visa_demandeur: initialData.visa_demandeur || '',
+        urgence: initialData.urgence || '',
+        nature: initialData.nature || '',
+        type: initialData.type || '',
+        zone: initialData.zone_code || '',
+        equipement: initialData.equipement_code || '',
+        description: initialData.description || '',
+        heure_debut: initialData.heure_debut ? new Date(initialData.heure_debut).toISOString().slice(0,16) : '',
+        heure_fin: initialData.heure_fin ? new Date(initialData.heure_fin).toISOString().slice(0,16) : '',
+        intervenants: initialData.intervenants?.length ? initialData.intervenants : [{ nom: '', visa: '' }],
+        arret_cpmp: initialData.arret_cpmp || 0,
+        arret_cpr: initialData.arret_cpr || 0,
+        arret_cle: initialData.arret_cle || 0,
+        arret_ccu: initialData.arret_ccu || 0,
+        arret_csl: initialData.arret_csl || 0,
+        pdr_utilisees: initialData.pdr_utilisees || [],
+        pdr_consommables: initialData.pdr_consommables || []
+      });
+
+      if (initialData.zone_code) {
+        setSelectedZone(initialData.zone_code);
+        setEquipements(getEquipementsForZone(initialData.zone_code));
+      }
+    }
+  }, [initialData, reset]);
 
   const { fields: intervenantsFields, append: appendIntervenant, remove: removeIntervenant } = useFieldArray({
     control,
@@ -187,16 +231,26 @@ export default function InterventionForm() {
       pdr_consommables: data.pdr_consommables,
     };
 
-    const { error } = await supabase.from('interventions').insert(insertData);
+    let error;
+    if (initialData?.id) {
+      const { error: updateError } = await supabase.from('interventions').update(insertData).eq('id', initialData.id);
+      error = updateError;
+    } else {
+      const { error: insertError } = await supabase.from('interventions').insert(insertData);
+      error = insertError;
+    }
 
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
       console.error("Supabase insert error:", error);
     } else {
-      toast({ title: 'Succès', description: 'Demande d\'intervention créée' });
-      reset();
-      setSelectedZone('');
-      setEquipements([]);
+      toast({ title: 'Succès', description: initialData?.id ? 'Intervention modifiée' : 'Demande d\'intervention créée' });
+      if (!initialData) {
+        reset();
+        setSelectedZone('');
+        setEquipements([]);
+      }
+      if (onSuccess) onSuccess();
     }
   };
 
@@ -570,7 +624,9 @@ export default function InterventionForm() {
             <Button type="button" variant="outline" onClick={() => addPdr('consommables')}><Plus className="h-4 w-4 mr-2" /> Ajouter</Button>
           </div>
           
-          <Button type="submit" size="lg" className="w-full">Soumettre l'intervention</Button>
+          <Button type="submit" size="lg" className="w-full">
+            {initialData ? "Mettre à jour l'intervention" : "Soumettre l'intervention"}
+          </Button>
         </form>
       </CardContent>
     </Card>

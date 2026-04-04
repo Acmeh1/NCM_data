@@ -9,6 +9,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import InterventionForm from "./InterventionForm";
 
 const formatDate = (dateString: string) => {
   if (!dateString) return "-";
@@ -22,6 +26,8 @@ const formatDate = (dateString: string) => {
 
 export default function HistoriqueInterventions() {
   const [interventions, setInterventions] = useState<any[]>([]);
+  const [editingData, setEditingData] = useState<any>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const loadHistorique = async () => {
     const { data, error } = await supabase
@@ -32,6 +38,20 @@ export default function HistoriqueInterventions() {
       
     if (!error && data) {
       setInterventions(data);
+    }
+  };
+
+  const handleEdit = (inv: any) => {
+    setEditingData(inv);
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Voulez-vous vraiment supprimer cette intervention ?")) {
+      const { error } = await supabase.from("interventions").delete().eq("id", id);
+      if (!error) {
+        loadHistorique();
+      }
     }
   };
 
@@ -78,7 +98,7 @@ export default function HistoriqueInterventions() {
             <TableBody>
               {interventions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-6">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-6">
                     Aucune intervention enregistrée.
                   </TableCell>
                 </TableRow>
@@ -93,10 +113,22 @@ export default function HistoriqueInterventions() {
                     </TableCell>
                     <TableCell>{inv.equipe || "-"}</TableCell>
                     <TableCell>{inv.zone_code || "-"}</TableCell>
-                    <TableCell>{inv.equipement_code || "-"}</TableCell>
+                    <TableCell title={inv.equipement_code || ""}>
+                      {inv.equipement && typeof inv.equipement === 'object' && inv.equipement.nom
+                        ? inv.equipement.nom
+                        : (inv.equipement_code || "-")}
+                    </TableCell>
                     <TableCell>{inv.demandeur || "-"}</TableCell>
                     <TableCell className="text-center">{inv.duree_intervention_minutes ?? "-"}</TableCell>
                     <TableCell className="text-right font-bold text-primary">{inv.total_arret ?? "0"}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(inv)}>
+                        <Pencil className="h-4 w-4 text-blue-500" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(inv.id)}>
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -104,6 +136,21 @@ export default function HistoriqueInterventions() {
           </Table>
         </div>
       </CardContent>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[90vw]">
+          <DialogHeader>
+            <DialogTitle>Modifier l'intervention</DialogTitle>
+          </DialogHeader>
+          <InterventionForm 
+            initialData={editingData} 
+            onSuccess={() => {
+              setIsDialogOpen(false);
+              loadHistorique();
+            }} 
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
