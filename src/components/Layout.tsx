@@ -31,6 +31,9 @@ export default function Layout() {
           <main className="flex-1 p-6 overflow-auto">
             <Outlet />
           </main>
+          <footer className="shrink-0 flex items-center justify-center border-t bg-card text-xs text-muted-foreground py-3">
+            &copy; 2026 by SAIBI Asma
+          </footer>
         </div>
       </div>
     </SidebarProvider>
