@@ -3986,7 +3986,7 @@
     {
         "CATEGORIE": "MURAL",
         "Cartons_Palette": "72",
-        "Couleur": GRIS",
+        "Couleur": "GRIS",
         "Finition": "MONO",
         "Format_Nominal": "30*60",
         "ID_Modele": "MOD-320",
