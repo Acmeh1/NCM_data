@@ -1,17 +1,11 @@
 import { X } from "lucide-react";
-import { Input } from "@/components/ui/input";
+
 import { cn } from "@/lib/utils";
 
 export type AggregationType = "day" | "week" | "month";
 export type DisplayType = "Graphiques" | "Tableau" | "KPIs";
 
 interface AnalyticsFilterBarProps {
-  dateFrom: string;
-  onDateFromChange: (v: string) => void;
-  dateTo: string;
-  onDateToChange: (v: string) => void;
-  aggregation: AggregationType;
-  onAggregationChange: (v: AggregationType) => void;
   selectedGroups: string[]; // e.g. ["A", "B", "C", "D"]
   onGroupsChange: (v: string[]) => void;
   displayType: DisplayType;
@@ -34,12 +28,6 @@ const GROUP_BG_COLORS: Record<string, string> = {
 };
 
 export default function AnalyticsFilterBar({
-  dateFrom,
-  onDateFromChange,
-  dateTo,
-  onDateToChange,
-  aggregation,
-  onAggregationChange,
   selectedGroups,
   onGroupsChange,
   displayType,
@@ -63,17 +51,11 @@ export default function AnalyticsFilterBar({
   const isAllGroups = selectedGroups.length === 0;
 
   const activeFilters = [
-    dateFrom && { label: `Depuis: ${dateFrom}`, onRemove: () => onDateFromChange("") },
-    dateTo && { label: `Jusqu'à: ${dateTo}`, onRemove: () => onDateToChange("") },
-    aggregation !== "day" && { label: `Agrégation: ${aggregation === "week" ? "Semaine" : "Mois"}`, onRemove: () => onAggregationChange("day") },
     ...selectedGroups.map(g => ({ label: `Groupe: ${g}`, onRemove: () => onGroupsChange(selectedGroups.filter(sg => sg !== g)) })),
     displayType !== "Graphiques" && { label: `Affichage: ${displayType}`, onRemove: () => onDisplayTypeChange("Graphiques") },
   ].filter(Boolean) as { label: string; onRemove: () => void }[];
 
   const clearAll = () => {
-    onDateFromChange("");
-    onDateToChange("");
-    onAggregationChange("day");
     onGroupsChange([]);
     onDisplayTypeChange("Graphiques");
   };
@@ -83,50 +65,6 @@ export default function AnalyticsFilterBar({
       {/* Main Filter Bar */}
       <div className="flex items-center gap-4 bg-card border-[0.5px] rounded-[12px] p-[14px_16px] shadow-none overflow-x-auto no-scrollbar">
         
-        {/* Période */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden xl:inline">Période</span>
-          <div className="flex items-center gap-1.5 p-1 bg-muted/30 rounded-[20px] border-[0.5px]">
-            <Input 
-              type="date" 
-              value={dateFrom} 
-              onChange={(e) => onDateFromChange(e.target.value)}
-              className="h-7 w-28 bg-transparent border-none text-[12px] px-2 focus-visible:ring-0" 
-            />
-            <span className="text-muted-foreground text-[12px]">→</span>
-            <Input 
-              type="date" 
-              value={dateTo} 
-              onChange={(e) => onDateToChange(e.target.value)}
-              className="h-7 w-28 bg-transparent border-none text-[12px] px-2 focus-visible:ring-0" 
-            />
-          </div>
-        </div>
-
-        <div className="w-[0.5px] h-6 bg-border shrink-0" />
-
-        {/* Agrégation */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1.5">
-            {(["day", "week", "month"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => onAggregationChange(p)}
-                className={cn(
-                  "rounded-[20px] text-[12px] px-[11px] py-[5px] border-[0.5px] transition-all",
-                  aggregation === p 
-                    ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white" 
-                    : "bg-transparent text-muted-foreground border-border hover:border-muted-foreground"
-                )}
-              >
-                {p === "day" ? "Jour" : p === "week" ? "Semaine" : "Mois"}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-[0.5px] h-6 bg-border shrink-0" />
-
         {/* Groupe */}
         <div className="flex items-center gap-2 shrink-0">
           <div className="flex items-center gap-1.5">

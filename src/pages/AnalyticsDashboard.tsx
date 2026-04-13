@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { parseISO, format as formatISO, startOfDay, endOfDay, subDays, differenceInDays } from "date-fns";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +16,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  AreaChart, Area, ComposedChart, Line,
+  ComposedChart, Line,
 } from "recharts";
 import {
   Factory, TrendingUp, Package, BarChart3,
@@ -24,6 +26,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MonthlyComparisonView from "@/components/MonthlyComparisonView";
 import MonthlyGroupDashboard from "@/components/MonthlyGroupDashboard";
 import AnalyticsFilterBar, { type AggregationType, type DisplayType } from "@/components/AnalyticsFilterBar";
+import DateRangeFilter, { type DateRange } from "@/components/DateRangeFilter";
+import ScrapRateKpiCard from "@/components/ScrapRateKpiCard";
+import RendementKpiCard from "@/components/RendementKpiCard";
+import VolumeProduitsKpiCard from "@/components/VolumeProduitsKpiCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const COLORS = [
@@ -42,11 +48,10 @@ const WIDGET_OPTIONS = [
   { id: "trend", label: "Nb Pièces Four vs Total Pièces" },
   { id: "groupe", label: "Production par Groupe" },
   { id: "choix", label: "Qualité Choix 1/2/3" },
-  { id: "comparaison", label: "Comparaison Production vs Emballage" },
 ] as const;
 
 type WidgetId = (typeof WIDGET_OPTIONS)[number]["id"];
-type ChoixCompare = "choix1" | "choix2" | "choix3";
+
 
 const DAILY_M2_OBJECTIVE = 8000;
 // FIX 2: Objectif mensuel fixe à 240 000 m² (au lieu de 8000 * jours du mois)
@@ -91,17 +96,44 @@ const MONTH_NAMES = [
 export default function AnalyticsDashboard() {
   const queryClient = useQueryClient();
   const { dashboard, isAdmin, loading: permLoading } = usePermissions();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // URL synced state
+  const startDateParam = searchParams.get("startDate") || formatISO(subDays(new Date(), 29), "yyyy-MM-dd");
+  const endDateParam = searchParams.get("endDate") || formatISO(new Date(), "yyyy-MM-dd");
+  const period = (searchParams.get("period") || "day") as AggPeriod;
+  const activePreset = searchParams.get("preset") || "30d";
+  const selectedGroups = searchParams.get("groups")?.split(",").filter(Boolean) || [];
+  const displayType = (searchParams.get("display") || "Graphiques") as DisplayType;
+
+  const currentRange: DateRange = {
+    from: parseISO(startDateParam),
+    to: parseISO(endDateParam)
+  };
+
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [selectedWeek, setSelectedWeek] = useState<string>("all");
-  const [dayFrom, setDayFrom] = useState<string>("");
-  const [dayTo, setDayTo] = useState<string>("");
-  const [period, setPeriod] = useState<AggPeriod>("day");
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [displayType, setDisplayType] = useState<DisplayType>("Graphiques");
-  const [choixCompare, setChoixCompare] = useState<ChoixCompare>("choix1");
+  
+  const updateUrlParams = (params: Record<string, string | null>) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === null || value === "") {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, value);
+      }
+    });
+    setSearchParams(newParams);
+  };
+
+  // Previous period for variation analysis
+  const duration = differenceInDays(currentRange.to, currentRange.from) + 1;
+  const prevStartDate = formatISO(subDays(currentRange.from, duration), "yyyy-MM-dd");
+  const prevEndDate = formatISO(subDays(currentRange.from, 1), "yyyy-MM-dd");
+
   const [visibleWidgets, setVisibleWidgets] = useState<Set<WidgetId>>(
-    new Set(["kpis", "trend", "groupe", "choix", "comparaison"])
+    new Set(["kpis", "trend", "groupe", "choix"])
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -132,8 +164,8 @@ export default function AnalyticsDashboard() {
   };
 
   // Fetch data
-  const { data: journalier = [] } = useQuery({
-    queryKey: ["analytics-journalier"],
+  const { data: journalierFull = [] } = useQuery({
+    queryKey: ["analytics-journalier-full", prevStartDate, endDateParam],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("production_journalier")
@@ -144,20 +176,61 @@ export default function AnalyticsDashboard() {
           cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
           four_minutes_vides, four_consommation_kwh, created_at
         `)
-        .limit(5000)
+        .gte("date", prevStartDate)
+        .lte("date", endDateParam)
         .order("date", { ascending: true });
       if (error) throw error;
       return data || [];
     },
   });
 
+  const journalier = useMemo(() => {
+    return journalierFull.filter(r => r.date >= startDateParam && r.date <= endDateParam);
+  }, [journalierFull, startDateParam, endDateParam]);
+
   const { data: emballage = [] } = useQuery({
-    queryKey: ["analytics-emballage"],
+    queryKey: ["analytics-emballage", startDateParam, endDateParam],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("production_emballage")
         .select("id, date, choice_type, surface_totale_m2, reste_m2, nb_palette")
+        .gte("date", startDateParam)
+        .lte("date", endDateParam)
         .order("date", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: statsLinea = [] } = useQuery({
+    queryKey: ["analytics-stats-linea", startDateParam, endDateParam],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stats_linea")
+        .select(`
+          id, production_id, total_surface_m2, choix1_surface_m2, choix2_surface_m2, choix3_surface_m2,
+          production_date
+        `)
+        .gte("production_date", startDateParam)
+        .lte("production_date", endDateParam)
+        .order("production_date", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch previous period scrap data for variation
+  const { data: statsLineaPrev = [] } = useQuery({
+    queryKey: ["analytics-stats-linea-prev", prevStartDate, prevEndDate],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("stats_linea")
+        .select(`
+          id, total_surface_m2, choix2_surface_m2, choix3_surface_m2,
+          production_date
+        `)
+        .gte("production_date", prevStartDate)
+        .lte("production_date", prevEndDate);
       if (error) throw error;
       return data || [];
     },
@@ -181,42 +254,17 @@ export default function AnalyticsDashboard() {
     return { years, months, weeks, days };
   }, [journalier, emballage]);
 
-  // Filter helper: check if date matches selected slicers
-  const matchesSlicers = (dateStr: string | null | undefined): boolean => {
-    if (!dateStr) return false;
-    const m = parseInt(dateStr.slice(5, 7), 10);
-    const y = dateStr.slice(0, 4);
-    if (selectedYear !== "all" && y !== selectedYear) return false;
-    if (selectedMonth !== "all" && String(m) !== selectedMonth) return false;
-    if (selectedWeek !== "all" && getWeek(dateStr) !== selectedWeek) return false;
-    if (dayFrom && dateStr < dayFrom) return false;
-    if (dayTo && dateStr > dayTo) return false;
-    return true;
-  };
-
-  // FIX 1: Correction du filtre date de fin — ne réagit que quand dayFrom change,
-  // pas quand dayTo change (évite d'écraser dayTo dès qu'il est saisi)
-  useEffect(() => {
-    if (dayFrom && dayTo && dayFrom > dayTo) {
-      setDayTo(dayFrom);
-    }
-  }, [dayFrom]); // ← seulement dayFrom, pas [dayFrom, dayTo]
-
   // Filters
   const filteredJournalier = useMemo(() => {
     return journalier.filter((r) => {
-      if (!matchesSlicers(r.date)) return false;
       if (selectedGroups.length > 0 && !selectedGroups.includes(r.groupe)) return false;
       return true;
     });
-  }, [journalier, selectedYear, selectedMonth, selectedWeek, dayFrom, dayTo, selectedGroups]);
+  }, [journalier, selectedGroups]);
 
   const filteredEmballage = useMemo(() => {
-    return emballage.filter((r) => {
-      if (!matchesSlicers(r.date)) return false;
-      return true;
-    });
-  }, [emballage, selectedYear, selectedMonth, selectedWeek, dayFrom, dayTo]);
+    return emballage;
+  }, [emballage]);
 
   // KPIs
   const totalProductionM2 = filteredJournalier.reduce((s, r) => s + (r.total_m2 || 0), 0);
@@ -228,26 +276,7 @@ export default function AnalyticsDashboard() {
     ? filteredJournalier.reduce((s, r) => s + (r.cycle_min || 0), 0) / filteredJournalier.length
     : 0;
 
-  // Emballage choix classification helper
-  const getEmballageChoix = (choiceType: string): "choix1" | "choix2" | "choix3" | null => {
-    const ct = choiceType || "";
-    if (["A", "B", "C", "D"].includes(ct)) return "choix1";
-    if (ct === "Choix_Commercial") return "choix2";
-    if (ct === "Choix_Commercial_Decasse") return "choix3";
-    return null;
-  };
 
-  const getEmballageM2 = (r: any): number => {
-    const choix = getEmballageChoix(r.choice_type);
-    if (choix === "choix1") return Number(r.surface_totale_m2) || 0;
-    if (choix === "choix2" || choix === "choix3") return Number(r.reste_m2) || 0;
-    return 0;
-  };
-
-  const embChoix1Total = filteredEmballage.reduce((s, r) => s + (getEmballageChoix(r.choice_type) === "choix1" ? getEmballageM2(r) : 0), 0);
-  const embChoix2Total = filteredEmballage.reduce((s, r) => s + (getEmballageChoix(r.choice_type) === "choix2" ? getEmballageM2(r) : 0), 0);
-  const embChoix3Total = filteredEmballage.reduce((s, r) => s + (getEmballageChoix(r.choice_type) === "choix3" ? getEmballageM2(r) : 0), 0);
-  const totalEmballageM2 = embChoix1Total + embChoix2Total + embChoix3Total;
 
   const totalChoix1 = filteredJournalier.reduce((s, r) => s + (r.choix_1_m2 || 0), 0);
   const totalChoix2 = filteredJournalier.reduce((s, r) => s + (r.choix_2_m2 || 0), 0);
@@ -330,46 +359,134 @@ export default function AnalyticsDashboard() {
     return Object.values(map).sort((a, b) => (a.groupe || "").localeCompare(b.groupe || ""));
   }, [filteredJournalier]);
 
-  const comparaisonData = useMemo(() => {
-    const map: Record<string, { period: string; prod_c1: number; prod_c2: number; prod_c3: number; emb_c1: number; emb_c2: number; emb_c3: number }> = {};
 
-    filteredJournalier.forEach((r) => {
-      const key = aggregateKey(r.date, period);
-      if (!map[key]) map[key] = { period: key, prod_c1: 0, prod_c2: 0, prod_c3: 0, emb_c1: 0, emb_c2: 0, emb_c3: 0 };
-      map[key].prod_c1 += r.choix_1_m2 || 0;
-      map[key].prod_c2 += r.choix_2_m2 || 0;
-      map[key].prod_c3 += r.choix_3_m2 || 0;
-    });
-
-    filteredEmballage.forEach((r: any) => {
-      const date = r.date;
-      if (!date) return;
-      const key = aggregateKey(date, period);
-      if (!map[key]) map[key] = { period: key, prod_c1: 0, prod_c2: 0, prod_c3: 0, emb_c1: 0, emb_c2: 0, emb_c3: 0 };
-      const choix = getEmballageChoix(r.choice_type);
-      const m2 = getEmballageM2(r);
-      if (choix === "choix1") map[key].emb_c1 += m2;
-      else if (choix === "choix2") map[key].emb_c2 += m2;
-      else if (choix === "choix3") map[key].emb_c3 += m2;
-    });
-
-    return Object.values(map).sort((a, b) => (a.period || "").localeCompare(b.period || ""));
-  }, [filteredJournalier, filteredEmballage, period]);
-
-  const choixCompareLabels: Record<ChoixCompare, string> = {
-    choix1: "1er Choix (Prod) vs A+B+C+D (Emb)",
-    choix2: "2ème Choix (Prod) vs Choix Commercial (Emb)",
-    choix3: "3ème Choix (Prod) vs Déclassé Commercial (Emb)",
-  };
 
   const groupes = [...new Set(journalier.map((r) => r.groupe))].filter(Boolean).sort();
+
+  // Scrap Rate Calculations
+  // Data source: stats_linea table, filtered by production_date (new column you added)
+  // Formula: (choix2_surface_m2 + choix3_surface_m2) / total_surface_m2 * 100
+  const scrapMetrics = useMemo(() => {
+    const calcRate = (entries: any[]) => {
+      const total = entries.reduce((s, r) => s + (Number(r.total_surface_m2) || 0), 0);
+      const c2 = entries.reduce((s, r) => s + (Number(r.choix2_surface_m2) || 0), 0);
+      const c3 = entries.reduce((s, r) => s + (Number(r.choix3_surface_m2) || 0), 0);
+      const scrap = c2 + c3;
+      return { 
+        rate: total > 0 ? (scrap / total) * 100 : 0, 
+        total, 
+        c2Pct: total > 0 ? (c2 / total) * 100 : 0, 
+        c3Pct: total > 0 ? (c3 / total) * 100 : 0 
+      };
+    };
+
+    const current = calcRate(statsLinea);
+    const prev = calcRate(statsLineaPrev);
+    const variation = prev.rate > 0 ? ((current.rate - prev.rate) / prev.rate) * 100 : 0;
+
+    // Daily trend from current period
+    const trendMap: Record<string, { total: number; scrap: number }> = {};
+    statsLinea.forEach(r => {
+      const d = r.production_date;
+      if (!d) return;
+      if (!trendMap[d]) trendMap[d] = { total: 0, scrap: 0 };
+      trendMap[d].total += Number(r.total_surface_m2) || 0;
+      trendMap[d].scrap += (Number(r.choix2_surface_m2) || 0) + (Number(r.choix3_surface_m2) || 0);
+    });
+
+    const trendData = Object.entries(trendMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, vals]) => ({
+        date,
+        rate: vals.total > 0 ? (vals.scrap / vals.total) * 100 : 0
+      }));
+
+    return { ...current, variation, trendData };
+  }, [statsLinea, statsLineaPrev]);
+
+  // ── Volume Produit Calculations ──────────────────────────────────────────
+  // Formula: Somme cuisson_m2 de production_journalier sur la période
+  const volumeMetrics = useMemo(() => {
+    // Current period total
+    const totalVolume = filteredJournalier.reduce((s, r) => s + (Number(r.cuisson_m2) || 0), 0);
+
+    // Previous period: rows in journalierFull that fall in [prevStartDate, prevEndDate]
+    const prevRows = journalierFull.filter(
+      (r) => r.date >= prevStartDate && r.date <= prevEndDate
+    );
+    const prevVolume = prevRows.reduce((s, r) => s + (Number(r.cuisson_m2) || 0), 0);
+
+    // Daily trend
+    const trendMap: Record<string, number> = {};
+    filteredJournalier.forEach((r) => {
+      const d = r.date;
+      if (!d) return;
+      trendMap[d] = (trendMap[d] || 0) + (Number(r.cuisson_m2) || 0);
+    });
+    const trendData = Object.entries(trendMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, value]) => ({ date, value }));
+
+    // Group breakdown
+    const groupMap: Record<string, number> = {};
+    filteredJournalier.forEach((r) => {
+      const g = r.groupe || "N/A";
+      groupMap[g] = (groupMap[g] || 0) + (Number(r.cuisson_m2) || 0);
+    });
+    const groupBreakdown = Object.entries(groupMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([label, value]) => ({
+        label,
+        value,
+        pct: totalVolume > 0 ? (value / totalVolume) * 100 : 0,
+      }));
+
+    const periodDays = duration;
+
+    return { totalVolume, prevVolume, trendData, groupBreakdown, periodDays };
+  }, [filteredJournalier, journalierFull, prevStartDate, prevEndDate, duration]);
+
+  // Rendement Calculations
+  // Formula: choix1_surface_m2 / total_surface_m2 * 100
+  const rendementMetrics = useMemo(() => {
+    const calcR = (entries: any[]) => {
+      const total = entries.reduce((s, r) => s + (Number(r.total_surface_m2) || 0), 0);
+      const c1 = entries.reduce((s, r) => s + (Number(r.choix1_surface_m2) || 0), 0);
+      return {
+        rate: total > 0 ? (c1 / total) * 100 : 0,
+        choix1Pct: total > 0 ? (c1 / total) * 100 : 0,
+        nonChoix1Pct: total > 0 ? ((total - c1) / total) * 100 : 0,
+      };
+    };
+
+    const current = calcR(statsLinea);
+    const prev = calcR(statsLineaPrev);
+    const variation = prev.rate > 0 ? ((current.rate - prev.rate) / prev.rate) * 100 : 0;
+
+    const trendMap: Record<string, { total: number; c1: number }> = {};
+    statsLinea.forEach(r => {
+      const d = r.production_date;
+      if (!d) return;
+      if (!trendMap[d]) trendMap[d] = { total: 0, c1: 0 };
+      trendMap[d].total += Number(r.total_surface_m2) || 0;
+      trendMap[d].c1 += Number(r.choix1_surface_m2) || 0;
+    });
+
+    const trendData = Object.entries(trendMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, vals]) => ({
+        date,
+        rate: vals.total > 0 ? (vals.c1 / vals.total) * 100 : 0
+      }));
+
+    return { ...current, variation, trendData };
+  }, [statsLinea, statsLineaPrev]);
 
   const kpis = [
     { label: "Production totale", value: `${totalProductionM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Factory, color: "text-blue-600" },
     { label: "1er Choix", value: `${totalPressageM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Layers, color: "text-emerald-600" },
     { label: "2ème Choix", value: `${totalDeuxiemeChoixM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Activity, color: "text-orange-600" },
     { label: "3ème Choix", value: `${totalTroisiemeChoixM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Package, color: "text-purple-600" },
-    { label: "Palettes", value: totalPalettes.toFixed(0), icon: Target, color: "text-rose-600" },
   ];
 
   if (permLoading) return <p className="text-muted-foreground p-8">Chargement…</p>;
@@ -397,33 +514,55 @@ export default function AnalyticsDashboard() {
         </div>
 
         <TabsContent value="realtime" className="space-y-6 mt-0">
+          <div className="bg-card p-4 rounded-xl border shadow-sm">
+            <DateRangeFilter
+              range={currentRange}
+              onRangeChange={(newRange, presetId) => {
+                updateUrlParams({
+                  startDate: formatISO(newRange.from, "yyyy-MM-dd"),
+                  endDate: formatISO(newRange.to, "yyyy-MM-dd"),
+                  preset: presetId || "custom"
+                });
+              }}
+              granularity={period}
+              onGranularityChange={(g) => updateUrlParams({ period: g })}
+              activePreset={activePreset}
+            />
+          </div>
+
           <AnalyticsFilterBar
-            dateFrom={dayFrom}
-            onDateFromChange={setDayFrom}
-            dateTo={dayTo}
-            onDateToChange={setDayTo}
-            aggregation={period}
-            onAggregationChange={(p) => setPeriod(p)}
             selectedGroups={selectedGroups}
-            onGroupsChange={setSelectedGroups}
+            onGroupsChange={(groups) => updateUrlParams({ groups: groups.join(",") })}
             displayType={displayType}
-            onDisplayTypeChange={setDisplayType}
+            onDisplayTypeChange={(d) => updateUrlParams({ display: d })}
           />
 
           {/* KPIs */}
           {(displayType === "KPIs" || displayType === "Graphiques") && visibleWidgets.has("kpis") && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
-              {kpis.map((kpi) => (
-                <Card key={kpi.label}>
-                  <CardContent className="pt-4 pb-3 px-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
-                      <span className="text-xs text-muted-foreground">{kpi.label}</span>
-                    </div>
-                    <p className="text-lg font-bold">{kpi.value}</p>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+              <VolumeProduitsKpiCard
+                totalVolume={volumeMetrics.totalVolume}
+                prevVolume={volumeMetrics.prevVolume}
+                trendData={volumeMetrics.trendData}
+                groupBreakdown={volumeMetrics.groupBreakdown}
+                periodDays={volumeMetrics.periodDays}
+              />
+              <RendementKpiCard
+                currentRate={rendementMetrics.rate}
+                variation={rendementMetrics.variation}
+                trendData={rendementMetrics.trendData}
+                choix1Pct={rendementMetrics.choix1Pct}
+                nonChoix1Pct={rendementMetrics.nonChoix1Pct}
+                recordCount={statsLinea.length}
+              />
+              <ScrapRateKpiCard
+                currentRate={scrapMetrics.rate}
+                variation={scrapMetrics.variation}
+                trendData={scrapMetrics.trendData}
+                choix2Pct={scrapMetrics.c2Pct}
+                choix3Pct={scrapMetrics.c3Pct}
+                recordCount={statsLinea.length}
+              />
             </div>
           )}
 
@@ -493,54 +632,7 @@ export default function AnalyticsDashboard() {
                 </Card>
               )}
 
-              {/* Comparaison Production vs Emballage */}
-              {visibleWidgets.has("comparaison") && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <CardTitle className="text-sm">Comparaison Production vs Emballage par {periodLabel(period)}</CardTitle>
-                      <Select value={choixCompare} onValueChange={(v) => setChoixCompare(v as ChoixCompare)}>
-                        <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="choix1">1er Choix (A+B+C+D)</SelectItem>
-                          <SelectItem value="choix2">2ème Choix (Commercial)</SelectItem>
-                          <SelectItem value="choix3">3ème Choix (Déclassé)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{choixCompareLabels[choixCompare]}</p>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <AreaChart data={comparaisonData}>
-                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis dataKey="period" tick={{ fontSize: 10 }} angle={period === "day" ? -45 : 0} textAnchor={period === "day" ? "end" : "middle"} height={period === "day" ? 60 : 30} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <Tooltip />
-                        <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                        {choixCompare === "choix1" && (
-                          <>
-                            <Area type="monotone" dataKey="prod_c1" name="Production 1er Choix (m²)" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
-                            <Area type="monotone" dataKey="emb_c1" name="Emballage 1er Choix (m²)" stroke={COLORS[3]} fill={COLORS[3]} fillOpacity={0.15} strokeWidth={2} />
-                          </>
-                        )}
-                        {choixCompare === "choix2" && (
-                          <>
-                            <Area type="monotone" dataKey="prod_c2" name="Production 2ème Choix (m²)" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
-                            <Area type="monotone" dataKey="emb_c2" name="Emballage 2ème Choix (m²)" stroke={COLORS[3]} fill={COLORS[3]} fillOpacity={0.15} strokeWidth={2} />
-                          </>
-                        )}
-                        {choixCompare === "choix3" && (
-                          <>
-                            <Area type="monotone" dataKey="prod_c3" name="Production 3ème Choix (m²)" stroke={COLORS[0]} fill={COLORS[0]} fillOpacity={0.15} strokeWidth={2} />
-                            <Area type="monotone" dataKey="emb_c3" name="Emballage 3ème Choix (m²)" stroke={COLORS[3]} fill={COLORS[3]} fillOpacity={0.15} strokeWidth={2} />
-                          </>
-                        )}
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              )}
+
             </>
           )}
 
@@ -585,7 +677,7 @@ export default function AnalyticsDashboard() {
           )}
 
           <p className="text-xs text-muted-foreground text-center">
-            {filteredJournalier.length} enregistrements · Agrégation: {periodLabel(period)}
+            {filteredJournalier.length} enregistrements · {statsLinea.length} stats qualité · Agrégation: {periodLabel(period)}
           </p>
         </TabsContent>
 
