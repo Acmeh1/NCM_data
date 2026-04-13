@@ -30,6 +30,7 @@ import DateRangeFilter, { type DateRange } from "@/components/DateRangeFilter";
 import ScrapRateKpiCard from "@/components/ScrapRateKpiCard";
 import RendementKpiCard from "@/components/RendementKpiCard";
 import VolumeProduitsKpiCard from "@/components/VolumeProduitsKpiCard";
+import FormatQualitePanel from "@/components/FormatQualitePanel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const COLORS = [
@@ -564,6 +565,11 @@ export default function AnalyticsDashboard() {
                 recordCount={statsLinea.length}
               />
             </div>
+          )}
+
+          {/* Format Quality Panel */}
+          {(displayType === "KPIs" || displayType === "Graphiques") && (
+            <FormatQualitePanel data={filteredJournalier} />
           )}
 
           {/* Charts Section */}
