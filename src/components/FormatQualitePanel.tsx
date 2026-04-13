@@ -55,7 +55,6 @@ const DonutTooltip = ({ active, payload }: any) => {
   );
 };
 
-/* ─── Main component ─────────────────────────────────────────────────────── */
 /* ─── Bar chart custom tooltip ──────────────────────────────────────────── */
 const BarTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -73,6 +72,7 @@ const BarTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+/* ─── Main component ─────────────────────────────────────────────────────── */
 export default function FormatQualitePanel({ data }: FormatQualitePanelProps) {
   const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
 
@@ -93,7 +93,7 @@ export default function FormatQualitePanel({ data }: FormatQualitePanelProps) {
 
   /* 2. Model breakdown for selected format */
   const modelBreakdown = useMemo(() => {
-    if (!selectedFormat) return [];
+    if (!selectedFormat || selectedFormat === "GLOBAL") return [];
     const map: Record<string, { nom: string; c1: number; c2: number; c3: number; total: number }> = {};
     data.forEach((r) => {
       if (String(r.format ?? "").trim() !== selectedFormat) return;
@@ -158,32 +158,53 @@ export default function FormatQualitePanel({ data }: FormatQualitePanelProps) {
         <div className="flex items-center gap-2 mb-4">
           <Layers className="h-4 w-4 text-blue-500" />
           <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-            Formats produits (période sélectionnée)
+            Qualité & Classements
           </h3>
           <span className="ml-auto text-[10px] text-muted-foreground italic">
-            Cliquez un format pour le détail
+            Cliquez une bulle pour afficher le détail
           </span>
         </div>
 
-        {/* Format bubbles */}
+        {/* Action Bubbles: Global + Formats */}
         <div className="flex flex-wrap gap-2 mb-4">
+          {/* 🏆 Global Toggle Button */}
+          <button
+            onClick={() => setSelectedFormat(selectedFormat === "GLOBAL" ? null : "GLOBAL")}
+            className={cn(
+              "group flex flex-col items-start px-3 py-2 rounded-xl border-2 text-left transition-all duration-150",
+              "hover:shadow-md hover:scale-[1.02]",
+              selectedFormat === "GLOBAL"
+                ? "bg-amber-500 border-amber-500 text-white shadow-lg scale-[1.02]"
+                : "bg-amber-500/5 border-amber-500/20 text-amber-600 hover:bg-amber-500/10"
+            )}
+          >
+            <div className="flex items-center gap-1.5">
+              <Trophy className={cn("h-3 w-3", selectedFormat === "GLOBAL" ? "text-white" : "text-amber-500")} />
+              <span className="text-xs font-bold leading-none">Classement Global</span>
+            </div>
+            <span className={cn("text-[10px] mt-0.5 font-medium", selectedFormat === "GLOBAL" ? "text-white/80" : "text-muted-foreground")}>
+              Top Modèles & Volumes
+            </span>
+          </button>
+
+          {/* 📦 Format Bubbles */}
           {formatSummary.map((f, i) => {
-            const color  = fmtColor(i);
+            const color = fmtColor(i);
             const active = selectedFormat === f.fmt;
-            const c1Pct  = f.total > 0 ? Math.round((f.c1 / f.total) * 100) : 0;
+            const c1Pct = f.total > 0 ? Math.round((f.c1 / f.total) * 100) : 0;
             return (
               <button
                 key={f.fmt}
                 onClick={() => setSelectedFormat(active ? null : f.fmt)}
                 className={cn(
                   "group flex flex-col items-start px-3 py-2 rounded-xl border-2 text-left transition-all duration-150",
-                  "hover:shadow-md hover:scale-[1.03]",
-                  active ? "shadow-lg scale-[1.03]" : "bg-transparent"
+                  "hover:shadow-md hover:scale-[1.02]",
+                  active ? "shadow-lg scale-[1.02]" : "bg-transparent"
                 )}
                 style={{
                   borderColor: color,
                   backgroundColor: active ? color : undefined,
-                  color:            active ? "#fff" : color,
+                  color: active ? "#fff" : color,
                 }}
               >
                 <span className="text-xs font-bold leading-none">{f.fmt}</span>
@@ -195,319 +216,179 @@ export default function FormatQualitePanel({ data }: FormatQualitePanelProps) {
           })}
         </div>
 
-        {/* ── Detail panel ──────────────────────────────────────────────── */}
-        {selectedFormat && selFmt && (
-          <div className="mt-2 border-t border-muted/40 pt-5 animate-in fade-in slide-in-from-top-2 duration-200">
-            {/* Title */}
-            <div className="flex items-start justify-between mb-5">
-              <div>
-                <h4 className="font-extrabold text-lg tracking-tight">{selectedFormat}</h4>
-                <p className="text-xs text-muted-foreground">
-                  {selFmt.total.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} m² produits ·{" "}
-                  {modelBreakdown.length} modèle{modelBreakdown.length > 1 ? "s" : ""}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedFormat(null)}
-                className="rounded-full p-1 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+        {/* ── Detail section (Conditional) ─────────────────────────────── */}
+        {selectedFormat && (
+          <div className="mt-2 border-t border-muted/40 pt-5 animate-in fade-in slide-in-from-top-2 duration-300">
+            {selectedFormat === "GLOBAL" ? (
+              /* Case 1: GLOBAL VIEW */
+              <div className="space-y-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-amber-500" />
+                    <div>
+                      <h4 className="font-extrabold text-lg tracking-tight">Analyse Comparative Globale</h4>
+                      <p className="text-xs text-muted-foreground">Performances cumulées sur tous les formats</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setSelectedFormat(null)} className="rounded-full p-1 hover:bg-muted text-muted-foreground transition-colors transition-opacity opacity-70 hover:opacity-100">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
 
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* ── Donut chart ──────────────────────────────────────── */}
-              <div className="flex flex-col items-center justify-start lg:w-52 shrink-0">
-                <div className="relative w-44 h-44">
+                {/* Top 6 Summary Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {globalRanking.slice(0, 6).map((m, i) => {
+                    const rebut = m.total > 0 ? ((m.c2 + m.c3) / m.total) * 100 : 0;
+                    const c1Pct = m.total > 0 ? (m.c1 / m.total) * 100 : 0;
+                    const rankStyle = i === 0 ? "bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-800" : i === 1 ? "bg-slate-50 dark:bg-slate-900/40 border-slate-300 dark:border-slate-800" : i === 2 ? "bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-800" : "bg-muted/20 border-muted/30";
+                    return (
+                      <div key={m.nom} className={cn("rounded-xl border p-3 flex flex-col gap-1.5 transition-shadow hover:shadow-sm", rankStyle)}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg font-black tracking-tighter italic">#{i + 1}</span>
+                          {i < 3 && <Medal className={cn("h-4 w-4", i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : "text-orange-500")} />}
+                        </div>
+                        <p className="text-[11px] font-bold leading-tight line-clamp-2 min-h-[2.2em]">{m.nom}</p>
+                        <div className="mt-auto">
+                          <span className="text-xs font-black text-emerald-600 tabular-nums">{m.c1.toLocaleString("fr-FR")}</span>
+                          <span className="text-[10px] text-muted-foreground ml-0.5">m² C1</span>
+                        </div>
+                        <div className="space-y-0.5 mt-1 pt-1 border-t border-muted/30">
+                          <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">C1:</span><span className="font-bold text-emerald-600">{c1Pct.toFixed(0)}%</span></div>
+                          <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Rebut:</span><span className={cn("font-bold", rebut < 2 ? "text-emerald-600" : rebut < 5 ? "text-amber-600" : "text-rose-600")}>{rebut.toFixed(1)}%</span></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Volume Comparison Chart */}
+                <div className="w-full h-[320px] bg-muted/5 rounded-2xl p-4 border border-muted/20 shadow-inner">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={donutData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={72}
-                        stroke="#fff"
-                        strokeWidth={2}
-                        dataKey="value"
-                      >
-                        {donutData.map((entry, idx) => (
-                          <Cell key={idx} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<DonutTooltip />} />
-                    </PieChart>
+                    <BarChart data={barData} barCategoryGap="20%" barGap={2} margin={{ bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-20" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 500 }} angle={-35} textAnchor="end" interval={0} height={70} />
+                      <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => v >= 1000 ? (v / 1000).toFixed(0) + "k" : v} />
+                      <Tooltip content={<BarTooltip />} />
+                      <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
+                      <Bar name="1er Choix" dataKey="1er Choix" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={30} />
+                      <Bar name="2ème Choix" dataKey="2ème Choix" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={30} />
+                      <Bar name="3ème Choix" dataKey="3ème Choix" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={30} />
+                    </BarChart>
                   </ResponsiveContainer>
-                  {/* Center label */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-[10px] font-medium text-muted-foreground">Total</span>
-                    <span className="text-base font-extrabold leading-none">
-                      {selFmt.total >= 1000
-                        ? (selFmt.total / 1000).toFixed(1) + "k"
-                        : selFmt.total.toFixed(0)}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">m²</span>
-                  </div>
-                </div>
-
-                {/* Donut legend */}
-                <div className="w-full space-y-2 mt-3">
-                  {donutData.map((d) => (
-                    <div key={d.name} className="flex items-center justify-between text-[11px]">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ background: d.color }}
-                        />
-                        <span className="text-muted-foreground">{d.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-bold">
-                          {selFmt.total > 0
-                            ? ((d.value / selFmt.total) * 100).toFixed(1) + "%"
-                            : "—"}
-                        </span>
-                        <span className="text-muted-foreground ml-1 text-[10px]">
-                          ({d.value.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} m²)
-                        </span>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
+            ) : (
+              /* Case 2: SPECIFIC FORMAT VIEW */
+              selFmt && (
+                <div className="space-y-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg bg-muted/20" style={{ color: fmtColor(formatSummary.findIndex(f => f.fmt === selectedFormat)) }}>
+                        {selectedFormat.slice(0, 2)}
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-xl tracking-tight">{selectedFormat}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-bold text-foreground">{selFmt.total.toLocaleString("fr-FR")} m²</span> au total · {modelBreakdown.length} modèles détectés
+                        </p>
+                      </div>
+                    </div>
+                    <button onClick={() => setSelectedFormat(null)} className="rounded-full p-1.5 hover:bg-muted text-muted-foreground transition-all">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
 
-              {/* ── Model ranking table ───────────────────────────────── */}
-              <div className="flex-1 min-w-0">
-                <table className="w-full text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-muted text-[10px] uppercase tracking-wider text-muted-foreground">
-                      <th className="pb-2 text-left w-8 font-medium">Rg</th>
-                      <th className="pb-2 text-left font-medium">Modèle</th>
-                      <th className="pb-2 text-center font-medium">Choix</th>
-                      <th className="pb-2 text-right font-medium">m²</th>
-                      <th className="pb-2 text-right font-medium min-w-[110px]">Part format</th>
-                      <th className="pb-2 text-right font-medium">Rebut</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {modelBreakdown.map((m, i) => {
-                      const pct   = selFmt.total > 0 ? (m.total / selFmt.total) * 100 : 0;
-                      const dom   = dominant(m.c1, m.c2, m.c3);
-                      const rebut = m.total > 0 ? ((m.c2 + m.c3) / m.total) * 100 : 0;
-                      const cfg   = CHOIX_CFG[dom - 1];
-                      const barColor = dom === 1 ? "#22c55e" : dom === 2 ? "#f59e0b" : "#f43f5e";
-                      const rebutColor =
-                        rebut < 2 ? "text-emerald-600" : rebut < 6 ? "text-amber-600" : "text-rose-600";
-
-                      return (
-                        <tr
-                          key={m.nom}
-                          className="border-b border-muted/30 hover:bg-muted/20 transition-colors"
-                        >
-                          {/* Rank */}
-                          <td className="py-2.5">
-                            <span
-                              className={cn(
-                                "inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold",
-                                i === 0
-                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
-                                  : i === 1
-                                  ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                                  : i === 2
-                                  ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400"
-                                  : "bg-muted text-muted-foreground"
-                              )}
-                            >
-                              {i + 1}
-                            </span>
-                          </td>
-
-                          {/* Modèle */}
-                          <td className="py-2.5 font-medium max-w-[160px]">
-                            <span title={m.nom} className="block truncate">
-                              {m.nom}
-                            </span>
-                          </td>
-
-                          {/* Choix badge */}
-                          <td className="py-2.5 text-center">
-                            <span
-                              className={cn(
-                                "inline-block px-1.5 py-0.5 rounded text-[10px] font-bold",
-                                cfg.bg, cfg.txt
-                              )}
-                            >
-                              {cfg.label}
-                            </span>
-                          </td>
-
-                          {/* m² */}
-                          <td className="py-2.5 text-right font-semibold tabular-nums">
-                            {m.total.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
-                          </td>
-
-                          {/* Progress bar + % */}
-                          <td className="py-2.5 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full rounded-full transition-all duration-500"
-                                  style={{
-                                    width: `${Math.min(pct, 100)}%`,
-                                    background: barColor,
-                                  }}
-                                />
-                              </div>
-                              <span
-                                className="text-[10px] font-bold w-10 text-right tabular-nums"
-                                style={{ color: barColor }}
-                              >
-                                {pct.toFixed(1)}%
-                              </span>
+                  <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Donut Qualitative Summary */}
+                    <div className="flex flex-col items-center justify-start lg:w-56 shrink-0 bg-muted/5 rounded-2xl p-4 border border-muted/20 shadow-inner">
+                      <div className="relative w-44 h-44">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie data={donutData} cx="50%" cy="50%" innerRadius={52} outerRadius={78} stroke="transparent" dataKey="value" paddingAngle={4}>
+                              {donutData.map((entry, idx) => (
+                                <Cell key={idx} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<DonutTooltip />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter">Volume</span>
+                          <span className="text-xl font-black text-foreground tabular-nums">{selFmt.total >= 1000 ? (selFmt.total / 1000).toFixed(1) + "k" : selFmt.total}</span>
+                          <span className="text-[10px] text-muted-foreground font-medium">m²</span>
+                        </div>
+                      </div>
+                      <div className="w-full space-y-2 mt-4">
+                        {donutData.map((d) => (
+                          <div key={d.name} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-lg bg-background/50 border border-muted/10 shadow-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ background: d.color }} />
+                              <span className="font-medium text-muted-foreground">{d.name}</span>
                             </div>
-                          </td>
-
-                          {/* Rebut */}
-                          <td className={cn("py-2.5 text-right font-semibold tabular-nums", rebutColor)}>
-                            {rebut.toFixed(1)}%
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {modelBreakdown.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic text-center py-4">
-                    Aucun modèle trouvé pour ce format.
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ════════════════════════════════════════════════════════════════
-            Classement Global
-        ════════════════════════════════════════════════════════════════ */}
-        {globalRanking.length > 0 && (
-          <div className="mt-6 border-t border-muted/40 pt-5">
-            {/* Section header */}
-            <div className="flex items-center gap-2 mb-4">
-              <Trophy className="h-4 w-4 text-amber-500" />
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
-                Classement Global — Tous formats confondus
-              </h3>
-              <span className="ml-auto text-[10px] text-muted-foreground italic">
-                Trié par volume 1er Choix
-              </span>
-            </div>
-
-            {/* ── Summary cards ── */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-5">
-              {globalRanking.slice(0, 6).map((m, i) => {
-                const rebut = m.total > 0 ? ((m.c2 + m.c3) / m.total) * 100 : 0;
-                const c1Pct = m.total > 0 ? (m.c1 / m.total) * 100 : 0;
-                const rankStyle =
-                  i === 0
-                    ? { bg: "bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700", icon: "text-amber-500", num: "text-amber-600" }
-                    : i === 1
-                    ? { bg: "bg-slate-50 dark:bg-slate-800/60 border-slate-300 dark:border-slate-600", icon: "text-slate-400", num: "text-slate-500" }
-                    : i === 2
-                    ? { bg: "bg-orange-50 dark:bg-orange-900/20 border-orange-300 dark:border-orange-700", icon: "text-orange-500", num: "text-orange-600" }
-                    : { bg: "bg-muted/30 border-muted", icon: "text-muted-foreground", num: "text-muted-foreground" };
-
-                return (
-                  <div
-                    key={m.nom}
-                    className={cn(
-                      "rounded-xl border p-3 flex flex-col gap-1.5 transition-all hover:shadow-sm",
-                      rankStyle.bg
-                    )}
-                  >
-                    {/* Rank + icon */}
-                    <div className="flex items-center justify-between">
-                      <span className={cn("text-lg font-extrabold leading-none", rankStyle.num)}>#{i + 1}</span>
-                      {i < 3 ? (
-                        <Medal className={cn("h-3.5 w-3.5", rankStyle.icon)} />
-                      ) : (
-                        <span className={cn("text-[10px] font-bold", rankStyle.num)}>#{i + 1}</span>
-                      )}
-                    </div>
-
-                    {/* Model name */}
-                    <p className="text-[11px] font-bold leading-tight line-clamp-2" title={m.nom}>
-                      {m.nom}
-                    </p>
-
-                    {/* c1 volume */}
-                    <div className="mt-auto">
-                      <span className="text-xs font-extrabold text-emerald-600">
-                        {m.c1.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground ml-0.5">m² C1</span>
-                    </div>
-
-                    {/* Formats + rebut */}
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] text-muted-foreground truncate" title={m.formats}>
-                        {m.formats || "—"}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-muted-foreground">C1:</span>
-                        <span className="text-[10px] font-bold text-emerald-600">{c1Pct.toFixed(0)}%</span>
+                            <span className="font-black text-foreground">{((d.value / selFmt.total) * 100).toFixed(1)}%</span>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-muted-foreground">Rebut:</span>
-                        <span className={cn(
-                          "text-[10px] font-bold",
-                          rebut < 3 ? "text-emerald-600" : rebut < 7 ? "text-amber-600" : "text-rose-600"
-                        )}>
-                          {rebut.toFixed(1)}%
-                        </span>
+                    </div>
+
+                    {/* Ranked Models Table */}
+                    <div className="flex-1 min-w-0 bg-muted/5 rounded-2xl p-4 border border-muted/20 shadow-inner overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b border-muted/30 text-[10px] uppercase font-bold text-muted-foreground">
+                              <th className="pb-3 text-left w-8 pl-2">Rg</th>
+                              <th className="pb-3 text-left">Modèle</th>
+                              <th className="pb-3 text-center">Choix</th>
+                              <th className="pb-3 text-right">Volume (m²)</th>
+                              <th className="pb-3 text-right min-w-[120px]">Répartition</th>
+                              <th className="pb-3 text-right pr-2">Rebut</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-muted/10">
+                            {modelBreakdown.map((m, i) => {
+                              const pct = (m.total / selFmt.total) * 100;
+                              const dom = dominant(m.c1, m.c2, m.c3);
+                              const rebut = m.total > 0 ? ((m.c2 + m.c3) / m.total) * 100 : 0;
+                              const cfg = CHOIX_CFG[dom - 1];
+                              const rebutColor = rebut < 1.5 ? "text-emerald-500 font-black" : rebut < 4 ? "text-amber-500 font-bold" : "text-rose-500 font-bold";
+                              return (
+                                <tr key={m.nom} className="hover:bg-background/40 transition-all group">
+                                  <td className="py-3 pl-2">
+                                    <span className={cn(
+                                      "inline-flex items-center justify-center w-6 h-6 rounded-lg text-[11px] font-black shadow-sm",
+                                      i === 0 ? "bg-amber-400 text-white" : i === 1 ? "bg-slate-300 text-slate-700" : i === 2 ? "bg-orange-300 text-orange-800" : "bg-muted text-muted-foreground"
+                                    )}>
+                                      {i + 1}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 font-bold text-foreground/90 max-w-[200px] truncate" title={m.nom}>{m.nom}</td>
+                                  <td className="py-3 text-center">
+                                    <span className={cn("inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter shadow-sm", cfg.bg, cfg.txt)}>
+                                      {cfg.label}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 text-right font-black tabular-nums">{m.total.toLocaleString("fr-FR")}</td>
+                                  <td className="py-3 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden shadow-inner">
+                                        <div className="h-full bg-blue-500 rounded-full transition-all duration-700 ease-out group-hover:bg-blue-400" style={{ width: `${pct}%` }} />
+                                      </div>
+                                      <span className="text-[10px] font-black w-10 tabular-nums">{pct.toFixed(1)}%</span>
+                                    </div>
+                                  </td>
+                                  <td className={cn("py-3 text-right tabular-nums pr-2", rebutColor)}>{rebut.toFixed(1)}%</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* ── Grouped bar chart ── */}
-            <div className="w-full" style={{ height: 280 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={barData}
-                  barCategoryGap="20%"
-                  barGap={2}
-                  margin={{ top: 4, right: 8, left: 0, bottom: 40 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-20" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                    angle={-35}
-                    textAnchor="end"
-                    height={50}
-                    interval={0}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                    tickFormatter={(v: number) =>
-                      v >= 1000 ? (v / 1000).toFixed(0) + "k" : String(v)
-                    }
-                  />
-                  <Tooltip content={<BarTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)" }} />
-                  <Legend
-                    iconSize={8}
-                    iconType="circle"
-                    wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
-                  />
-                  <Bar dataKey="1er Choix"  fill="#22c55e" radius={[3, 3, 0, 0]} maxBarSize={28} />
-                  <Bar dataKey="2ème Choix" fill="#f59e0b" radius={[3, 3, 0, 0]} maxBarSize={28} />
-                  <Bar dataKey="3ème Choix" fill="#f43f5e" radius={[3, 3, 0, 0]} maxBarSize={28} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+                </div>
+              )
+            )}
           </div>
         )}
       </CardContent>
