@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, BarChart3, ChevronDown, ChevronRight, Eye, Info, Plus, Save, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import refProduit from "@/data/REF_PRODUIT.json";
+import formatData from "@/data/Format.json";
 import StatsLineaTable from "@/components/StatsLineaTable";
 
 type NumericField = number | "";
@@ -149,24 +150,23 @@ export default function StatsLinea() {
     return Array.from(groupsMap.values());
   }, [prodEntries, doneKeys]);
 
-  // Surface CAR m² depuis REF_PRODUIT.json (comme ProductionForm)
+  // Surface CAR m² depuis Format.json (Priorité) ou REF_PRODUIT.json
   const surfaceCAR = useMemo(() => {
     if (!selectedProduction) return 0;
-    const validProducts = (refProduit as any[]).filter(
-      (p) =>
-        p.Nom_Commercial &&
-        p.Nom_Commercial !== "�" &&
-        p.Format_Nominal &&
-        p.Format_Nominal !== "�" &&
-        p.Surface_CAR_m2 &&
-        p.Surface_CAR_m2 !== "#N/A" &&
-        Number(p.Surface_CAR_m2) > 0
-    );
+    
+    const firstFormat = (selectedProduction as any).formatsList?.[0] || selectedProduction.Format;
+    
+    // PRIORITY 1: Format.json rules
+    const fmtMatch = (formatData as any[]).find(f => f.Format_Nominal === firstFormat);
+    if (fmtMatch && fmtMatch.Surface_CAR_m2 && Number(fmtMatch.Surface_CAR_m2) > 0) {
+      return Number(fmtMatch.Surface_CAR_m2);
+    }
+
+    // PRIORITY 2: REF_PRODUIT.json fallback
     const firstModel = (selectedProduction as any).modelesList?.[0] || selectedProduction.Modele;
     const firstColor = (selectedProduction as any).couleursList?.[0] || selectedProduction.Couleur;
-    const firstFormat = (selectedProduction as any).formatsList?.[0] || selectedProduction.Format;
 
-    const match = validProducts.find(
+    const match = (refProduit as any[]).find(
       (p) =>
         p.Nom_Commercial === firstModel &&
         (!firstColor || p.Couleur === firstColor) &&
@@ -836,4 +836,3 @@ export default function StatsLinea() {
     </div>
   );
 }
-

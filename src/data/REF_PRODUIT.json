@@ -4126,5 +4126,53 @@
         "Pcs_Carton": "7",
         "Surface_CAR_m2": "0.18",
         "Type_Decor": ""
+    },
+    {
+        "CATEGORIE": "MURAL",
+        "Cartons_Palette": "72",
+        "Couleur": "",
+        "Finition": "MONO",
+        "Format_Nominal": "30*60",
+        "ID_Modele": "MOD-328",
+        "Largeur_cm": "30",
+        "Longueur_cm": "60",
+        "M2_Carton": "1.26",
+        "M2_PALETTE": "90.72",
+        "Nom_Commercial": "ELYT LISSE",
+        "Pcs_Carton": "7",
+        "Surface_CAR_m2": "0.18",
+        "Type_Decor": ""
+    },
+    {
+        "CATEGORIE": "MURAL",
+        "Cartons_Palette": "72",
+        "Couleur": "GRIS LISIERE",
+        "Finition": "MONO",
+        "Format_Nominal": "30*60",
+        "ID_Modele": "MOD-329",
+        "Largeur_cm": "30",
+        "Longueur_cm": "60",
+        "M2_Carton": "1.26",
+        "M2_PALETTE": "90.72",
+        "Nom_Commercial": "MARINA",
+        "Pcs_Carton": "7",
+        "Surface_CAR_m2": "0.18",
+        "Type_Decor": ""
+    },
+    {
+        "CATEGORIE": "MURAL",
+        "Cartons_Palette": "72",
+        "Couleur": "BEIGE LISIERE",
+        "Finition": "MONO",
+        "Format_Nominal": "30*60",
+        "ID_Modele": "MOD-330",
+        "Largeur_cm": "30",
+        "Longueur_cm": "60",
+        "M2_Carton": "1.26",
+        "M2_PALETTE": "90.72",
+        "Nom_Commercial": "MARINA",
+        "Pcs_Carton": "7",
+        "Surface_CAR_m2": "0.18",
+        "Type_Decor": ""
     }
 ]

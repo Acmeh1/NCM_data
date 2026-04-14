@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import refProduit from "@/data/REF_PRODUIT.json";
+import formatData from "@/data/Format.json";
 import type { ProductionEntry } from "@/hooks/useProductionStore";
 import type { EmballageEntry, EmballageChoix } from "@/hooks/useEmballageStore";
 
@@ -30,6 +31,13 @@ const validProducts = (refProduit as any[]).filter(
 );
 
 function getSurfaceParPalette(modele: string, couleur: string, format: string): number {
+  // PRIORITY 1: Check Format.json for standard surface rules
+  const fmtMatch = (formatData as any[]).find(f => f.Format_Nominal === format);
+  if (fmtMatch && fmtMatch.M2_PALETTE && Number(fmtMatch.M2_PALETTE) > 0) {
+    return Number(fmtMatch.M2_PALETTE);
+  }
+
+  // PRIORITY 2: Fallback to REF_PRODUIT.json specific product rules
   const match = validProducts.find(
     (p) =>
       p.Nom_Commercial === modele &&

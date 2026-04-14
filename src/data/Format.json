@@ -20,13 +20,13 @@
         "Surface_CAR_m2": "0.36"
     },
     {
-        "Cartons_Palette": "72",
+        "Cartons_Palette": "48",
         "Format_Nominal": "30*60",
         "Largeur_cm": "30",
         "Longueur_cm": "60",
-        "M2_Carton": "1.26",
-        "M2_PALETTE": "90.72",
-        "Pcs_Carton": "7",
+        "M2_Carton": "1.44",
+        "M2_PALETTE": "69.12",
+        "Pcs_Carton": "8",
         "Surface_CAR_m2": "0.18"
     },
     {

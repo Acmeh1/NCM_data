@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import refProduit from "@/data/REF_PRODUIT.json";
+import formatData from "@/data/Format.json";
 import { useProductionStore, type ProductionEntry } from "@/hooks/useProductionStore";
 
 interface Props {
@@ -130,9 +131,18 @@ export default function ProductionForm({
     }
   }, [availableFormats]);
 
-  // Get Surface_CAR_m2 dynamically from REF_PRODUIT.json based on selected model+couleur+format
+  // Get Surface_CAR_m2 dynamically from Format.json (Priority) or REF_PRODUIT.json
   const surfaceCAR = useMemo(() => {
-    if (!form.Modele || !form.Format) return 0;
+    if (!form.Format) return 0;
+    
+    // PRIORITY 1: Format.json rules
+    const fmtMatch = (formatData as any[]).find(f => f.Format_Nominal === form.Format);
+    if (fmtMatch && fmtMatch.Surface_CAR_m2 && Number(fmtMatch.Surface_CAR_m2) > 0) {
+      return Number(fmtMatch.Surface_CAR_m2);
+    }
+
+    // PRIORITY 2: REF_PRODUIT.json fallback
+    if (!form.Modele) return 0;
     const match = validProducts.find(
       (p) =>
         p.Nom_Commercial === form.Modele &&
