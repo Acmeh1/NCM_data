@@ -15,6 +15,7 @@ import ViewSelection from "@/pages/ViewSelection";
 import ViewStatsLinea from "@/pages/ViewStatsLinea";
 import AdminBackup from "@/pages/AdminBackup";
 import AdminUsers from "@/pages/AdminUsers";
+import AdminKpiConfig from "@/pages/AdminKpiConfig";
 import Maintenance from "@/pages/Maintenance";
 import ViewInterventions from "@/pages/ViewInterventions";
 import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/maintenance/view" element={<ViewInterventions />} />
               <Route path="/admin/backup" element={<AdminBackup />} />
               <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/kpi" element={<AdminKpiConfig />} />
             </Route>
           </Route>
           <Route path="*" element={<NotFound />} />

@@ -1,4 +1,4 @@
-import { Factory, ClipboardList, Package, ChevronDown, Database, CheckSquare, BarChart3, Wrench, Users, PieChart } from "lucide-react";
+import { Factory, ClipboardList, Package, ChevronDown, Database, CheckSquare, BarChart3, Wrench, Users, PieChart, Target } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -159,6 +159,16 @@ export function AppSidebar() {
                             activeClassName="bg-sidebar-accent text-primary font-medium">
                             <Users className="h-4 w-4" />
                             Gestion Utilisateurs
+                          </NavLink>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <NavLink to="/admin/kpi"
+                            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                            activeClassName="bg-sidebar-accent text-primary font-medium">
+                            <Target className="h-4 w-4" />
+                            Configuration KPI
                           </NavLink>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

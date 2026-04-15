@@ -4,6 +4,7 @@ import { parseISO, format as formatISO, startOfDay, endOfDay, subDays, differenc
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePermissions } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import formatData from "@/data/Format.json";
 import { Label } from "@/components/ui/label";
@@ -30,8 +31,10 @@ import DateRangeFilter, { type DateRange } from "@/components/DateRangeFilter";
 import ScrapRateKpiCard from "@/components/ScrapRateKpiCard";
 import RendementKpiCard from "@/components/RendementKpiCard";
 import VolumeProduitsKpiCard from "@/components/VolumeProduitsKpiCard";
+import EnergyRatioKpiCard from "@/components/EnergyRatioKpiCard";
 import FormatQualitePanel from "@/components/FormatQualitePanel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useKpiSettings } from "@/hooks/useKpiSettings";
 
 const COLORS = [
   "hsl(210, 70%, 55%)",
@@ -97,6 +100,7 @@ const MONTH_NAMES = [
 export default function AnalyticsDashboard() {
   const queryClient = useQueryClient();
   const { dashboard, isAdmin, loading: permLoading } = usePermissions();
+  const { kpiObjectives } = useKpiSettings();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // URL synced state
@@ -137,6 +141,7 @@ export default function AnalyticsDashboard() {
     new Set(["kpis", "trend", "groupe", "choix"])
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [focusedKpi, setFocusedKpi] = useState<string | null>(null);
 
   // Realtime: auto-refresh when production data changes
   useEffect(() => {
@@ -483,6 +488,44 @@ export default function AnalyticsDashboard() {
     return { ...current, variation, trendData };
   }, [statsLinea, statsLineaPrev]);
 
+  // ── Energy Ratio Calculations ──────────────────────────────────────────
+  const energyMetrics = useMemo(() => {
+    const calcRate = (entries: any[]) => {
+      const totalGas = entries.reduce((s, r) => s + (Number(r.four_consommation_kwh) || 0), 0);
+      const totalPieces = entries.reduce((s, r) => s + (Number(r.nb_pieces_four) || 0), 0);
+      return { 
+        rate: totalPieces > 0 ? totalGas / totalPieces : 0, 
+        totalGas, 
+        totalPieces 
+      };
+    };
+
+    const current = calcRate(filteredJournalier);
+    const prevRows = journalierFull.filter(
+      (r) => r.date >= prevStartDate && r.date <= prevEndDate
+    );
+    const prev = calcRate(prevRows);
+
+    // Daily trend
+    const trendMap: Record<string, { gas: number; pieces: number }> = {};
+    filteredJournalier.forEach(r => {
+      const d = r.date;
+      if (!d) return;
+      if (!trendMap[d]) trendMap[d] = { gas: 0, pieces: 0 };
+      trendMap[d].gas += Number(r.four_consommation_kwh) || 0;
+      trendMap[d].pieces += Number(r.nb_pieces_four) || 0;
+    });
+
+    const trendData = Object.entries(trendMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, vals]) => ({
+        date,
+        rate: vals.pieces > 0 ? vals.gas / vals.pieces : 0
+      }));
+
+    return { ...current, prevRatio: prev.rate, trendData };
+  }, [filteredJournalier, journalierFull, prevStartDate, prevEndDate]);
+
   const kpis = [
     { label: "Production totale", value: `${totalProductionM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Factory, color: "text-blue-600" },
     { label: "1er Choix", value: `${totalPressageM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Layers, color: "text-emerald-600" },
@@ -540,36 +583,91 @@ export default function AnalyticsDashboard() {
 
           {/* KPIs */}
           {(displayType === "KPIs" || displayType === "Graphiques") && visibleWidgets.has("kpis") && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-              <VolumeProduitsKpiCard
-                totalVolume={volumeMetrics.totalVolume}
-                prevVolume={volumeMetrics.prevVolume}
-                trendData={volumeMetrics.trendData}
-                groupBreakdown={volumeMetrics.groupBreakdown}
-                periodDays={volumeMetrics.periodDays}
-              />
-              <RendementKpiCard
-                currentRate={rendementMetrics.rate}
-                variation={rendementMetrics.variation}
-                trendData={rendementMetrics.trendData}
-                choix1Pct={rendementMetrics.choix1Pct}
-                nonChoix1Pct={rendementMetrics.nonChoix1Pct}
-                recordCount={statsLinea.length}
-              />
-              <ScrapRateKpiCard
-                currentRate={scrapMetrics.rate}
-                variation={scrapMetrics.variation}
-                trendData={scrapMetrics.trendData}
-                choix2Pct={scrapMetrics.c2Pct}
-                choix3Pct={scrapMetrics.c3Pct}
-                recordCount={statsLinea.length}
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6 pt-2">
+              {[
+                { 
+                  id: "volume", 
+                  component: VolumeProduitsKpiCard, 
+                  props: {
+                    totalVolume: volumeMetrics.totalVolume,
+                    prevVolume: volumeMetrics.prevVolume,
+                    trendData: volumeMetrics.trendData,
+                    groupBreakdown: volumeMetrics.groupBreakdown,
+                    periodDays: volumeMetrics.periodDays,
+                  } 
+                },
+                { 
+                  id: "rendement", 
+                  component: RendementKpiCard, 
+                  props: {
+                    currentRate: rendementMetrics.rate,
+                    variation: rendementMetrics.variation,
+                    trendData: rendementMetrics.trendData,
+                    choix1Pct: rendementMetrics.choix1Pct,
+                    nonChoix1Pct: rendementMetrics.nonChoix1Pct,
+                    recordCount: statsLinea.length,
+                  } 
+                },
+                { 
+                  id: "scrap", 
+                  component: ScrapRateKpiCard, 
+                  props: {
+                    currentRate: scrapMetrics.rate,
+                    variation: scrapMetrics.variation,
+                    trendData: scrapMetrics.trendData,
+                    choix2Pct: scrapMetrics.c2Pct,
+                    choix3Pct: scrapMetrics.c3Pct,
+                    recordCount: statsLinea.length,
+                  } 
+                },
+                { 
+                  id: "energy", 
+                  component: EnergyRatioKpiCard, 
+                  props: {
+                    currentRatio: energyMetrics.rate,
+                    prevRatio: energyMetrics.prevRatio,
+                    trendData: energyMetrics.trendData,
+                    totalGas: energyMetrics.totalGas,
+                    totalPieces: energyMetrics.totalPieces,
+                  } 
+                }
+              ].map((kpi) => {
+                const isFocused = focusedKpi === kpi.id;
+                const Component = kpi.component;
+                const kpiConfig = kpiObjectives.find((k) => k.id === kpi.id);
+                const extraProps: Record<string, unknown> = kpiConfig
+                  ? { objective: kpiConfig.objective, formula: kpiConfig.formula }
+                  : {};
+                return (
+                  <div
+                    key={kpi.id}
+                    className={cn(
+                      "transition-all duration-500 ease-out cursor-pointer relative",
+                      isFocused 
+                        ? "scale-[1.03] z-20 shadow-2xl" 
+                        : "scale-100 z-10 hover:scale-[1.015] hover:z-15"
+                    )}
+                    onMouseEnter={() => setFocusedKpi(kpi.id)}
+                    onMouseLeave={() => setFocusedKpi(null)}
+                    onClick={() => setFocusedKpi(focusedKpi === kpi.id ? null : kpi.id)}
+                  >
+                    <Component {...kpi.props as any} {...extraProps} />
+                    {isFocused && (
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 -z-10" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
           {/* Format Quality Panel */}
           {(displayType === "KPIs" || displayType === "Graphiques") && (
-            <FormatQualitePanel data={filteredJournalier} />
+            <FormatQualitePanel 
+              data={filteredJournalier} 
+              startDate={startDateParam}
+              endDate={endDateParam}
+            />
           )}
 
           {/* Charts Section */}
