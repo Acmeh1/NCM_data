@@ -19,6 +19,13 @@ import AdminKpiConfig from "@/pages/AdminKpiConfig";
 import Maintenance from "@/pages/Maintenance";
 import ViewInterventions from "@/pages/ViewInterventions";
 import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
+import DashboardProduction from "@/pages/DashboardProduction";
+import DashboardDirection from "@/pages/DashboardDirection";
+import DashboardGeneral from "@/pages/DashboardGeneral";
+import DashboardMaintenance from "@/pages/DashboardMaintenance";
+import DashboardQualite from "@/pages/DashboardQualite";
+import DashboardRH from "@/pages/DashboardRH";
+import DashboardCommercial from "@/pages/DashboardCommercial";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -29,7 +36,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           {/* Public route for password reset */}
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -47,6 +54,13 @@ const App = () => (
               <Route path="/production/selection/view" element={<ViewSelection />} />
               <Route path="/production/stats-linea/view" element={<ViewStatsLinea />} />
               <Route path="/analytics" element={<AnalyticsDashboard />} />
+              <Route path="/dashboard/production" element={<DashboardProduction />} />
+              <Route path="/dashboard/direction" element={<DashboardDirection />} />
+              <Route path="/dashboard/general" element={<DashboardGeneral />} />
+              <Route path="/dashboard/maintenance" element={<DashboardMaintenance />} />
+              <Route path="/dashboard/qualite" element={<DashboardQualite />} />
+              <Route path="/dashboard/rh" element={<DashboardRH />} />
+              <Route path="/dashboard/commercial" element={<DashboardCommercial />} />
               <Route path="/maintenance" element={<Maintenance />} />
               <Route path="/maintenance/view" element={<ViewInterventions />} />
               <Route path="/admin/backup" element={<AdminBackup />} />

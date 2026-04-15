@@ -1,4 +1,4 @@
-import { Factory, ClipboardList, Package, ChevronDown, Database, CheckSquare, BarChart3, Wrench, Users, PieChart, Target } from "lucide-react";
+import { Factory, ClipboardList, Package, ChevronDown, Database, CheckSquare, BarChart3, Wrench, Users, PieChart, Target, LayoutDashboard, TrendingUp, ShieldCheck, UserCog, ShoppingCart } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -118,20 +118,93 @@ export function AppSidebar() {
 
         {(isAdmin || dashboard) && (
           <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink to="/analytics"
-                      className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-accent text-primary font-medium">
-                      <PieChart className="h-4 w-4" />
-                      Tableau de Bord
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between w-full cursor-pointer hover:bg-sidebar-accent rounded-md px-2">
+                  <span className="flex items-center gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Tableaux de Bord
+                  </span>
+                  <ChevronDown className="h-4 w-4 transition-transform" />
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/dashboard/general"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <LayoutDashboard className="h-4 w-4" />
+                          Vue Générale d'Usine
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/dashboard/direction"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <PieChart className="h-4 w-4" />
+                          Vue Direction
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/dashboard/production"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <TrendingUp className="h-4 w-4" />
+                          Production
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/dashboard/qualite"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <ShieldCheck className="h-4 w-4" />
+                          Qualité
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/dashboard/maintenance"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <Wrench className="h-4 w-4" />
+                          Maintenance
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/dashboard/rh"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <UserCog className="h-4 w-4" />
+                          Ressources Humaines
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/dashboard/commercial"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <ShoppingCart className="h-4 w-4" />
+                          Commercial
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
           </SidebarGroup>
         )}
 

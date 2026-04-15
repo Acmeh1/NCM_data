@@ -81,8 +81,6 @@ export default function AnalyticsFilterBar({
             </button>
             {GROUPS.map((g) => {
               const active = selectedGroups.includes(g);
-              const colorClass = GROUP_COLORS[g];
-              const bgClass = GROUP_BG_COLORS[g];
               return (
                 <button
                   key={g}
@@ -90,7 +88,7 @@ export default function AnalyticsFilterBar({
                   className={cn(
                     "rounded-[20px] text-[12px] px-[11px] py-[5px] border-[0.5px] transition-all",
                     active 
-                      ? `${colorClass} ${bgClass} border-transparent font-bold` 
+                      ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white" 
                       : "bg-transparent text-muted-foreground border-border hover:border-muted-foreground"
                   )}
                 >
