@@ -31,7 +31,7 @@ import DateRangeFilter, { type DateRange } from "@/components/DateRangeFilter";
 import ScrapRateKpiCard from "@/components/ScrapRateKpiCard";
 import RendementKpiCard from "@/components/RendementKpiCard";
 import VolumeProduitsKpiCard from "@/components/VolumeProduitsKpiCard";
-import EnergyRatioKpiCard from "@/components/EnergyRatioKpiCard";
+import MachineUtilizationKpiCard from "@/components/MachineUtilizationKpiCard";
 import FormatQualitePanel from "@/components/FormatQualitePanel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useKpiSettings } from "@/hooks/useKpiSettings";
@@ -488,43 +488,60 @@ export default function AnalyticsDashboard() {
     return { ...current, variation, trendData };
   }, [statsLinea, statsLineaPrev]);
 
-  // ── Energy Ratio Calculations ──────────────────────────────────────────
-  const energyMetrics = useMemo(() => {
-    const calcRate = (entries: any[]) => {
-      const totalGas = entries.reduce((s, r) => s + (Number(r.four_consommation_kwh) || 0), 0);
-      const totalPieces = entries.reduce((s, r) => s + (Number(r.nb_pieces_four) || 0), 0);
+
+  // ── Machine Utilization Calculations ────────────────────────────────────
+  const utilizationMetrics = useMemo(() => {
+    const calcRate = (entries: any[], days: number) => {
+      const totalAvailableHours = days * 24;
+      const totalEmptyMinutes = entries.reduce((s, r) => s + (Number(r.four_minutes_vides) || 0), 0);
+      const totalEmptyHours = totalEmptyMinutes / 60;
+      const totalProductionHours = Math.max(0, totalAvailableHours - totalEmptyHours);
+      
       return { 
-        rate: totalPieces > 0 ? totalGas / totalPieces : 0, 
-        totalGas, 
-        totalPieces 
+        rate: totalAvailableHours > 0 ? (totalProductionHours / totalAvailableHours) * 100 : 0, 
+        totalAvailableHours, 
+        totalProductionHours 
       };
     };
 
-    const current = calcRate(filteredJournalier);
+    const current = calcRate(filteredJournalier, duration);
+    
     const prevRows = journalierFull.filter(
       (r) => r.date >= prevStartDate && r.date <= prevEndDate
     );
-    const prev = calcRate(prevRows);
+    const prev = calcRate(prevRows, duration);
 
     // Daily trend
-    const trendMap: Record<string, { gas: number; pieces: number }> = {};
+    const trendMap: Record<string, number> = {};
     filteredJournalier.forEach(r => {
       const d = r.date;
       if (!d) return;
-      if (!trendMap[d]) trendMap[d] = { gas: 0, pieces: 0 };
-      trendMap[d].gas += Number(r.four_consommation_kwh) || 0;
-      trendMap[d].pieces += Number(r.nb_pieces_four) || 0;
+      const dayEmptyMins = (Number(r.four_minutes_vides) || 0);
+      const dayProdHours = Math.max(0, 24 - (dayEmptyMins / 60));
+      const dayRate = (dayProdHours / 24) * 100;
+      
+      // If multiple records for same day, we should technically average them or sum them correctly.
+      // Logic: (24 - sum_vides/60) / 24 * 100
+      if (!trendMap[d]) trendMap[d] = 0;
+      trendMap[d] += dayEmptyMins;
     });
 
     const trendData = Object.entries(trendMap)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, vals]) => ({
-        date,
-        rate: vals.pieces > 0 ? vals.gas / vals.pieces : 0
-      }));
+      .map(([date, totalEmptyMinsForDay]) => {
+        const rate = Math.max(0, (24 - (totalEmptyMinsForDay / 60)) / 24) * 100;
+        return { date, rate };
+      });
 
-    return { ...current, prevRatio: prev.rate, trendData };
-  }, [filteredJournalier, journalierFull, prevStartDate, prevEndDate]);
+    return { 
+      rate: current.rate, 
+      prevRate: prev.rate, 
+      trendData,
+      totalAvailableHours: current.totalAvailableHours,
+      totalProductionHours: current.totalProductionHours
+    };
+  }, [filteredJournalier, journalierFull, prevStartDate, prevEndDate, duration]);
+
 
   const kpis = [
     { label: "Production totale", value: `${totalProductionM2.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} m²`, icon: Factory, color: "text-blue-600" },
@@ -621,14 +638,14 @@ export default function AnalyticsDashboard() {
                   } 
                 },
                 { 
-                  id: "energy", 
-                  component: EnergyRatioKpiCard, 
+                  id: "utilization", 
+                  component: MachineUtilizationKpiCard, 
                   props: {
-                    currentRatio: energyMetrics.rate,
-                    prevRatio: energyMetrics.prevRatio,
-                    trendData: energyMetrics.trendData,
-                    totalGas: energyMetrics.totalGas,
-                    totalPieces: energyMetrics.totalPieces,
+                    currentRate: utilizationMetrics.rate,
+                    prevRate: utilizationMetrics.prevRate,
+                    trendData: utilizationMetrics.trendData,
+                    totalAvailableHours: utilizationMetrics.totalAvailableHours,
+                    totalProductionHours: utilizationMetrics.totalProductionHours,
                   } 
                 }
               ].map((kpi) => {

@@ -36,8 +36,8 @@ const COLUMNS = [
   { key: "demandeur", label: "Demandeur" },
   { key: "visa_demandeur", label: "Visa" },
   { key: "urgence", label: "Urgence" },
-  { key: "nature", label: "Nature" },
-  { key: "type", label: "Type" },
+  { key: "nature", label: "Type" },
+  { key: "type", label: "Nature" },
   { key: "zone_code", label: "Zone" },
   { key: "equipement", label: "Équipement", isEquipJson: true },
   { key: "equipement_code", label: "Code Équipement" },
@@ -59,6 +59,7 @@ const FILTER_CONFIGS = [
   { key: "Date", label: "Date", type: "date" as const },
   { key: "Zone", label: "Zone", type: "select" as const },
   { key: "Équipement", label: "Équipement", type: "select" as const },
+  { key: "Nature", label: "Nature", type: "select" as const },
   { key: "Type", label: "Type", type: "select" as const },
   { key: "Urgence", label: "Urgence", type: "select" as const },
 ];
@@ -113,7 +114,8 @@ export default function ViewInterventions() {
     // For filter: use nom from equipement JSON, or fallback
     const eq = e.equipement;
     row["Équipement"] = (eq && typeof eq === 'object' && eq.nom) ? eq.nom : (e.equipement_code || "");
-    row["Type"] = e.type || "";
+    row["Nature"] = e.type || "";
+    row["Type"] = e.nature || "";
     row["Urgence"] = e.urgence || "";
 
     return row;

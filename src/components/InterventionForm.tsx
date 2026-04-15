@@ -366,7 +366,7 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
               {errors.urgence && <p className="text-red-500 text-sm mt-1">{errors.urgence.message}</p>}
             </div>
             <div>
-              <Label>Nature</Label>
+              <Label>Type</Label>
               <Controller
                 name="nature"
                 control={control}
@@ -386,7 +386,7 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
               {errors.nature && <p className="text-red-500 text-sm mt-1">{errors.nature.message}</p>}
             </div>
             <div>
-              <Label>Type</Label>
+              <Label>Nature</Label>
               <Controller
                 name="type"
                 control={control}
