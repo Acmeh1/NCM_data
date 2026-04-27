@@ -8,7 +8,7 @@ import { Filter, X } from "lucide-react";
 interface FilterConfig {
   key: string;
   label: string;
-  type: "date" | "select";
+  type: "date" | "select" | "text";
 }
 
 interface Props {
@@ -41,6 +41,9 @@ export function useTableFilters<T extends Record<string, any>>(
         const val = filterValues[f.key];
         if (!val) return true;
         const rowVal = String(row[f.key] ?? "");
+        if (f.type === "text") {
+          return val === "" || rowVal.toLowerCase().includes(val.toLowerCase());
+        }
         if (f.type === "date") {
           return rowVal.includes(val);
         }
@@ -82,7 +85,15 @@ export default function TableFilters({
       {filterConfigs.map((f) => (
         <div key={f.key} className="space-y-1">
           <Label className="text-xs text-muted-foreground">{f.label}</Label>
-          {f.type === "date" ? (
+          {f.type === "text" ? (
+            <Input
+              type="text"
+              placeholder={`Rechercher...`}
+              className="h-8 text-xs w-[160px]"
+              value={filterValues[f.key] ?? ""}
+              onChange={(e) => onSetFilter(f.key, e.target.value)}
+            />
+          ) : f.type === "date" ? (
             <Input
               type="date"
               className="h-8 text-xs w-[140px]"

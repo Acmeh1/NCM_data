@@ -20,9 +20,10 @@ import {
   ComposedChart, Line,
 } from "recharts";
 import {
-  Factory, TrendingUp, Package, BarChart3,
-  Activity, Layers, Target, Settings2, CalendarDays
-} from "lucide-react";
+   Factory, TrendingUp, Package, BarChart3,
+   Activity, Layers, Target, Settings2, CalendarDays, Gauge, ChevronDown, ChevronUp,
+   Wind, Flame, Share2
+ } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MonthlyComparisonView from "@/components/MonthlyComparisonView";
 import MonthlyGroupDashboard from "@/components/MonthlyGroupDashboard";
@@ -34,7 +35,7 @@ import RendementKpiCard from "@/components/RendementKpiCard";
 import VolumeProduitsKpiCard from "@/components/VolumeProduitsKpiCard";
 import MachineUtilizationKpiCard from "@/components/MachineUtilizationKpiCard";
 import FormatQualitePanel from "@/components/FormatQualitePanel";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useKpiSettings } from "@/hooks/useKpiSettings";
 
 const COLORS = [
@@ -121,6 +122,9 @@ export default function DashboardProduction() {
     new Set(["kpis", "trend", "groupe", "choix"])
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showProductionDetails, setShowProductionDetails] = useState(false);
+  const [showQualityDetails, setShowQualityDetails] = useState(false);
+  const [showFluxDetails, setShowFluxDetails] = useState(false);
   const [focusedKpi, setFocusedKpi] = useState<string | null>(null);
 
   // Realtime: auto-refresh when production data changes
@@ -253,10 +257,10 @@ export default function DashboardProduction() {
   }, [emballage]);
 
   // KPIs
-  const totalProductionM2 = filteredJournalier.reduce((s, r) => s + (r.total_m2 || 0), 0);
-  const totalPressageM2 = filteredJournalier.reduce((s, r) => s + (r.choix_1_m2 || 0), 0);
-  const totalDeuxiemeChoixM2 = filteredJournalier.reduce((s, r) => s + (r.choix_2_m2 || 0), 0);
-  const totalTroisiemeChoixM2 = filteredJournalier.reduce((s, r) => s + (r.choix_3_m2 || 0), 0);
+  const totalProductionM2 = statsLinea.reduce((s, r) => s + (Number(r.total_surface_m2) || 0), 0);
+  const totalPressageM2 = statsLinea.reduce((s, r) => s + (Number(r.choix1_surface_m2) || 0), 0);
+  const totalDeuxiemeChoixM2 = statsLinea.reduce((s, r) => s + (Number(r.choix2_surface_m2) || 0), 0);
+  const totalTroisiemeChoixM2 = statsLinea.reduce((s, r) => s + (Number(r.choix3_surface_m2) || 0), 0);
   const totalPalettes = filteredEmballage.reduce((s, r) => s + (Number(r.nb_palette) || 0), 0);
   const avgCycleMin = filteredJournalier.length
     ? filteredJournalier.reduce((s, r) => s + (r.cycle_min || 0), 0) / filteredJournalier.length
@@ -264,9 +268,9 @@ export default function DashboardProduction() {
 
 
 
-  const totalChoix1 = filteredJournalier.reduce((s, r) => s + (r.choix_1_m2 || 0), 0);
-  const totalChoix2 = filteredJournalier.reduce((s, r) => s + (r.choix_2_m2 || 0), 0);
-  const totalChoix3 = filteredJournalier.reduce((s, r) => s + (r.choix_3_m2 || 0), 0);
+  const totalChoix1 = totalPressageM2;
+  const totalChoix2 = totalDeuxiemeChoixM2;
+  const totalChoix3 = totalTroisiemeChoixM2;
   const choixTotal = totalChoix1 + totalChoix2 + totalChoix3;
   const choixPieData = [
     { name: "Choix 1", value: totalChoix1, pct: choixTotal ? ((totalChoix1 / choixTotal) * 100).toFixed(1) : "0" },
@@ -276,15 +280,15 @@ export default function DashboardProduction() {
 
   const choixByPeriod = useMemo(() => {
     const map: Record<string, { period: string; choix1: number; choix2: number; choix3: number }> = {};
-    filteredJournalier.forEach((r) => {
-      const key = aggregateKey(r.date, period);
+    statsLinea.forEach((r) => {
+      const key = aggregateKey(r.production_date || "", period);
       if (!map[key]) map[key] = { period: key, choix1: 0, choix2: 0, choix3: 0 };
-      map[key].choix1 += r.choix_1_m2 || 0;
-      map[key].choix2 += r.choix_2_m2 || 0;
-      map[key].choix3 += r.choix_3_m2 || 0;
+      map[key].choix1 += Number(r.choix1_surface_m2) || 0;
+      map[key].choix2 += Number(r.choix2_surface_m2) || 0;
+      map[key].choix3 += Number(r.choix3_surface_m2) || 0;
     });
     return Object.values(map).sort((a, b) => (a.period || "").localeCompare(b.period || ""));
-  }, [filteredJournalier, period]);
+  }, [statsLinea, period]);
 
   const formatSurfaceMap = useMemo(() => {
     const map: Record<string, number> = {};
@@ -299,12 +303,21 @@ export default function DashboardProduction() {
   const trendData = useMemo(() => {
     const map: Record<string, { period: string; total_m2: number; sumDailyObj: number; shiftCount: number }> = {};
     
+    // 1. Production Actuals from Scanner (statsLinea)
+    statsLinea.forEach((r) => {
+      const key = aggregateKey(r.production_date || "", period);
+      if (!map[key]) {
+        map[key] = { period: key, total_m2: 0, sumDailyObj: 0, shiftCount: 0 };
+      }
+      map[key].total_m2 += Number(r.total_surface_m2) || 0;
+    });
+
+    // 2. Objectives calculation from Journalier formats
     filteredJournalier.forEach((r) => {
       const key = aggregateKey(r.date, period);
       if (!map[key]) {
         map[key] = { period: key, total_m2: 0, sumDailyObj: 0, shiftCount: 0 };
       }
-      map[key].total_m2 += Number(r.total_m2) || 0;
       
       const format = String(r.format || r.modele || "").trim();
       let dailyObj = 8000;
@@ -331,7 +344,7 @@ export default function DashboardProduction() {
         objectif: finalObj
       };
     }).sort((a, b) => (a.period || "").localeCompare(b.period || ""));
-  }, [filteredJournalier, period, selectedGroups]);
+  }, [statsLinea, filteredJournalier, period, selectedGroups]);
 
   const groupeData = useMemo(() => {
     const map: Record<string, { groupe: string; total_m2: number; choix1: number; choix2: number; choix3: number }> = {};
@@ -390,24 +403,19 @@ export default function DashboardProduction() {
     return { ...current, variation, trendData };
   }, [statsLinea, statsLineaPrev]);
 
-  // ── Volume Produit Calculations ──────────────────────────────────────────
-  // Formula: Somme cuisson_m2 de production_journalier sur la période
   const volumeMetrics = useMemo(() => {
     // Current period total
-    const totalVolume = filteredJournalier.reduce((s, r) => s + (Number(r.cuisson_m2) || 0), 0);
+    const totalVolume = statsLinea.reduce((s, r) => s + (Number(r.total_surface_m2) || 0), 0);
 
-    // Previous period: rows in journalierFull that fall in [prevStartDate, prevEndDate]
-    const prevRows = journalierFull.filter(
-      (r) => r.date >= prevStartDate && r.date <= prevEndDate
-    );
-    const prevVolume = prevRows.reduce((s, r) => s + (Number(r.cuisson_m2) || 0), 0);
+    // Previous period
+    const prevVolume = statsLineaPrev.reduce((s, r) => s + (Number(r.total_surface_m2) || 0), 0);
 
-    // Daily trend
+    // Daily trend from statsLinea
     const trendMap: Record<string, number> = {};
-    filteredJournalier.forEach((r) => {
-      const d = r.date;
+    statsLinea.forEach((r) => {
+      const d = r.production_date;
       if (!d) return;
-      trendMap[d] = (trendMap[d] || 0) + (Number(r.cuisson_m2) || 0);
+      trendMap[d] = (trendMap[d] || 0) + (Number(r.total_surface_m2) || 0);
     });
     const trendData = Object.entries(trendMap)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -430,7 +438,7 @@ export default function DashboardProduction() {
     const periodDays = duration;
 
     return { totalVolume, prevVolume, trendData, groupBreakdown, periodDays };
-  }, [filteredJournalier, journalierFull, prevStartDate, prevEndDate, duration]);
+  }, [statsLinea, statsLineaPrev, filteredJournalier, duration]);
 
   // Rendement Calculations
   // Formula: choix1_surface_m2 / total_surface_m2 * 100
@@ -467,6 +475,70 @@ export default function DashboardProduction() {
 
     return { ...current, variation, trendData };
   }, [statsLinea, statsLineaPrev]);
+
+  const qualityTableData = useMemo(() => {
+    const map: Record<string, { period: string; total: number; c1: number; c2: number; c3: number }> = {};
+    statsLinea.forEach((r) => {
+      const key = aggregateKey(r.production_date || "", period);
+      if (!map[key]) map[key] = { period: key, total: 0, c1: 0, c2: 0, c3: 0 };
+      map[key].total += Number(r.total_surface_m2) || 0;
+      map[key].c1 += Number(r.choix1_surface_m2) || 0;
+      map[key].c2 += Number(r.choix2_surface_m2) || 0;
+      map[key].c3 += Number(r.choix3_surface_m2) || 0;
+    });
+    return Object.values(map)
+      .map(entry => ({
+        ...entry,
+        rendement: entry.total > 0 ? (entry.c1 / entry.total) * 100 : 0,
+        rebut: entry.total > 0 ? ((entry.c2 + entry.c3) / entry.total) * 100 : 0
+      }))
+      .sort((a, b) => (a.period || "").localeCompare(b.period || ""));
+  }, [statsLinea, period]);  const qualityTotals = useMemo(() => {
+    const total = qualityTableData.reduce((s, r) => s + r.total, 0);
+    const c1 = qualityTableData.reduce((s, r) => s + r.c1, 0);
+    const scrap = qualityTableData.reduce((s, r) => s + (r.c2 + r.c3), 0);
+    
+    return {
+      total,
+      c1,
+      scrap,
+      rendement: total > 0 ? (c1 / total) * 100 : 0,
+      rebut: total > 0 ? (scrap / total) * 100 : 0
+    };
+  }, [qualityTableData]);
+
+  const productionTotals = useMemo(() => {
+    const totalM2 = trendData.reduce((s, r) => s + r.total_m2, 0);
+    const objective = trendData.reduce((s, r) => s + r.objectif, 0);
+    const c1 = choixByPeriod.reduce((s, r) => s + r.choix1, 0);
+    const c2 = choixByPeriod.reduce((s, r) => s + r.choix2, 0);
+    const c3 = choixByPeriod.reduce((s, r) => s + r.choix3, 0);
+    
+    return { totalM2, objective, c1, c2, c3 };
+  }, [trendData, choixByPeriod]);
+
+  const periodicZoneData = useMemo(() => {
+    const map: Record<string, { period: string; press: number; emaillage: number; cuisson: number; scanner: number }> = {};
+    
+    // Process journalier data
+    filteredJournalier.forEach((r) => {
+      const key = aggregateKey(r.date, period);
+      if (!map[key]) map[key] = { period: key, press: 0, emaillage: 0, cuisson: 0, scanner: 0 };
+      map[key].press += Number(r.pressage_m2) || 0;
+      map[key].emaillage += Number(r.emaillage_m2) || 0;
+      map[key].cuisson += Number(r.cuisson_m2) || 0;
+    });
+
+    // Process scanner data
+    statsLinea.forEach((r) => {
+      const key = aggregateKey(r.production_date || "", period);
+      if (!map[key]) map[key] = { period: key, press: 0, emaillage: 0, cuisson: 0, scanner: 0 };
+      map[key].scanner += Number(r.total_surface_m2) || 0;
+    });
+
+    return Object.values(map).sort((a, b) => a.period.localeCompare(b.period));
+  }, [filteredJournalier, statsLinea, period]);
+
 
 
   // ── Machine Utilization Calculations ────────────────────────────────────
@@ -597,6 +669,7 @@ export default function DashboardProduction() {
                     choix1Pct: rendementMetrics.choix1Pct,
                     nonChoix1Pct: rendementMetrics.nonChoix1Pct,
                     recordCount: statsLinea.length,
+                    totalC1: totalPressageM2,
                   } 
                 },
                 { 
@@ -609,6 +682,7 @@ export default function DashboardProduction() {
                     choix2Pct: scrapMetrics.c2Pct,
                     choix3Pct: scrapMetrics.c3Pct,
                     recordCount: statsLinea.length,
+                    totalScrap: totalDeuxiemeChoixM2 + totalTroisiemeChoixM2,
                   } 
                 },
                 { 
@@ -678,7 +752,7 @@ export default function DashboardProduction() {
                         <YAxis tick={{ fontSize: 10 }} />
                         <Tooltip formatter={(v: number) => v.toLocaleString("fr-FR", {maximumFractionDigits: 0}) + " m²"} />
                         <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                        <Bar dataKey="total_m2" name="Total m² (Journalier)" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="total_m2" name="Total m² (Scanner)" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
                         <Line type="monotone" dataKey="objectif" name="Objectif" stroke="#ef4444" strokeWidth={2} dot={false} />
                       </ComposedChart>
                     </ResponsiveContainer>
@@ -695,13 +769,14 @@ export default function DashboardProduction() {
                   <div className="col-span-1 lg:col-span-2">
                     <Card>
                       <CardContent className="pt-6">
-                        <MonthlyGroupDashboard />
+                        <MonthlyGroupDashboard 
+                          startDate={startDateParam} 
+                          endDate={endDateParam} 
+                        />
                       </CardContent>
                     </Card>
                   </div>
                 )}
-
-
               </div>
 
               {/* Choix by period */}
@@ -731,44 +806,285 @@ export default function DashboardProduction() {
             </>
           )}
 
-          {/* Tableau View */}
-          {displayType === "Tableau" && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Données détaillées par {periodLabel(period)}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-md border overflow-hidden">
-                  <Table>
-                    <TableHeader className="bg-muted/50 text-[11px] uppercase tracking-wider">
-                      <TableRow>
-                        <TableHead className="w-[120px] font-bold">Période</TableHead>
-                        <TableHead className="text-right font-bold">Production (m²)</TableHead>
-                        <TableHead className="text-right font-bold">Choix 1 (m²)</TableHead>
-                        <TableHead className="text-right font-bold">Choix 2 (m²)</TableHead>
-                        <TableHead className="text-right font-bold">Choix 3 (m²)</TableHead>
-                        <TableHead className="text-right font-bold">Objectif (m²)</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {choixByPeriod.map((row) => {
-                        const trendRow = trendData.find(t => t.period === row.period);
-                        return (
-                          <TableRow key={row.period} className="hover:bg-muted/30">
-                            <TableCell className="text-xs font-medium">{row.period}</TableCell>
-                            <TableCell className="text-right text-xs font-semibold">{(trendRow?.total_m2 || 0).toLocaleString("fr-FR")}</TableCell>
-                            <TableCell className="text-right text-xs text-emerald-600 font-medium">{row.choix1.toLocaleString("fr-FR")}</TableCell>
-                            <TableCell className="text-right text-xs text-orange-600">{row.choix2.toLocaleString("fr-FR")}</TableCell>
-                            <TableCell className="text-right text-xs text-rose-600">{row.choix3.toLocaleString("fr-FR")}</TableCell>
-                            <TableCell className="text-right text-xs text-muted-foreground italic">{(trendRow?.objectif || 0).toLocaleString("fr-FR", {maximumFractionDigits: 0})}</TableCell>
+           {/* Tableau View */}
+           {displayType === "Tableau" && (
+             <div className="space-y-6">
+               {/* New: Production Flow by Zone Table - Moved here */}
+               <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                 <CardHeader className="pb-3 border-b bg-slate-50/50 dark:bg-slate-900/50">
+                   <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-2">
+                       <Share2 className="h-4 w-4 text-primary rotate-90" />
+                       <CardTitle className="text-sm font-bold">Détails de Flux de Production par Zone</CardTitle>
+                     </div>
+                     <Button 
+                       variant="ghost" 
+                       size="sm" 
+                       className="h-7 gap-1 text-[10px] hover:bg-muted"
+                       onClick={() => setShowFluxDetails(!showFluxDetails)}
+                     >
+                       {showFluxDetails ? (
+                         <>Masquer Détails <ChevronUp className="h-3 w-3" /></>
+                       ) : (
+                         <>Afficher Détails <ChevronDown className="h-3 w-3" /></>
+                       )}
+                     </Button>
+                   </div>
+                 </CardHeader>
+                 <CardContent className="p-0">
+                   <Table>
+                     <TableHeader className="bg-muted/30 text-[10px] uppercase">
+                       <TableRow>
+                         <TableHead className="font-bold">Période</TableHead>
+                         <TableHead className="text-right font-bold text-blue-600">Entrée Presse (m²)</TableHead>
+                         <TableHead className="text-right font-bold text-purple-600">Émaillage (m²)</TableHead>
+                         <TableHead className="text-right font-bold text-orange-600">Sortie Four (m²)</TableHead>
+                         <TableHead className="text-right font-bold text-emerald-600">Scanner m² (Final)</TableHead>
+                         <TableHead className="text-right font-bold">Rendement Global</TableHead>
+                       </TableRow>
+                     </TableHeader>
+                     {showFluxDetails && (
+                       <TableBody>
+                         {periodicZoneData.map((row) => {
+                           const rendement = row.press > 0 ? (row.scanner / row.press) * 100 : 0;
+                           return (
+                             <TableRow key={row.period} className="hover:bg-muted/20">
+                               <TableCell className="text-xs font-bold">{row.period}</TableCell>
+                               <TableCell className="text-right text-xs font-medium">{row.press.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}</TableCell>
+                               <TableCell className="text-right text-xs">{row.emaillage.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}</TableCell>
+                               <TableCell className="text-right text-xs">{row.cuisson.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}</TableCell>
+                               <TableCell className="text-right text-xs font-bold text-emerald-600">{row.scanner.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}</TableCell>
+                               <TableCell className="text-right py-2">
+                                 <span className={cn(
+                                   "text-[10px] font-black px-2 py-0.5 rounded shadow-sm",
+                                   rendement > 95 ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-700"
+                                 )}>
+                                   {rendement.toFixed(1)}%
+                                 </span>
+                               </TableCell>
+                             </TableRow>
+                           );
+                         })}
+                       </TableBody>
+                     )}
+                     <TableFooter className="bg-muted/50">
+                       <TableRow>
+                         <TableCell className="text-xs font-black uppercase">Total</TableCell>
+                         <TableCell className="text-right text-xs font-black">
+                           {periodicZoneData.reduce((s, r) => s + r.press, 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                         </TableCell>
+                         <TableCell className="text-right text-xs font-bold">
+                           {periodicZoneData.reduce((s, r) => s + r.emaillage, 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                         </TableCell>
+                         <TableCell className="text-right text-xs font-bold">
+                           {periodicZoneData.reduce((s, r) => s + r.cuisson, 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                         </TableCell>
+                         <TableCell className="text-right text-xs font-black text-emerald-700">
+                           {periodicZoneData.reduce((s, r) => s + r.scanner, 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                         </TableCell>
+                         <TableCell className="text-right text-xs font-black">
+                           {(periodicZoneData.reduce((s, r) => s + r.press, 0) > 0 
+                             ? (periodicZoneData.reduce((s, r) => s + r.scanner, 0) / periodicZoneData.reduce((s, r) => s + r.press, 0)) * 100 
+                             : 0).toFixed(1)}%
+                         </TableCell>
+                       </TableRow>
+                     </TableFooter>
+                   </Table>
+                 </CardContent>
+               </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm">Données Production par {periodLabel(period)}</CardTitle>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 gap-1 text-[10px] hover:bg-muted"
+                      onClick={() => setShowProductionDetails(!showProductionDetails)}
+                    >
+                      {showProductionDetails ? (
+                        <>Masquer Détails <ChevronUp className="h-3 w-3" /></>
+                      ) : (
+                        <>Afficher Détails <ChevronDown className="h-3 w-3" /></>
+                      )}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-md border overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-muted/50 text-[11px] uppercase tracking-wider">
+                        <TableRow>
+                          <TableHead className="w-[120px] font-bold">Période</TableHead>
+                          <TableHead className="text-right font-bold">Production (m²)</TableHead>
+                          <TableHead className="text-right font-bold">Objectif (m²)</TableHead>
+                          <TableHead className="text-right font-bold text-blue-600">Écart (m²)</TableHead>
+                          <TableHead className="text-right font-bold text-blue-600">Écart (%)</TableHead>
+                          <TableHead className="text-right font-bold">Choix 1 (m²)</TableHead>
+                          <TableHead className="text-right font-bold">Choix 2 (m²)</TableHead>
+                          <TableHead className="text-right font-bold">Choix 3 (m²)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      {showProductionDetails && (
+                        <TableBody>
+                          {choixByPeriod.map((row) => {
+                            const trendRow = trendData.find(t => t.period === row.period);
+                            const prod = trendRow?.total_m2 || 0;
+                            const obj = trendRow?.objectif || 0;
+                            const ecartM2 = prod - obj;
+                            const ecartPct = obj > 0 ? (ecartM2 / obj) * 100 : 0;
+                            return (
+                              <TableRow key={row.period} className="hover:bg-muted/30">
+                                <TableCell className="text-xs font-medium">{row.period}</TableCell>
+                                <TableCell className="text-right text-xs font-semibold">{prod.toLocaleString("fr-FR")}</TableCell>
+                                <TableCell className="text-right text-xs text-muted-foreground italic">{obj.toLocaleString("fr-FR", {maximumFractionDigits: 0})}</TableCell>
+                                <TableCell className={cn("text-right text-xs font-bold", ecartM2 >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                                  {ecartM2 >= 0 ? "+" : ""}{ecartM2.toLocaleString("fr-FR", {maximumFractionDigits: 0})}
+                                </TableCell>
+                                <TableCell className={cn("text-right text-xs font-black", ecartM2 >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                                  {ecartPct >= 0 ? "+" : ""}{ecartPct.toFixed(1)}%
+                                </TableCell>
+                                <TableCell className="text-right text-xs text-emerald-600 font-medium">{row.choix1.toLocaleString("fr-FR")}</TableCell>
+                                <TableCell className="text-right text-xs text-orange-600">{row.choix2.toLocaleString("fr-FR")}</TableCell>
+                                <TableCell className="text-right text-xs text-rose-600">{row.choix3.toLocaleString("fr-FR")}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      )}
+                      <TableFooter className="bg-muted/30">
+                        <TableRow className="hover:bg-transparent">
+                          <TableCell className="text-xs font-black uppercase">Total</TableCell>
+                          <TableCell className="text-right text-xs font-black">{productionTotals.totalM2.toLocaleString("fr-FR")}</TableCell>
+                          <TableCell className="text-right text-xs font-black italic">{productionTotals.objective.toLocaleString("fr-FR", {maximumFractionDigits: 0})}</TableCell>
+                          <TableCell className={cn("text-right text-xs font-black", (productionTotals.totalM2 - productionTotals.objective) >= 0 ? "text-emerald-700" : "text-rose-700")}>
+                            {(productionTotals.totalM2 - productionTotals.objective) >= 0 ? "+" : ""}
+                            {(productionTotals.totalM2 - productionTotals.objective).toLocaleString("fr-FR", {maximumFractionDigits: 0})}
+                          </TableCell>
+                          <TableCell className={cn("text-right text-xs font-black", (productionTotals.totalM2 - productionTotals.objective) >= 0 ? "text-emerald-700" : "text-rose-700")}>
+                            {productionTotals.objective > 0 ? (((productionTotals.totalM2 - productionTotals.objective) / productionTotals.objective) * 100).toFixed(1) : "0"}%
+                          </TableCell>
+                          <TableCell className="text-right text-xs text-emerald-600 font-black">{productionTotals.c1.toLocaleString("fr-FR")}</TableCell>
+                          <TableCell className="text-right text-xs text-orange-600 font-black">{productionTotals.c2.toLocaleString("fr-FR")}</TableCell>
+                          <TableCell className="text-right text-xs text-rose-600 font-black">{productionTotals.c3.toLocaleString("fr-FR")}</TableCell>
+                        </TableRow>
+                      </TableFooter>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-sky-100 dark:border-sky-900 shadow-md">
+                <CardHeader className="pb-2 bg-sky-50/50 dark:bg-sky-950/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Gauge className="h-4 w-4 text-sky-600" />
+                      <CardTitle className="text-sm">Analyse Détaillée Rendement & Qualité (Scanner)</CardTitle>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 gap-1 text-[10px] hover:bg-sky-100 dark:hover:bg-sky-900"
+                      onClick={() => setShowQualityDetails(!showQualityDetails)}
+                    >
+                      {showQualityDetails ? (
+                        <>Masquer Détails <ChevronUp className="h-3 w-3" /></>
+                      ) : (
+                        <>Afficher Détails <ChevronDown className="h-3 w-3" /></>
+                      )}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="rounded-md border border-sky-100 dark:border-sky-900 overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-sky-50 dark:bg-sky-950/40 text-[11px] uppercase tracking-wider">
+                        <TableRow>
+                          <TableHead className="w-[120px] font-bold text-sky-900 dark:text-sky-100">Période</TableHead>
+                          <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">Total Scanner (m²)</TableHead>
+                          <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">Objectif (m²)</TableHead>
+                          <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">1er Choix (m²)</TableHead>
+                          <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">Rendement (%)</TableHead>
+                          <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">Scrap C2+C3 (m²)</TableHead>
+                          <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">Taux Rebut (%)</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      {showQualityDetails && (
+                        <TableBody>
+                          {qualityTableData.map((row) => (
+                            <TableRow key={row.period} className="hover:bg-sky-50/50 dark:hover:bg-sky-900/10">
+                              <TableCell className="text-xs font-bold">{row.period}</TableCell>
+                              <TableCell className="text-right text-xs">{row.total.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</TableCell>
+                              <TableCell className="text-right text-xs text-muted-foreground italic">
+                                { (trendData.find(t => t.period === row.period)?.objectif || 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 }) }
+                              </TableCell>
+                              <TableCell className="text-right text-xs text-emerald-600 font-bold">{row.c1.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</TableCell>
+                              <TableCell className="text-right text-xs font-black">
+                                <span className={cn(
+                                  "px-2 py-0.5 rounded",
+                                  row.rendement >= 85 ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"
+                                )}>
+                                  {row.rendement.toFixed(2)}%
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right text-xs text-rose-500">{(row.c2 + row.c3).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</TableCell>
+                              <TableCell className="text-right text-xs font-bold text-rose-600">{row.rebut.toFixed(2)}%</TableCell>
+                            </TableRow>
+                          ))}
+                          {qualityTableData.length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground italic">
+                                Aucune donnée de rendement disponible pour cette période
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      )}
+                      {qualityTableData.length > 0 && (
+                        <TableFooter className="bg-sky-100/50 dark:bg-sky-900/30">
+                          <TableRow className="hover:bg-transparent border-t-2 border-sky-200 dark:border-sky-800">
+                            <TableCell className="text-xs font-black text-sky-900 dark:text-sky-100 uppercase">Total</TableCell>
+                            <TableCell className="text-right text-xs font-black text-sky-900 dark:text-sky-100">
+                              {qualityTotals.total.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-right text-xs font-black text-sky-900/60 dark:text-sky-100/60 italic">
+                               {productionTotals.objective.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}
+                             </TableCell>
+                            <TableCell className="text-right text-xs text-emerald-700 font-black">
+                              {qualityTotals.c1.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-right text-xs font-black">
+                              <span className={cn(
+                                "px-2 py-0.5 rounded shadow-sm text-white",
+                                qualityTotals.rendement >= 85 ? "bg-emerald-500" : "bg-orange-500"
+                              )}>
+                                {qualityTotals.rendement.toFixed(2)}%
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right text-xs text-rose-600 font-black">
+                              {qualityTotals.scrap.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-right text-xs font-black text-rose-700">
+                              {qualityTotals.rebut.toFixed(2)}%
+                            </TableCell>
                           </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+                        </TableFooter>
+                      )}
+                    </Table>
+                  </div>
+                  <div className="mt-4 flex items-center gap-4 text-[10px] text-muted-foreground italic">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                      <span>Rendement ≥ 85% (Objectif)</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                      <span>Taux de Rebut (C2 + C3)</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           <p className="text-xs text-muted-foreground text-center">

@@ -99,12 +99,12 @@ export default function InterventionExcelImport() {
 
           // ── Intervenants colonnes 1 à 7 ──────────────────────────────────
           const intervenants: { nom: string; visa: string }[] = [];
-          for (let i = 1; i <= 7; i++) {
-            const key = i === 1 ? 'Intervenants et Visas' : `Intervenants et Visas${i}`;
-            const val = getCol(row, key);
-            if (val) intervenants.push({ nom: val, visa: 'Excel' });
-          }
-          if (intervenants.length === 0) intervenants.push({ nom: 'Système/Excel', visa: 'N/A' });
+            for (let i = 1; i <= 7; i++) {
+              const key = i === 1 ? 'Intervenants et Visas' : `Intervenants et Visas${i}`;
+              const val = getCol(row, key);
+              if (val) intervenants.push({ nom: val });
+            }
+            if (intervenants.length === 0) intervenants.push({ nom: 'Système/Excel' });
 
           // ── Pièces de rechange ────────────────────────────────────────────
           const pdrText = getCol(row, 'Pièces de rechange');
@@ -161,7 +161,6 @@ export default function InterventionExcelImport() {
             heure_demande: getCol(row, 'Heure de demande', 'Heure') || '08:00',
             equipe: getCol(row, 'Equipe') || null,
             demandeur: getCol(row, 'Operateur', 'Demandeur', 'Operateur ') || 'Import Excel',
-            visa_demandeur: 'Excel',
             urgence: getCol(row, 'Urgence') || 'Moyenne',
             nature: getCol(row, 'Nature') || 'Corrective',
             type: getCol(row, 'Type') || 'Intervention',

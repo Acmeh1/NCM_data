@@ -19,6 +19,7 @@ interface ScrapRateKpiCardProps {
   recordCount?: number;
   objective?: number;
   formula?: string;
+  totalScrap?: number;
 }
 
 export default function ScrapRateKpiCard({
@@ -30,6 +31,7 @@ export default function ScrapRateKpiCard({
   recordCount,
   objective,
   formula,
+  totalScrap,
 }: ScrapRateKpiCardProps) {
   const isBetter = variation < 0; // Negative variation in scrap is good
   const meetsObjective = objective !== undefined ? currentRate <= objective : null;
@@ -96,6 +98,17 @@ export default function ScrapRateKpiCard({
             </ResponsiveContainer>
           </div>
         </div>
+        
+        {totalScrap !== undefined && (
+          <div className="grid grid-cols-1 gap-4 mb-4">
+            <div className="bg-amber-50/50 dark:bg-amber-900/10 rounded-xl p-2.5 border border-amber-100/50 dark:border-amber-800/50">
+              <p className="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider mb-0.5">Surface Rebut (C2 + C3)</p>
+              <p className="text-xl font-black text-amber-700 dark:text-amber-200">
+                {totalScrap.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} <span className="text-xs font-bold opacity-60">m²</span>
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/50">
           <div className="group/item">

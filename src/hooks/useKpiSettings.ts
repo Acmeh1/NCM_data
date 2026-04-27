@@ -19,9 +19,9 @@ export const DEFAULT_KPI_OBJECTIVES: KpiObjective[] = [
   {
     id: "volume",
     label: "Volume Produit",
-    description: "Surface totale produite au four (cuisson) sur la période analysée.",
-    formula: "Σ cuisson_m2",
-    formulaLatex: "Volume = \\sum_{i} cuisson\\_m2_i",
+    description: "Surface totale produite (Total Linéa A) sur la période analysée.",
+    formula: "Σ total_surface_m2 (Linéa)",
+    formulaLatex: "Volume = \\sum total\\_surface\\_m2",
     unit: "m²",
     objective: 8000,
     objectiveLabel: "m²/jour",

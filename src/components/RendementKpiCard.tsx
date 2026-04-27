@@ -19,6 +19,7 @@ interface RendementKpiCardProps {
   recordCount?: number;
   objective?: number;
   formula?: string;
+  totalC1?: number;
 }
 
 export default function RendementKpiCard({
@@ -30,6 +31,7 @@ export default function RendementKpiCard({
   recordCount,
   objective,
   formula,
+  totalC1,
 }: RendementKpiCardProps) {
   const isBetter = variation > 0; // More yield = better
   const meetsObjective = objective !== undefined ? currentRate >= objective : null;
@@ -96,6 +98,17 @@ export default function RendementKpiCard({
             </ResponsiveContainer>
           </div>
         </div>
+
+        {totalC1 !== undefined && (
+          <div className="grid grid-cols-1 gap-4 mb-4">
+            <div className="bg-sky-50/50 dark:bg-sky-900/10 rounded-xl p-2.5 border border-sky-100/50 dark:border-sky-800/50">
+              <p className="text-[9px] text-sky-600 dark:text-sky-400 font-bold uppercase tracking-wider mb-0.5">Surface 1er Choix</p>
+              <p className="text-xl font-black text-sky-700 dark:text-sky-200">
+                {totalC1.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} <span className="text-xs font-bold opacity-60">m²</span>
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/50">
           <div className="group/item">

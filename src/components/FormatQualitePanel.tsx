@@ -502,21 +502,15 @@ export default function FormatQualitePanel({ data, startDate, endDate }: FormatQ
                             <tr className="border-b border-muted/30 text-[10px] uppercase font-bold text-muted-foreground">
                               <th className="pb-3 text-left w-10 pl-2">Rg</th>
                               <th className="pb-3 text-left">Modèle</th>
-                              <th className="pb-3 text-center">Choix Dominant</th>
-                              <th className="pb-3 text-right">Volume (m²)</th>
-                              <th className="pb-3 text-right min-w-[140px]">Répartition du Format</th>
-                              <th className="pb-3 text-right pr-2">Taux Rebut</th>
+                              <th className="pb-3 text-right text-emerald-600">1er Choix (m²)</th>
+                              <th className="pb-3 text-right text-amber-600">2ème Choix (m²)</th>
+                              <th className="pb-3 text-right text-rose-600 pr-2">3ème Choix (m²)</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-muted/10">
                             {modelBreakdown.map((m, i) => {
-                              const pct = (m.total / selFmt.total) * 100;
-                              const dom = dominant(m.c1, m.c2, m.c3);
-                              const rebut = m.total > 0 ? ((m.c2 + m.c3) / m.total) * 100 : 0;
-                              const cfg = CHOIX_CFG[dom - 1];
-                              const rebutColor = rebut < 1.5 ? "text-emerald-500 font-extrabold" : rebut < 4 ? "text-amber-500 font-bold" : "text-rose-500 font-bold";
                               return (
-                                <tr key={m.nom} className="hover:bg-background/50 transition-all group">
+                                <tr key={m.nom} className="hover:bg-background/50 transition-all group border-b border-muted/10 last:border-0">
                                   <td className="py-4 pl-2">
                                     <span className={cn(
                                       "inline-flex items-center justify-center w-7 h-7 rounded-xl text-[12px] font-black shadow-sm",
@@ -525,27 +519,21 @@ export default function FormatQualitePanel({ data, startDate, endDate }: FormatQ
                                       {i + 1}
                                     </span>
                                   </td>
-                                  <td className="py-4 font-bold text-foreground/90 max-w-[200px]" title={m.nom}>
+                                  <td className="py-4 font-bold text-foreground/90 max-w-[220px]" title={m.nom}>
                                     <div className="flex flex-col">
-                                      <span className="truncate">{m.nom}</span>
+                                      <span className="truncate text-sm">{m.nom}</span>
                                       <span className="text-[9px] font-medium text-muted-foreground/60 italic uppercase tracking-tighter">Détail qualité</span>
                                     </div>
                                   </td>
-                                  <td className="py-4 text-center">
-                                    <span className={cn("inline-block px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter shadow-sm", cfg.bg, cfg.txt)}>
-                                      {cfg.label}
-                                    </span>
-                                  </td>
-                                  <td className="py-4 text-right font-black tabular-nums text-sm">{m.total.toLocaleString("fr-FR")}</td>
                                   <td className="py-4 text-right">
-                                    <div className="flex flex-col items-end gap-1.5 pr-2">
-                                      <div className="w-full h-2 bg-muted/50 rounded-full overflow-hidden shadow-inner border border-muted/5">
-                                        <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 rounded-full transition-all duration-1000 ease-out group-hover:from-blue-500 group-hover:to-indigo-400" style={{ width: `${pct}%` }} />
-                                      </div>
-                                      <span className="text-[10px] font-black tabular-nums text-blue-600/80">{pct.toFixed(1)}%</span>
-                                    </div>
+                                    <span className="font-black text-emerald-600 tabular-nums text-sm">{m.c1.toLocaleString("fr-FR")}</span>
                                   </td>
-                                  <td className={cn("py-4 text-right tabular-nums pr-2 text-sm", rebutColor)}>{rebut.toFixed(1)}%</td>
+                                  <td className="py-4 text-right">
+                                    <span className="font-bold text-amber-600 tabular-nums text-sm">{m.c2.toLocaleString("fr-FR")}</span>
+                                  </td>
+                                  <td className="py-4 text-right pr-2">
+                                    <span className="font-bold text-rose-500 tabular-nums text-sm">{m.c3.toLocaleString("fr-FR")}</span>
+                                  </td>
                                 </tr>
                               );
                             })}

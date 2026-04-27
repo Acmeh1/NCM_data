@@ -47,28 +47,34 @@ function CustomTooltip({ active, payload, label }: any) {
       <p style={{ fontWeight: 700, marginBottom: 4, color: GROUP_COLORS[d.groupe] || "#111" }}>
         Groupe {d.groupe}
       </p>
-      <p style={{ color: "#6B7280" }}>Performance : <strong style={{ color: "#111" }}>{fmt(d.performance)} m²/rot</strong></p>
+      <p style={{ color: "#6B7280" }}>Performance : <strong style={{ color: "#111" }}>{fmt(d.performance)} m²/Jr</strong></p>
       <p style={{ color: "#6B7280" }}>Écart var : <strong style={{ color: d.ecart > 0 ? "#10B981" : "#EF4444" }}>{d.ecart > 0 ? "+" : ""}{d.ecart.toFixed(1)}%</strong></p>
       <p style={{ color: "#6B7280" }}>Métrage : <strong style={{ color: "#111" }}>{fmt(d.total_surface_m2)} m²</strong></p>
-      <p style={{ color: "#6B7280" }}>Rotations : <strong style={{ color: "#111" }}>{d.rotations}</strong></p>
+      <p style={{ color: "#6B7280" }}>Jours : <strong style={{ color: "#111" }}>{d.jours}</strong></p>
     </div>
   );
 }
 
 // ── main component ────────────────────────────────────────────────────────────
-export default function MonthlyGroupDashboard() {
+interface MonthlyGroupDashboardProps {
+  startDate?: string;
+  endDate?: string;
+}
+
+export default function MonthlyGroupDashboard({ startDate, endDate }: MonthlyGroupDashboardProps) {
   const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  
+  // Use props if provided, otherwise fallback to current month
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+  
+  const from = startDate || `${currentYear}-${String(currentMonth).padStart(2, "0")}-01`;
+  const to = endDate || `${currentYear}-${String(currentMonth).padStart(2, "0")}-31`;
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["group-dashboard", selectedYear, selectedMonth],
+    queryKey: ["group-dashboard", from, to],
     queryFn: async () => {
-      const monthStr = String(selectedMonth).padStart(2, "0");
-      const from = `${selectedYear}-${monthStr}-01`;
-      const to = `${selectedYear}-${monthStr}-31`;
-
       const { data, error } = await supabase
         .from("production_journalier")
         .select("groupe, total_m2, date, horaire")
@@ -97,25 +103,25 @@ export default function MonthlyGroupDashboard() {
       mapM2[g] = (mapM2[g] || 0) + (Number(r.total_surface_m2) || 0);
       
       if (!mapShifts[g]) mapShifts[g] = new Set();
-      if (r.date && r.horaire) {
-        mapShifts[g].add(`${r.date}_${r.horaire}`);
+      if (r.date) {
+        mapShifts[g].add(r.date);
       }
     });
 
     const rawData = Object.entries(mapM2).map(([groupe, total_surface_m2]) => {
-      const rotations = mapShifts[groupe]?.size || 0;
-      const performance = rotations > 0 ? total_surface_m2 / rotations : 0;
+      const jours = mapShifts[groupe]?.size || 0;
+      const performance = jours > 0 ? total_surface_m2 / jours : 0;
       return {
         groupe,
         total_surface_m2,
-        rotations,
+        jours,
         performance,
       };
     });
 
     const totalM2All = rawData.reduce((s, d) => s + d.total_surface_m2, 0);
-    const totalRotationsAll = rawData.reduce((s, d) => s + d.rotations, 0);
-    const moyenneGlobale = totalRotationsAll > 0 ? totalM2All / totalRotationsAll : 0;
+    const totalJoursAll = rawData.reduce((s, d) => s + d.jours, 0);
+    const moyenneGlobale = totalJoursAll > 0 ? totalM2All / totalJoursAll : 0;
 
     return rawData
       .map(d => ({
@@ -127,9 +133,9 @@ export default function MonthlyGroupDashboard() {
 
   const winner = groupData[0];
   const totalM2 = groupData.reduce((s, d) => s + d.total_surface_m2, 0);
-  const totalRotations = groupData.reduce((s, d) => s + d.rotations, 0);
+  const totalJours = groupData.reduce((s, d) => s + d.jours, 0);
   const maxPerformance = Math.max(...groupData.map(d => d.performance), 1);
-  const globale = totalRotations > 0 ? totalM2 / totalRotations : 0;
+  const globale = totalJours > 0 ? totalM2 / totalJours : 0;
 
   // ── year options ───────────────────────────────────────────────────────────
   const years = Array.from({ length: 4 }, (_, i) => now.getFullYear() - i);
@@ -149,45 +155,8 @@ export default function MonthlyGroupDashboard() {
               Performance par groupe
             </h2>
             <p style={{ margin: 0, fontSize: 12, color: "#6B7280" }}>
-              Classement mensuel · m² / rotation
+              Analylse filtrée · {from} au {to}
             </p>
-          </div>
-        </div>
-
-        {/* ── selectors ── */}
-        <div style={{ display: "flex", gap: 8 }}>
-          {/* month */}
-          <div style={{ position: "relative" }}>
-            <select
-              value={selectedMonth}
-              onChange={e => setSelectedMonth(Number(e.target.value))}
-              style={{
-                appearance: "none", paddingRight: 28, paddingLeft: 12, paddingTop: 7, paddingBottom: 7,
-                border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13,
-                background: "var(--background,#fff)", color: "var(--foreground,#111)", cursor: "pointer",
-              }}
-            >
-              {MONTHS.map((m, i) => (
-                <option key={i} value={i + 1}>{m}</option>
-              ))}
-            </select>
-            <ChevronDown size={13} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#9CA3AF" }} />
-          </div>
-
-          {/* year */}
-          <div style={{ position: "relative" }}>
-            <select
-              value={selectedYear}
-              onChange={e => setSelectedYear(Number(e.target.value))}
-              style={{
-                appearance: "none", paddingRight: 28, paddingLeft: 12, paddingTop: 7, paddingBottom: 7,
-                border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13,
-                background: "var(--background,#fff)", color: "var(--foreground,#111)", cursor: "pointer",
-              }}
-            >
-              {years.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-            <ChevronDown size={13} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#9CA3AF" }} />
           </div>
         </div>
       </div>
@@ -242,7 +211,7 @@ export default function MonthlyGroupDashboard() {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: GROUP_COLORS[winner.groupe] || "#3B82F6" }}>
-                  {fmt(winner.performance)} m²/rot
+                  {fmt(winner.performance)} m²/Jr
                 </div>
                 <div style={{ fontSize: 11, color: winner.ecart > 0 ? "#10B981" : "#EF4444", fontWeight: 600 }}>
                   {winner.ecart > 0 ? "+" : ""}{winner.ecart.toFixed(1)}% vs moy.
@@ -282,10 +251,10 @@ export default function MonthlyGroupDashboard() {
                     </div>
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "#111", marginTop: 8 }}>
-                    {fmt(d.performance)} m²/rot
+                    {fmt(d.performance)} m²/Jr
                   </div>
                   <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
-                    {fmt(d.total_surface_m2)} m² en {d.rotations} rot.
+                    {fmt(d.total_surface_m2)} m² en {d.jours} Jr.
                   </div>
                   {/* mini bar */}
                   <div style={{ marginTop: 8, height: 5, background: "rgba(0,0,0,0.08)", borderRadius: 4, overflow: "hidden" }}>
@@ -303,7 +272,7 @@ export default function MonthlyGroupDashboard() {
             marginBottom: 16,
           }}>
             <div style={{ fontSize: 12, color: "#6B7280", marginLeft: 12, marginBottom: 8, fontWeight: 600 }}>
-              Performance (m² / rot) — {MONTHS[selectedMonth - 1]} {selectedYear}
+              Performance (m² / Jr) — {from} au {to}
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={groupData} barCategoryGap="35%">
@@ -328,9 +297,9 @@ export default function MonthlyGroupDashboard() {
                 <tr style={{ background: "#F9FAFB" }}>
                   <th style={{ padding: "10px 14px", textAlign: "left", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Rang</th>
                   <th style={{ padding: "10px 14px", textAlign: "left", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Groupe</th>
-                  <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Rotations</th>
+                  <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Jours</th>
                   <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Métrage Total</th>
-                  <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Performance (m²/rot)</th>
+                  <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Performance (m²/Jr)</th>
                   <th style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280", fontWeight: 600, fontSize: 11, textTransform: "uppercase", letterSpacing: ".04em" }}>Écart vs Moyenne</th>
                 </tr>
               </thead>
@@ -351,13 +320,13 @@ export default function MonthlyGroupDashboard() {
                       </td>
                       <td style={{ padding: "10px 14px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: 7, background: color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 13, color: "#fff" }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 7, background: color, display: "flex", alignItems: "center", justifyCenter: "center", fontWeight: 800, fontSize: 13, color: "#fff" }}>
                             {d.groupe}
                           </div>
                           <span style={{ fontWeight: 600, color: "var(--foreground,#111)" }}>
                             Groupe {d.groupe}
                             {i === 0 && (
-                              <span style={{ marginLeft: 6, fontSize: 10, background: "#FEF3C7", color: "#92400E", padding: "1px 6px", borderRadius: 20, fontWeight: 700 }}>
+                              <span style={{ marginLeft: 6, fontSize: 10, background: "#FEF3C7", color: "#92400E", padding: "1px 6px", borderRadius: 20, font: 700 }}>
                                 🏆 Prime
                               </span>
                             )}
@@ -365,7 +334,7 @@ export default function MonthlyGroupDashboard() {
                         </div>
                       </td>
                       <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 600 }}>
-                        {d.rotations}
+                        {d.jours}
                       </td>
                       <td style={{ padding: "10px 14px", textAlign: "right", color: "#6B7280" }}>
                         {fmt(d.total_surface_m2)} m²
@@ -385,7 +354,7 @@ export default function MonthlyGroupDashboard() {
               <tfoot>
                 <tr style={{ borderTop: "2px solid #E5E7EB", background: "#F9FAFB" }}>
                   <td colSpan={2} style={{ padding: "10px 14px", fontWeight: 700, fontSize: 12 }}>Total / Moyenne Globale</td>
-                  <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700, fontSize: 13 }}>{totalRotations}</td>
+                  <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700, fontSize: 13 }}>{totalJours}</td>
                   <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 700, fontSize: 13 }}>{fmt(totalM2)} m²</td>
                   <td style={{ padding: "10px 14px", textAlign: "right", fontWeight: 800, fontSize: 13 }}>{fmt(globale)}</td>
                   <td style={{ padding: "10px 14px" }} />

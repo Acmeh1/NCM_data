@@ -5,6 +5,7 @@ import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import configData from '@/data/config_data.json';
 import equipementsDataRaw from '@/data/Liste_FINAL_de_codification_des_equipements .json';
+import fileDataRaw from '@/data/pdrrrrr.json';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PDRSearchableInput } from './PDRSearchableInput';
 
 // Parse raw equipment data to unique zones
 const equipementsData = equipementsDataRaw as any[];
@@ -28,6 +30,18 @@ equipementsData.forEach((e) => {
 });
 
 const zonesList = Array.from(uniqueZonesMap.entries()).map(([id, nom]) => ({ id, nom }));
+
+const pdrList = Array.isArray(fileDataRaw) 
+  ? fileDataRaw
+      .filter((item: any) => item?.Intitule && item.Intitule !== 'Intitule')
+      .map((item: any) => {
+        return { 
+          Intitule: item.Intitule,
+          originalName: item.Intitule,
+          ref: item.REF || ''
+        };
+      })
+  : [];
 
 const getEquipementsForZone = (zoneId: string) => {
   return equipementsData
@@ -47,7 +61,7 @@ const interventionSchema = z.object({
   equipe: z.enum(["A", "B", "C", "D"], { required_error: "Équipe requise" }),
   
   demandeur: z.string().min(1, "Demandeur requis"),
-  visa_demandeur: z.string().min(1, "Visa demandeur requis"),
+  nom_demandeur: z.string().min(1, "Nom du demandeur requis"),
   urgence: z.string().min(1, "Urgence requise"),
   nature: z.string().min(1, "Nature requise"),
   type: z.string().min(1, "Type requis"),
@@ -62,7 +76,6 @@ const interventionSchema = z.object({
   intervenants: z.array(
     z.object({
       nom: z.string().min(1, "Nom requis"),
-      visa: z.string().min(1, "Visa requis"),
     })
   ).min(1, "Au moins un intervenant requis"),
   
@@ -71,6 +84,7 @@ const interventionSchema = z.object({
   arret_cle: z.number().min(0).default(0),
   arret_ccu: z.number().min(0).default(0),
   arret_csl: z.number().min(0).default(0),
+  total_arret: z.number().min(0).default(0),
 
   pdr_utilisees: z.array(z.object({ nom: z.string().min(1), quantite: z.number().min(1) })),
   pdr_consommables: z.array(z.object({ nom: z.string().min(1), quantite: z.number().min(1) })),
@@ -87,6 +101,40 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
   const { toast } = useToast();
   const [selectedZone, setSelectedZone] = useState<string>('');
   const [equipements, setEquipements] = useState<any[]>([]);
+  const [numeroExistsWarning, setNumeroExistsWarning] = useState<string | null>(null);
+  const [suggestedNames, setSuggestedNames] = useState<string[]>([]);
+
+  React.useEffect(() => {
+    const fetchNames = async () => {
+      try {
+        const { data: intervs } = await supabase
+          .from('interventions')
+          .select('intervenants, nom_demandeur')
+          .order('id', { ascending: false })
+          .limit(100);
+        
+        const namesSet = new Set<string>();
+
+        if (intervs) {
+          for (const row of intervs) {
+            if (row.nom_demandeur && row.nom_demandeur.trim()) {
+              namesSet.add(row.nom_demandeur.trim());
+            }
+            if (Array.isArray(row.intervenants)) {
+              row.intervenants.forEach((i: any) => {
+                if (i.nom && i.nom.trim()) namesSet.add(i.nom.trim());
+              });
+            }
+          }
+        }
+
+        setSuggestedNames(Array.from(namesSet).filter(Boolean).slice(0, 4));
+      } catch (err) {
+        console.error("Error fetching names for autocomplete:", err);
+      }
+    };
+    fetchNames();
+  }, []);
 
   const { control, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<InterventionFormData>({
     resolver: zodResolver(interventionSchema),
@@ -96,7 +144,7 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
       heure_demande: '',
       equipe: undefined,
       demandeur: '',
-      visa_demandeur: '',
+      nom_demandeur: '',
       urgence: '',
       nature: '',
       type: '',
@@ -105,12 +153,13 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
       description: '',
       heure_debut: '',
       heure_fin: '',
-      intervenants: [{ nom: '', visa: '' }],
+      intervenants: [{ nom: '' }],
       arret_cpmp: 0,
       arret_cpr: 0,
       arret_cle: 0,
       arret_ccu: 0,
       arret_csl: 0,
+      total_arret: 0,
       pdr_utilisees: [],
       pdr_consommables: [],
     }
@@ -124,7 +173,7 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
         heure_demande: initialData.heure_demande || '',
         equipe: initialData.equipe || undefined,
         demandeur: initialData.demandeur || '',
-        visa_demandeur: initialData.visa_demandeur || '',
+        nom_demandeur: initialData.nom_demandeur || '',
         urgence: initialData.urgence || '',
         nature: initialData.nature || '',
         type: initialData.type || '',
@@ -133,12 +182,15 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
         description: initialData.description || '',
         heure_debut: initialData.heure_debut ? new Date(initialData.heure_debut).toISOString().slice(0,16) : '',
         heure_fin: initialData.heure_fin ? new Date(initialData.heure_fin).toISOString().slice(0,16) : '',
-        intervenants: initialData.intervenants?.length ? initialData.intervenants : [{ nom: '', visa: '' }],
+        intervenants: initialData.intervenants?.length 
+          ? initialData.intervenants.map((i: any) => ({ nom: i.nom })) 
+          : [{ nom: '' }],
         arret_cpmp: initialData.arret_cpmp || 0,
         arret_cpr: initialData.arret_cpr || 0,
         arret_cle: initialData.arret_cle || 0,
         arret_ccu: initialData.arret_ccu || 0,
         arret_csl: initialData.arret_csl || 0,
+        total_arret: initialData.total_arret || 0,
         pdr_utilisees: initialData.pdr_utilisees || [],
         pdr_consommables: initialData.pdr_consommables || []
       });
@@ -165,6 +217,7 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
     name: 'pdr_consommables'
   });
 
+  const numeroValue = watch('numero');
   const heureDebut = watch('heure_debut');
   const heureFin = watch('heure_fin');
   
@@ -173,7 +226,41 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
   const arretCle = watch('arret_cle') || 0;
   const arretCcu = watch('arret_ccu') || 0;
   const arretCsl = watch('arret_csl') || 0;
-  const totalArret = arretCpmp + arretCpr + arretCle + arretCcu + arretCsl;
+  
+  // Update total_arret automatically when sub-components change, 
+  // but allow manual override in the field later.
+  // Actually the user said "ne sera pas automatique". But usually they still want 
+  // a calculation that they can override. Or strictly manual.
+  // The request said "total temp arret ne sera pas automatique change la focntionalister".
+  // I will stop the auto-calculation in the onSubmit as well.
+
+  React.useEffect(() => {
+    const checkNumero = async () => {
+      if (!numeroValue || numeroValue.trim() === '') {
+        setNumeroExistsWarning(null);
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('interventions')
+        .select('id, numero')
+        .eq('numero', numeroValue.trim())
+        .limit(1);
+
+      if (!error && data && data.length > 0) {
+        if (initialData?.id && data[0].id === initialData.id) {
+          setNumeroExistsWarning(null);
+        } else {
+          setNumeroExistsWarning("Ce numéro d'intervention existe déjà.");
+        }
+      } else {
+        setNumeroExistsWarning(null);
+      }
+    };
+
+    const debounce = setTimeout(checkNumero, 400);
+    return () => clearTimeout(debounce);
+  }, [numeroValue, initialData]);
 
   const handleZoneChange = (zoneId: string) => {
     setSelectedZone(zoneId);
@@ -202,18 +289,27 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
       ? Math.floor((new Date(data.heure_fin).getTime() - new Date(data.heure_debut).getTime()) / (1000 * 60)) 
       : null;
 
+    const selectedEquip = equipements.find(e => e.code === data.equipement);
+    const zoneNom = zonesList.find(z => z.id === data.zone)?.nom || '';
+
     const insertData = {
       numero: data.numero,
       date_intervention: data.date_intervention,
       heure_demande: data.heure_demande,
       equipe: data.equipe,
       demandeur: data.demandeur,
-      visa_demandeur: data.visa_demandeur,
+      nom_demandeur: data.nom_demandeur,
       urgence: data.urgence,
       nature: data.nature,
       type: data.type,
       zone_code: data.zone,
       equipement_code: data.equipement,
+      equipement: selectedEquip ? {
+        nom: selectedEquip.nom,
+        "code d'équipement": selectedEquip.code,
+        "code de la zone": data.zone,
+        zone: zoneNom
+      } : data.equipement,
       description: data.description,
       heure_debut: data.heure_debut,
       heure_fin: data.heure_fin,
@@ -225,7 +321,7 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
       arret_cle: data.arret_cle,
       arret_ccu: data.arret_ccu,
       arret_csl: data.arret_csl,
-      total_arret: totalArret,
+      total_arret: data.total_arret,
 
       pdr_utilisees: data.pdr_utilisees,
       pdr_consommables: data.pdr_consommables,
@@ -260,6 +356,11 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
 
   return (
     <Card>
+      <datalist id="suggested-names">
+        {suggestedNames.map(name => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
       <CardHeader>
         <CardTitle>Demande d'Intervention</CardTitle>
       </CardHeader>
@@ -272,9 +373,16 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
               <Controller
                 name="numero"
                 control={control}
-                render={({ field }) => <Input {...field} placeholder="Ex: INT-2023-001" />}
+                render={({ field }) => (
+                  <Input 
+                    {...field} 
+                    placeholder="Ex: INT-2023-001" 
+                    className={numeroExistsWarning ? "border-amber-500 focus-visible:ring-amber-500" : ""}
+                  />
+                )}
               />
               {errors.numero && <p className="text-red-500 text-xs mt-1">{errors.numero.message}</p>}
+              {numeroExistsWarning && <p className="text-amber-500 font-semibold text-xs mt-1">{numeroExistsWarning}</p>}
             </div>
             <div>
               <Label>Date</Label>
@@ -334,13 +442,13 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
               {errors.demandeur && <p className="text-red-500 text-sm mt-1">{errors.demandeur.message}</p>}
             </div>
             <div>
-              <Label>Visa Demandeur</Label>
+              <Label>Nom Demandeur</Label>
               <Controller
-                name="visa_demandeur"
+                name="nom_demandeur"
                 control={control}
-                render={({ field }) => <Input {...field} placeholder="Saisir visa" />}
+                render={({ field }) => <Input {...field} placeholder="Saisir nom" list="suggested-names" autoComplete="off" />}
               />
-              {errors.visa_demandeur && <p className="text-red-500 text-sm mt-1">{errors.visa_demandeur.message}</p>}
+              {errors.nom_demandeur && <p className="text-red-500 text-sm mt-1">{errors.nom_demandeur.message}</p>}
             </div>
           </div>
           
@@ -492,17 +600,9 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
                   <Controller
                     name={`intervenants.${index}.nom`}
                     control={control}
-                    render={({ field: inputField }) => <Input placeholder="Nom intervenant" {...inputField} />}
+                    render={({ field: inputField }) => <Input placeholder="Nom intervenant" {...inputField} list="suggested-names" autoComplete="off" />}
                   />
                   {errors.intervenants?.[index]?.nom && <p className="text-red-500 text-xs mt-1">{errors.intervenants[index]?.nom?.message}</p>}
-                </div>
-                <div className="flex-1">
-                  <Controller
-                    name={`intervenants.${index}.visa`}
-                    control={control}
-                    render={({ field: inputField }) => <Input placeholder="Visa / Signature" {...inputField} />}
-                  />
-                  {errors.intervenants?.[index]?.visa && <p className="text-red-500 text-xs mt-1">{errors.intervenants[index]?.visa?.message}</p>}
                 </div>
                 {intervenantsFields.length > 1 && (
                   <Button type="button" variant="destructive" size="icon" onClick={() => removeIntervenant(index)}>
@@ -511,7 +611,7 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
                 )}
               </div>
             ))}
-            <Button type="button" variant="outline" size="sm" onClick={() => appendIntervenant({ nom: '', visa: '' })} className="mt-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => appendIntervenant({ nom: '' })} className="mt-2">
               <Plus className="h-4 w-4 mr-2" /> Ajouter un intervenant
             </Button>
             {errors.intervenants && !Array.isArray(errors.intervenants) && <p className="text-red-500 text-sm mt-1">{errors.intervenants.message}</p>}
@@ -572,7 +672,13 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
               </div>
               <div>
                 <Label className="text-xs font-bold text-primary">Total Temps Arrêt</Label>
-                <Input className="bg-muted font-bold" value={totalArret} readOnly />
+                <Controller
+                  name="total_arret"
+                  control={control}
+                  render={({ field }) => (
+                    <Input type="number" min="0" className="font-bold" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
+                  )}
+                />
               </div>
             </div>
           </div>
@@ -581,13 +687,21 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
             <Label>Pièces de rechange utilisées</Label>
             {pdrUtiliseesFields.map((field, index) => (
               <div key={field.id} className="flex gap-2 mb-2">
-                <Controller
-                  name={`pdr_utilisees.${index}.nom` as const}
-                  control={control}
-                  render={({ field: inputField }) => (
-                    <Input placeholder="Nom" {...inputField} />
-                  )}
-                />
+                <div className="flex-1">
+                  <Controller
+                    name={`pdr_utilisees.${index}.nom` as const}
+                    control={control}
+                    render={({ field: inputField }) => (
+                      <PDRSearchableInput 
+                        items={pdrList} 
+                        value={inputField.value} 
+                        onChange={inputField.onChange}
+                        onManualEntry={inputField.onChange}
+                        placeholder="Rechercher ou saisir un PDR"
+                      />
+                    )}
+                  />
+                </div>
                 <Controller
                   name={`pdr_utilisees.${index}.quantite` as const}
                   control={control}
@@ -604,13 +718,21 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
             <Label>Pièces de rechange consommables</Label>
             {pdrConsommablesFields.map((field, index) => (
               <div key={field.id} className="flex gap-2 mb-2">
-                <Controller
-                  name={`pdr_consommables.${index}.nom` as const}
-                  control={control}
-                  render={({ field: inputField }) => (
-                    <Input placeholder="Nom" {...inputField} />
-                  )}
-                />
+                <div className="flex-1">
+                  <Controller
+                    name={`pdr_consommables.${index}.nom` as const}
+                    control={control}
+                    render={({ field: inputField }) => (
+                      <PDRSearchableInput 
+                        items={pdrList} 
+                        value={inputField.value} 
+                        onChange={inputField.onChange}
+                        onManualEntry={inputField.onChange}
+                        placeholder="Rechercher ou saisir un consommable"
+                      />
+                    )}
+                  />
+                </div>
                 <Controller
                   name={`pdr_consommables.${index}.quantite` as const}
                   control={control}

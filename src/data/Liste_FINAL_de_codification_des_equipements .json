@@ -181,19 +181,19 @@
     },
     {
         "Equipements": "MOdule N°01 (broyeur)",
-        "code d'équipement": "CPMP MO 3101",
+        "code d'équipement": "CPMP MO 0101",
         "code de la zone": "CPMP",
         "zone": "Préparation Matier Premiere"
     },
     {
         "Equipements": "MOdule N°02 (broyeur)",
-        "code d'équipement": "CPMP MO 3202",
+        "code d'équipement": "CPMP MO 0202",
         "code de la zone": "CPMP",
         "zone": "Préparation Matier Premiere"
     },
     {
         "Equipements": "Tamis Vibrant N°01",
-        "code d'équipement": "CPMP TV 3301",
+        "code d'équipement": "CPMP TV 01",
         "code de la zone": "CPMP",
         "zone": "Préparation Matier Premiere"
     },
@@ -1130,7 +1130,7 @@
     {
         "Equipements": "\"Cloche enGobe ( agitateur tamis",
         "code d'équipement": "CLE",
-        "code de la zone": "belle contrôle )\"",
+        "code de la zone": "CLE",
         "zone": "Ligne d'Emaillage"
     },
     {
@@ -1142,7 +1142,7 @@
     {
         "Equipements": "\"Cloche  eMail( agitateur tamis",
         "code d'équipement": "CLE",
-        "code de la zone": "belle contrôle )\"",
+        "code de la zone": "CLE",
         "zone": "Ligne d'Emaillage"
     },
     {
@@ -1687,8 +1687,14 @@
     },
     {
         "Equipements": "Venteuse  DeChargement",
-        "code d'équipement": "CSL VD 1000",
+        "code d'équipement": "CSL VD 0900",
         "code de la zone": "CSL",
+        "zone": "SeLection"
+    },
+    {
+        "Equipements": "PAS EQUIPEMENT MONTIONEE",
+        "code d'équipement": "",
+        "code de la zone": "",
         "zone": "SeLection"
     },
     {
@@ -1765,13 +1771,13 @@
     },
     {
         "Equipements": "POusseur",
-        "code d'équipement": "CSL PO 2300",
+        "code d'équipement": "CSL PO 2200",
         "code de la zone": "CSL",
         "zone": "SeLection"
     },
     {
         "Equipements": "CoNditioneuse",
-        "code d'équipement": "CSL CN 2400",
+        "code d'équipement": "CSL CN 2300",
         "code de la zone": "CSL",
         "zone": "SeLection"
     },

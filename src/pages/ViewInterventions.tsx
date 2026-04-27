@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, FileSpreadsheet } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import InterventionForm from "@/components/InterventionForm";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -34,7 +36,7 @@ const COLUMNS = [
   { key: "heure_demande", label: "H. Demande" },
   { key: "equipe", label: "Équipe" },
   { key: "demandeur", label: "Demandeur" },
-  { key: "visa_demandeur", label: "Visa" },
+  { key: "nom_demandeur", label: "Nom" },
   { key: "urgence", label: "Urgence" },
   { key: "nature", label: "Type" },
   { key: "type", label: "Nature" },
@@ -62,25 +64,29 @@ const FILTER_CONFIGS = [
   { key: "Nature", label: "Nature", type: "select" as const },
   { key: "Type", label: "Type", type: "select" as const },
   { key: "Urgence", label: "Urgence", type: "select" as const },
+  { key: "N° Intervention", label: "Recherche N°", type: "text" as const },
 ];
 
 export default function ViewInterventions() {
   const navigate = useNavigate();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const fetchAll = async () => {
+    setLoading(true);
+    const { data: records, error } = await supabase
+      .from("interventions")
+      .select("*")
+      .order("created_at", { ascending: false });
+      
+    if (!error && records) {
+      setData(records);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchAll = async () => {
-      const { data: records, error } = await supabase
-        .from("interventions")
-        .select("*")
-        .order("created_at", { ascending: false });
-        
-      if (!error && records) {
-        setData(records);
-      }
-      setLoading(false);
-    };
     fetchAll();
   }, []);
 
@@ -170,6 +176,7 @@ export default function ViewInterventions() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
+              <TableHead className="font-semibold text-xs uppercase tracking-wider whitespace-nowrap sticky left-0 z-20 bg-muted/50">Actions</TableHead>
               {headers.map((h) => (
                 <TableHead key={h} className="font-semibold text-xs uppercase tracking-wider whitespace-nowrap">{h}</TableHead>
               ))}
@@ -178,6 +185,11 @@ export default function ViewInterventions() {
           <TableBody>
             {filteredData.map((row, idx) => (
               <TableRow key={idx}>
+                <TableCell className="sticky left-0 bg-background py-1 z-10 border-r">
+                  <Button variant="ghost" size="icon" onClick={() => setEditingId(row._id)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </TableCell>
                 {headers.map((h) => (
                   <TableCell key={h} className="font-mono text-xs whitespace-nowrap max-w-[200px] truncate" title={String(row[h] ?? "—")}>
                     {typeof row[h] === "number" ? row[h] : String(row[h] ?? "—")}
@@ -188,6 +200,20 @@ export default function ViewInterventions() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!editingId} onOpenChange={(open) => !open && setEditingId(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {editingId && (
+            <InterventionForm 
+              initialData={data.find((d) => d.id === editingId)} 
+              onSuccess={() => {
+                setEditingId(null);
+                fetchAll();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
