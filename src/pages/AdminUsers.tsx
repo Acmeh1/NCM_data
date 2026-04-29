@@ -196,15 +196,53 @@ export default function AdminUsers() {
 
   const toggleRole = async (userId: string, currentRole: string) => {
     setSaving(userId + "role");
+    console.log(`Toggling role for ${userId}. Current: ${currentRole}`);
     try {
       if (currentRole === "user") {
-        await supabase.from("user_roles").insert({ user_id: userId, role: "admin" as any });
+        // Promote to admin
+        // 1. Check if they already have the role to avoid 400s
+        const { data: existing } = await supabase
+          .from("user_roles")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("role", "admin" as any)
+          .maybeSingle();
+
+        if (!existing) {
+          const { error: roleError } = await supabase.from("user_roles").insert({ 
+            id: uuidv4(), 
+            user_id: userId, 
+            role: "admin" as any 
+          });
+          if (roleError) {
+            console.error("Role (Insert) Error:", JSON.stringify(roleError, null, 2));
+            throw roleError;
+          }
+        }
+        
+        // 2. Also ensure they are approved in profiles
+        const { error: profileError } = await supabase.from("profiles").update({ approved: true }).eq("id", userId);
+        if (profileError) {
+          console.error("Profile Update Error:", JSON.stringify(profileError, null, 2));
+          throw profileError;
+        }
       } else {
-        await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin" as any);
+        // Downgrade to user
+        const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin" as any);
+        if (error) {
+          console.error("Role (Delete) Error:", JSON.stringify(error, null, 2));
+          throw error;
+        }
       }
-      await fetchUsers();
-      toast.success("Rôle mis à jour");
+      
+      // Wait a tiny bit for the DB to propagate
+      setTimeout(async () => {
+        await fetchUsers();
+        toast.success("Rôle mis à jour");
+      }, 500);
+      
     } catch (e: any) {
+      console.error("Caught Exception:", JSON.stringify(e));
       toast.error("Erreur: " + e.message);
     } finally {
       setSaving(null);
