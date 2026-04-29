@@ -26,6 +26,7 @@ import DashboardMaintenance from "@/pages/DashboardMaintenance";
 import DashboardQualite from "@/pages/DashboardQualite";
 import DashboardRH from "@/pages/DashboardRH";
 import DashboardCommercial from "@/pages/DashboardCommercial";
+import ProductionCasse from "@/pages/ProductionCasse";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/production/emballage" element={<ProductionEmballage />} />
               <Route path="/production/selection" element={<ProductionSelection />} />
               <Route path="/production/stats-linea" element={<StatsLinea />} />
+              <Route path="/production/casse" element={<ProductionCasse />} />
               <Route path="/production/journalier/view" element={<ViewJournalier />} />
               <Route path="/production/emballage/view" element={<ViewEmballage />} />
               <Route path="/production/selection/view" element={<ViewSelection />} />

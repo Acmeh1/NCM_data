@@ -277,6 +277,7 @@ export default function StatsLinea() {
 
       const payload = {
         production_id: selectedProduction.id,
+        production_date: selectedProduction.Date,
 
         choix1_pieces,
         choix1_surface_m2,

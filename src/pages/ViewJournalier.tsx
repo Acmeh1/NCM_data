@@ -35,6 +35,8 @@ const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
   { key: "Surface_CAR_m2", label: "Surface CAR m²", type: "number" },
   { key: "Cuisson_M2", label: "Production Four m²", type: "number" },
   { key: "Four_Minutes_Vides", label: "Minutes vides Four", type: "number" },
+  { key: "VIDE_f_maintenance", label: "Vide Maintenance", type: "number" },
+  { key: "VIDE_f_production", label: "Vide Production", type: "number" },
   { key: "Four_Consommation_Kwh", label: "Consommation Four kW/h", type: "number" },
 ];
 
@@ -54,6 +56,7 @@ const FILTER_CONFIGS = [
 ];
 
 export default function ViewJournalier() {
+  const [showVideDetails, setShowVideDetails] = useState(false);
   const { entries, isLoaded, updateEntry } = useProductionStore();
   const { entries: selectionEntries, isLoaded: selectionLoaded } = useSelectionStore();
   const { productionEdit } = usePermissions();
@@ -84,7 +87,14 @@ export default function ViewJournalier() {
 
   if (!isLoaded || !selectionLoaded) return <p className="text-muted-foreground p-8">Chargement…</p>;
 
-  const headers = [...COLUMNS.map((c) => c.label), ...EXTRA_SELECTION_COLUMNS.map((c) => c.label)];
+  const activeColumns = COLUMNS.filter(c => {
+    if (c.key === "VIDE_f_maintenance" || c.key === "VIDE_f_production") {
+      return showVideDetails;
+    }
+    return true;
+  });
+
+  const headers = [...activeColumns.map((c) => c.label), ...EXTRA_SELECTION_COLUMNS.map((c) => c.label)];
   const exportData = filteredData.map(({ _id, ...r }) => {
     const out: Record<string, any> = {};
     headers.forEach((h) => { out[h] = r[h]; });
@@ -142,8 +152,19 @@ export default function ViewJournalier() {
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-[40px]" />
-              {headers.map((h) => (
-                <TableHead key={h} className="font-semibold text-xs uppercase tracking-wider whitespace-nowrap">{h}</TableHead>
+              {activeColumns.map((c) => (
+                <TableHead 
+                  key={c.key} 
+                  className={`font-semibold text-xs uppercase tracking-wider whitespace-nowrap ${c.key === "Four_Minutes_Vides" ? "cursor-help text-primary hover:underline" : ""}`}
+                  onClick={() => c.key === "Four_Minutes_Vides" && setShowVideDetails(!showVideDetails)}
+                >
+                  {c.label}
+                </TableHead>
+              ))}
+              {EXTRA_SELECTION_COLUMNS.map((col) => (
+                <TableHead key={String(col.key)} className="font-semibold text-xs uppercase tracking-wider whitespace-nowrap">
+                  {col.label}
+                </TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -158,11 +179,19 @@ export default function ViewJournalier() {
                     </Button>
                   )}
                 </TableCell>
-                {headers.map((h) => (
-                  <TableCell key={h} className="font-mono text-xs whitespace-nowrap">
-                    {typeof row[h] === "number" ? row[h].toFixed(2) : String(row[h] ?? "—")}
-                  </TableCell>
-                ))}
+                {activeColumns.map((c) => {
+                  const val = row[c.label];
+                  const hasVideValue = c.key === "Four_Minutes_Vides" && Number(val) > 0;
+                  return (
+                    <TableCell 
+                      key={c.key} 
+                      className={`font-mono text-xs whitespace-nowrap ${hasVideValue ? "cursor-pointer text-primary font-bold hover:bg-primary/5" : ""}`}
+                      onClick={() => hasVideValue && setShowVideDetails(!showVideDetails)}
+                    >
+                      {typeof val === "number" ? val.toFixed(2) : String(val ?? "—")}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>

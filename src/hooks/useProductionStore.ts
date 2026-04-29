@@ -29,6 +29,8 @@ export interface ProductionEntry {
   Cuisson_M2: number;
   Four_Minutes_Vides: number;
   Four_Consommation_Kwh: number;
+  VIDE_f_maintenance: number;
+  VIDE_f_production: number;
 }
 
 // Map DB row to frontend interface
@@ -57,6 +59,8 @@ function fromDb(row: any): ProductionEntry {
     Cuisson_M2: Number(row.cuisson_m2),
     Four_Minutes_Vides: Number(row.four_minutes_vides ?? 0),
     Four_Consommation_Kwh: Number(row.four_consommation_kwh ?? 0),
+    VIDE_f_maintenance: Number(row.VIDE_f_maintenance ?? 0),
+    VIDE_f_production: Number(row.VIDE_f_production ?? 0),
   };
 }
 
@@ -75,7 +79,7 @@ export function useProductionStore() {
           modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
           total_m2, pressage_m2, Project_m2, emaillage_m2, 
           cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-          four_minutes_vides, four_consommation_kwh, created_at
+          four_minutes_vides, four_consommation_kwh, VIDE_f_maintenance, VIDE_f_production, created_at
         `)
         .limit(5000)
         .order("created_at", { ascending: true });
@@ -99,7 +103,7 @@ export function useProductionStore() {
         modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
         total_m2, pressage_m2, Project_m2, emaillage_m2, 
         cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-        four_minutes_vides, four_consommation_kwh, created_at
+        four_minutes_vides, four_consommation_kwh, VIDE_f_maintenance, VIDE_f_production, created_at
       `)
       .limit(5000)
       .order("created_at", { ascending: true });
@@ -143,13 +147,15 @@ export function useProductionStore() {
         cuisson_m2: Number(entry.Cuisson_M2) || 0,
         four_minutes_vides: Number(entry.Four_Minutes_Vides) || 0,
         four_consommation_kwh: Number(entry.Four_Consommation_Kwh) || 0,
+        VIDE_f_maintenance: Number(entry.VIDE_f_maintenance) || 0,
+        VIDE_f_production: Number(entry.VIDE_f_production) || 0,
       })
       .select(`
         id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
         modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
         total_m2, pressage_m2, Project_m2, emaillage_m2, 
         cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-        four_minutes_vides, four_consommation_kwh, created_at
+        four_minutes_vides, four_consommation_kwh, VIDE_f_maintenance, VIDE_f_production, created_at
       `)
       .single();
 
@@ -190,6 +196,8 @@ export function useProductionStore() {
         cuisson_m2: Number(rest.Cuisson_M2) || 0,
         four_minutes_vides: Number(rest.Four_Minutes_Vides) || 0,
         four_consommation_kwh: Number(rest.Four_Consommation_Kwh) || 0,
+        VIDE_f_maintenance: Number(rest.VIDE_f_maintenance) || 0,
+        VIDE_f_production: Number(rest.VIDE_f_production) || 0,
       })
       .eq("id", id)
       .select(`
@@ -197,7 +205,7 @@ export function useProductionStore() {
         modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
         total_m2, pressage_m2, Project_m2, emaillage_m2, 
         cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-        four_minutes_vides, four_consommation_kwh, created_at
+        four_minutes_vides, four_consommation_kwh, VIDE_f_maintenance, VIDE_f_production, created_at
       `)
       .single();
 

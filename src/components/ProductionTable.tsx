@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -37,6 +38,8 @@ const COLUMNS: { key: keyof ProductionEntry; label: string }[] = [
   { key: "Surface_CAR_m2", label: "Surface CAR m²" },
   { key: "Cuisson_M2", label: "Production Four m²" },
   { key: "Four_Minutes_Vides", label: "Minutes vides Four" },
+  { key: "VIDE_f_maintenance", label: "Vide Maintenance" },
+  { key: "VIDE_f_production", label: "Vide Production" },
   { key: "Four_Consommation_Kwh", label: "Consommation Four kW/h" },
 ];
 
@@ -54,6 +57,7 @@ function buildKey(date: string, groupe: string, horaire: string) {
 }
 
 export default function ProductionTable({ entries, selectionEntries, onDelete, onEdit }: Props) {
+  const [showVideDetails, setShowVideDetails] = useState(false);
   const selectionByKey = new Map<string, SelectionEntry>();
   (selectionEntries ?? []).forEach((s) => {
     selectionByKey.set(buildKey(s.date, s.groupe, s.horaire), s);
@@ -88,7 +92,18 @@ export default function ProductionTable({ entries, selectionEntries, onDelete, o
   }
 
   const exportData = filteredData.map(({ _entry_id, _f_Date, _f_Groupe, _f_Horaire, _f_Modele, ...rest }) => rest);
-  const displayColumns = [...COLUMNS.map((c) => ({ key: String(c.key), label: c.label })), ...EXTRA_SELECTION_COLUMNS.map((c) => ({ key: String(c.key), label: c.label }))];
+  
+  const activeColumns = COLUMNS.filter(c => {
+    if (c.key === "VIDE_f_maintenance" || c.key === "VIDE_f_production") {
+      return showVideDetails;
+    }
+    return true;
+  });
+
+  const displayColumns = [
+    ...activeColumns.map((c) => ({ key: String(c.key), label: c.label })), 
+    ...EXTRA_SELECTION_COLUMNS.map((c) => ({ key: String(c.key), label: c.label }))
+  ];
 
   return (
     <div className="space-y-3">
@@ -120,9 +135,18 @@ export default function ProductionTable({ entries, selectionEntries, onDelete, o
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-[80px]" />
-              {COLUMNS.map((col) => (
-                <TableHead key={col.key} className="font-semibold text-xs uppercase tracking-wider whitespace-nowrap">
+              {activeColumns.map((col) => (
+                <TableHead 
+                  key={col.key} 
+                  className={`font-semibold text-xs uppercase tracking-wider whitespace-nowrap ${col.key === "Four_Minutes_Vides" ? "cursor-help text-primary hover:underline" : ""}`}
+                  onClick={() => col.key === "Four_Minutes_Vides" && setShowVideDetails(!showVideDetails)}
+                >
                   {col.label}
+                  {col.key === "Four_Minutes_Vides" && (
+                    <span className="ml-1 text-[10px] lowercase font-normal opacity-70">
+                      (cliquer)
+                    </span>
+                  )}
                 </TableHead>
               ))}
               {EXTRA_SELECTION_COLUMNS.map((col) => (
@@ -155,13 +179,23 @@ export default function ProductionTable({ entries, selectionEntries, onDelete, o
                       </Button>
                     )}
                   </TableCell>
-                  {COLUMNS.map((col) => (
-                    <TableCell key={col.key} className="font-mono text-xs whitespace-nowrap">
-                      {typeof entry[col.key] === "number"
-                        ? (entry[col.key] as number).toFixed(2)
-                        : String(entry[col.key] ?? "—")}
-                    </TableCell>
-                  ))}
+                  {activeColumns.map((col) => {
+                    const value = entry[col.key];
+                    const isVideField = col.key === "Four_Minutes_Vides";
+                    const hasVideValue = isVideField && Number(value) > 0;
+                    
+                    return (
+                      <TableCell 
+                        key={col.key} 
+                        className={`font-mono text-xs whitespace-nowrap ${hasVideValue ? "cursor-pointer text-primary font-bold hover:bg-primary/5" : ""}`}
+                        onClick={() => hasVideValue && setShowVideDetails(!showVideDetails)}
+                      >
+                        {typeof value === "number"
+                          ? (value as number).toFixed(2)
+                          : String(value ?? "—")}
+                      </TableCell>
+                    );
+                  })}
                   {EXTRA_SELECTION_COLUMNS.map((col) => (
                     <TableCell key={String(col.key)} className="font-mono text-xs whitespace-nowrap">
                       {typeof (sel as any)?.[col.key] === "number"

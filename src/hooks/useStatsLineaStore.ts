@@ -7,6 +7,7 @@ import { uuidv4 } from "@/lib/uuid";
 export interface StatsLineaEntry {
   id: string;
   production_id: string;
+  production_date: string;
 
   // Section 2
   choix1_pieces: number;
@@ -62,6 +63,7 @@ export interface StatsLineaEntry {
 function fromDb(row: any): StatsLineaEntry {
   return {
     ...row,
+    production_date: row.production_date || "",
     choix1_pieces: Number(row.choix1_pieces),
     choix2_pieces: Number(row.choix2_pieces),
     choix3_pieces: Number(row.choix3_pieces),

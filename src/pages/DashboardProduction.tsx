@@ -279,16 +279,35 @@ export default function DashboardProduction() {
   ];
 
   const choixByPeriod = useMemo(() => {
-    const map: Record<string, { period: string; choix1: number; choix2: number; choix3: number }> = {};
+    const map: Record<string, { period: string; choix1: number; choix2: number; choix3: number; hasScanner: boolean; cuisson: number }> = {};
+    
+    // Process journalier first
+    filteredJournalier.forEach((r) => {
+      const key = aggregateKey(r.date, period);
+      if (!map[key]) map[key] = { period: key, choix1: 0, choix2: 0, choix3: 0, hasScanner: false, cuisson: 0 };
+      map[key].cuisson += Number(r.cuisson_m2) || 0;
+    });
+
     statsLinea.forEach((r) => {
       const key = aggregateKey(r.production_date || "", period);
-      if (!map[key]) map[key] = { period: key, choix1: 0, choix2: 0, choix3: 0 };
+      if (!map[key]) map[key] = { period: key, choix1: 0, choix2: 0, choix3: 0, hasScanner: false, cuisson: 0 };
       map[key].choix1 += Number(r.choix1_surface_m2) || 0;
       map[key].choix2 += Number(r.choix2_surface_m2) || 0;
       map[key].choix3 += Number(r.choix3_surface_m2) || 0;
+      map[key].hasScanner = true;
     });
-    return Object.values(map).sort((a, b) => (a.period || "").localeCompare(b.period || ""));
-  }, [statsLinea, period]);
+
+    return Object.values(map).map(entry => {
+      const isFallback = !entry.hasScanner && entry.cuisson > 0;
+      return {
+        period: entry.period,
+        choix1: isFallback ? entry.cuisson : entry.choix1,
+        choix2: entry.choix2,
+        choix3: entry.choix3,
+        isFallback
+      };
+    }).sort((a, b) => (a.period || "").localeCompare(b.period || ""));
+  }, [statsLinea, filteredJournalier, period]);
 
   const formatSurfaceMap = useMemo(() => {
     const map: Record<string, number> = {};
@@ -301,23 +320,24 @@ export default function DashboardProduction() {
   }, []);
 
   const trendData = useMemo(() => {
-    const map: Record<string, { period: string; total_m2: number; sumDailyObj: number; shiftCount: number }> = {};
+    const map: Record<string, { period: string; total_m2_scanner: number; total_m2_cuisson: number; sumDailyObj: number; shiftCount: number }> = {};
     
     // 1. Production Actuals from Scanner (statsLinea)
     statsLinea.forEach((r) => {
       const key = aggregateKey(r.production_date || "", period);
       if (!map[key]) {
-        map[key] = { period: key, total_m2: 0, sumDailyObj: 0, shiftCount: 0 };
+        map[key] = { period: key, total_m2_scanner: 0, total_m2_cuisson: 0, sumDailyObj: 0, shiftCount: 0 };
       }
-      map[key].total_m2 += Number(r.total_surface_m2) || 0;
+      map[key].total_m2_scanner += Number(r.total_surface_m2) || 0;
     });
 
     // 2. Objectives calculation from Journalier formats
     filteredJournalier.forEach((r) => {
       const key = aggregateKey(r.date, period);
       if (!map[key]) {
-        map[key] = { period: key, total_m2: 0, sumDailyObj: 0, shiftCount: 0 };
+        map[key] = { period: key, total_m2_scanner: 0, total_m2_cuisson: 0, sumDailyObj: 0, shiftCount: 0 };
       }
+      map[key].total_m2_cuisson += Number(r.cuisson_m2) || 0;
       
       const format = String(r.format || r.modele || "").trim();
       let dailyObj = 8000;
@@ -338,9 +358,12 @@ export default function DashboardProduction() {
         finalObj = finalObj * (selectedGroups.length / 3);
       }
       
+      const hasScannerData = entry.total_m2_scanner > 0;
+      
       return {
         period: entry.period,
-        total_m2: entry.total_m2,
+        total_m2: hasScannerData ? entry.total_m2_scanner : entry.total_m2_cuisson,
+        isFallback: !hasScannerData && entry.total_m2_cuisson > 0,
         objectif: finalObj
       };
     }).sort((a, b) => (a.period || "").localeCompare(b.period || ""));
@@ -477,23 +500,43 @@ export default function DashboardProduction() {
   }, [statsLinea, statsLineaPrev]);
 
   const qualityTableData = useMemo(() => {
-    const map: Record<string, { period: string; total: number; c1: number; c2: number; c3: number }> = {};
+    const map: Record<string, { period: string; total: number; c1: number; c2: number; c3: number; hasScanner: boolean; cuisson: number }> = {};
+    
+    // Process journalier for period skeleton and fallback totals
+    filteredJournalier.forEach((r) => {
+      const key = aggregateKey(r.date, period);
+      if (!map[key]) map[key] = { period: key, total: 0, c1: 0, c2: 0, c3: 0, hasScanner: false, cuisson: 0 };
+      map[key].cuisson += Number(r.cuisson_m2) || 0;
+    });
+
     statsLinea.forEach((r) => {
       const key = aggregateKey(r.production_date || "", period);
-      if (!map[key]) map[key] = { period: key, total: 0, c1: 0, c2: 0, c3: 0 };
+      if (!map[key]) map[key] = { period: key, total: 0, c1: 0, c2: 0, c3: 0, hasScanner: false, cuisson: 0 };
       map[key].total += Number(r.total_surface_m2) || 0;
       map[key].c1 += Number(r.choix1_surface_m2) || 0;
       map[key].c2 += Number(r.choix2_surface_m2) || 0;
       map[key].c3 += Number(r.choix3_surface_m2) || 0;
+      map[key].hasScanner = true;
     });
+
     return Object.values(map)
-      .map(entry => ({
-        ...entry,
-        rendement: entry.total > 0 ? (entry.c1 / entry.total) * 100 : 0,
-        rebut: entry.total > 0 ? ((entry.c2 + entry.c3) / entry.total) * 100 : 0
-      }))
+      .map(entry => {
+        const isFallback = !entry.hasScanner && entry.cuisson > 0;
+        const total = entry.hasScanner ? entry.total : entry.cuisson;
+        const c1 = entry.hasScanner ? entry.c1 : entry.cuisson;
+        return {
+          ...entry,
+          total,
+          c1,
+          isFallback,
+          rendement: total > 0 ? (c1 / total) * 100 : 0,
+          rebut: total > 0 ? ((entry.c2 + entry.c3) / total) * 100 : 0
+        };
+      })
       .sort((a, b) => (a.period || "").localeCompare(b.period || ""));
-  }, [statsLinea, period]);  const qualityTotals = useMemo(() => {
+  }, [statsLinea, filteredJournalier, period]);
+
+  const qualityTotals = useMemo(() => {
     const total = qualityTableData.reduce((s, r) => s + r.total, 0);
     const c1 = qualityTableData.reduce((s, r) => s + r.c1, 0);
     const scrap = qualityTableData.reduce((s, r) => s + (r.c2 + r.c3), 0);
@@ -518,12 +561,12 @@ export default function DashboardProduction() {
   }, [trendData, choixByPeriod]);
 
   const periodicZoneData = useMemo(() => {
-    const map: Record<string, { period: string; press: number; emaillage: number; cuisson: number; scanner: number }> = {};
+    const map: Record<string, { period: string; press: number; emaillage: number; cuisson: number; scanner: number; hasScanner: boolean }> = {};
     
     // Process journalier data
     filteredJournalier.forEach((r) => {
       const key = aggregateKey(r.date, period);
-      if (!map[key]) map[key] = { period: key, press: 0, emaillage: 0, cuisson: 0, scanner: 0 };
+      if (!map[key]) map[key] = { period: key, press: 0, emaillage: 0, cuisson: 0, scanner: 0, hasScanner: false };
       map[key].press += Number(r.pressage_m2) || 0;
       map[key].emaillage += Number(r.emaillage_m2) || 0;
       map[key].cuisson += Number(r.cuisson_m2) || 0;
@@ -532,11 +575,16 @@ export default function DashboardProduction() {
     // Process scanner data
     statsLinea.forEach((r) => {
       const key = aggregateKey(r.production_date || "", period);
-      if (!map[key]) map[key] = { period: key, press: 0, emaillage: 0, cuisson: 0, scanner: 0 };
+      if (!map[key]) map[key] = { period: key, press: 0, emaillage: 0, cuisson: 0, scanner: 0, hasScanner: false };
       map[key].scanner += Number(r.total_surface_m2) || 0;
+      map[key].hasScanner = true;
     });
 
-    return Object.values(map).sort((a, b) => a.period.localeCompare(b.period));
+    return Object.values(map).map(r => ({
+      ...r,
+      isFallback: !r.hasScanner && r.cuisson > 0,
+      scanner: r.hasScanner ? r.scanner : r.cuisson
+    })).sort((a, b) => a.period.localeCompare(b.period));
   }, [filteredJournalier, statsLinea, period]);
 
 
@@ -752,7 +800,11 @@ export default function DashboardProduction() {
                         <YAxis tick={{ fontSize: 10 }} />
                         <Tooltip formatter={(v: number) => v.toLocaleString("fr-FR", {maximumFractionDigits: 0}) + " m²"} />
                         <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                        <Bar dataKey="total_m2" name="Total m² (Scanner)" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="total_m2" name="Total m² (Scanner / Four)" radius={[4, 4, 0, 0]}>
+                          {trendData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.isFallback ? "#f97316" : COLORS[1]} />
+                          ))}
+                        </Bar>
                         <Line type="monotone" dataKey="objectif" name="Objectif" stroke="#ef4444" strokeWidth={2} dot={false} />
                       </ComposedChart>
                     </ResponsiveContainer>
@@ -848,7 +900,7 @@ export default function DashboardProduction() {
                          {periodicZoneData.map((row) => {
                            const rendement = row.press > 0 ? (row.scanner / row.press) * 100 : 0;
                            return (
-                             <TableRow key={row.period} className="hover:bg-muted/20">
+                             <TableRow key={row.period} className={cn("hover:bg-muted/20 transition-colors", row.isFallback && "bg-orange-50/50 dark:bg-orange-500/5")}>
                                <TableCell className="text-xs font-bold">{row.period}</TableCell>
                                <TableCell className="text-right text-xs font-medium">{row.press.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}</TableCell>
                                <TableCell className="text-right text-xs">{row.emaillage.toLocaleString("fr-FR", { maximumFractionDigits: 0 })}</TableCell>
@@ -934,7 +986,7 @@ export default function DashboardProduction() {
                             const ecartM2 = prod - obj;
                             const ecartPct = obj > 0 ? (ecartM2 / obj) * 100 : 0;
                             return (
-                              <TableRow key={row.period} className="hover:bg-muted/30">
+                              <TableRow key={row.period} className={cn("hover:bg-muted/30 transition-colors", row.isFallback && "bg-orange-50/50 dark:bg-orange-500/5")}>
                                 <TableCell className="text-xs font-medium">{row.period}</TableCell>
                                 <TableCell className="text-right text-xs font-semibold">{prod.toLocaleString("fr-FR")}</TableCell>
                                 <TableCell className="text-right text-xs text-muted-foreground italic">{obj.toLocaleString("fr-FR", {maximumFractionDigits: 0})}</TableCell>
@@ -1012,7 +1064,7 @@ export default function DashboardProduction() {
                       {showQualityDetails && (
                         <TableBody>
                           {qualityTableData.map((row) => (
-                            <TableRow key={row.period} className="hover:bg-sky-50/50 dark:hover:bg-sky-900/10">
+                            <TableRow key={row.period} className={cn("hover:bg-sky-50/50 dark:hover:bg-sky-900/10 transition-colors", row.isFallback && "bg-orange-50/50 dark:bg-orange-500/5")}>
                               <TableCell className="text-xs font-bold">{row.period}</TableCell>
                               <TableCell className="text-right text-xs">{row.total.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</TableCell>
                               <TableCell className="text-right text-xs text-muted-foreground italic">

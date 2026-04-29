@@ -1,4 +1,4 @@
-import { Factory, ClipboardList, Package, ChevronDown, Database, CheckSquare, BarChart3, Wrench, Users, PieChart, Target, LayoutDashboard, TrendingUp, ShieldCheck, UserCog, ShoppingCart } from "lucide-react";
+import { Factory, ClipboardList, Package, ChevronDown, Database, CheckSquare, BarChart3, Wrench, Users, PieChart, Target, LayoutDashboard, TrendingUp, ShieldCheck, UserCog, ShoppingCart, Hammer } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -74,6 +74,16 @@ export function AppSidebar() {
                           activeClassName="bg-sidebar-accent text-primary font-medium">
                           <BarChart3 className="h-4 w-4" />
                           Statistiques Linea
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/production/casse"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <Hammer className="h-4 w-4" />
+                          Casse Céramique
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -166,8 +176,8 @@ export function AppSidebar() {
                         <NavLink to="/dashboard/qualite"
                           className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
                           activeClassName="bg-sidebar-accent text-primary font-medium">
-                          <ShieldCheck className="h-4 w-4" />
-                          Qualité
+                          <Package className="h-4 w-4" />
+                          GESTION DES STOCKS & APPROVISIONNEMENT
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

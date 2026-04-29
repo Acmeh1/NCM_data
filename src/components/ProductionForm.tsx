@@ -85,6 +85,8 @@ export default function ProductionForm({
     Nb_Pieces_Four: "",
     Four_Minutes_Vides: "",
     Four_Consommation_Kwh: "",
+    VIDE_f_maintenance: "",
+    VIDE_f_production: "",
   });
 
   // Refs for ENTER key navigation
@@ -173,6 +175,8 @@ export default function ProductionForm({
   const cuissonM2 = surfaceCAR * nbPieces;
   const fourMinutesVides = Number(form.Four_Minutes_Vides) || 0;
   const fourConsommationKwh = Number(form.Four_Consommation_Kwh) || 0;
+  const videMaintenance = Number(form.VIDE_f_maintenance) || 0;
+  const videProduction = Number(form.VIDE_f_production) || 0;
 
   // Hydrate form when editing an existing entry
   useEffect(() => {
@@ -198,6 +202,8 @@ export default function ProductionForm({
       Nb_Pieces_Four: String(editingEntry.Nb_Pieces_Four),
       Four_Minutes_Vides: String(editingEntry.Four_Minutes_Vides),
       Four_Consommation_Kwh: String(editingEntry.Four_Consommation_Kwh),
+      VIDE_f_maintenance: String(editingEntry.VIDE_f_maintenance),
+      VIDE_f_production: String(editingEntry.VIDE_f_production),
     });
   }, [editingEntry]);
 
@@ -250,6 +256,8 @@ export default function ProductionForm({
         Cuisson_M2: cuissonM2,
         Four_Minutes_Vides: fourMinutesVides,
         Four_Consommation_Kwh: fourConsommationKwh,
+        VIDE_f_maintenance: videMaintenance,
+        VIDE_f_production: videProduction,
       });
       return;
     }
@@ -277,6 +285,8 @@ export default function ProductionForm({
       Cuisson_M2: cuissonM2,
       Four_Minutes_Vides: fourMinutesVides,
       Four_Consommation_Kwh: fourConsommationKwh,
+      VIDE_f_maintenance: videMaintenance,
+      VIDE_f_production: videProduction,
     });
     setForm({
       Date: form.Date,
@@ -299,6 +309,8 @@ export default function ProductionForm({
       Nb_Pieces_Four: "",
       Four_Minutes_Vides: "",
       Four_Consommation_Kwh: "",
+      VIDE_f_maintenance: "",
+      VIDE_f_production: "",
     });
   };
 
@@ -626,6 +638,31 @@ export default function ProductionForm({
               placeholder="0"
             />
           </div>
+
+          {fourMinutesVides > 0 && (
+            <>
+              <div className="space-y-1.5 animate-in slide-in-from-left duration-300">
+                <Label className="text-xs font-medium text-amber-600 dark:text-amber-400">Vide par Maintenance (min)</Label>
+                <Input
+                  type="number"
+                  value={form.VIDE_f_maintenance}
+                  onChange={(e) => update("VIDE_f_maintenance", e.target.value)}
+                  placeholder="0"
+                  className="border-amber-200 dark:border-amber-900 focus-visible:ring-amber-500"
+                />
+              </div>
+              <div className="space-y-1.5 animate-in slide-in-from-left duration-500">
+                <Label className="text-xs font-medium text-blue-600 dark:text-blue-400">Vide par Production (min)</Label>
+                <Input
+                  type="number"
+                  value={form.VIDE_f_production}
+                  onChange={(e) => update("VIDE_f_production", e.target.value)}
+                  placeholder="0"
+                  className="border-blue-200 dark:border-blue-900 focus-visible:ring-blue-500"
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
