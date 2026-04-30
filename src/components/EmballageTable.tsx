@@ -2,9 +2,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Download, FileSpreadsheet, Pencil } from "lucide-react";
+import { Trash2, Download, FileSpreadsheet, Pencil, FileText } from "lucide-react";
 import type { EmballageEntry } from "@/hooks/useEmballageStore";
-import { exportToExcel, exportToCsvGeneric } from "@/lib/exportUtils";
+import { exportToExcel, exportToCsvGeneric, exportToPdf } from "@/lib/exportUtils";
 import TableFilters, { useTableFilters } from "@/components/TableFilters";
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const FILTER_CONFIGS = [
-  { key: "Date", label: "Date", type: "date" as const },
+  { key: "Date", label: "Date", type: "dateRange" as const },
   { key: "Groupe", label: "Groupe", type: "select" as const },
   { key: "Horaire", label: "Horaire", type: "select" as const },
 ];
@@ -84,6 +84,10 @@ export default function EmballageTable({ entries, onDelete, onEdit }: Props) {
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => exportToExcel(exportData, "production_emballage")}>
             <FileSpreadsheet className="h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2"
+            onClick={() => exportToPdf(exportData, "production_emballage")}>
+            <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
       </div>

@@ -45,7 +45,7 @@ export default function ScrapRateKpiCard({
               <div className="p-1 rounded-md bg-amber-500/10">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
               </div>
-              Taux de Rebut
+              Choix commercial (2ème + 3ème)
             </p>
             <div className="flex flex-col gap-0.5">
               <div className="flex items-baseline gap-1.5">
@@ -102,7 +102,7 @@ export default function ScrapRateKpiCard({
         {totalScrap !== undefined && (
           <div className="grid grid-cols-1 gap-4 mb-4">
             <div className="bg-amber-50/50 dark:bg-amber-900/10 rounded-xl p-2.5 border border-amber-100/50 dark:border-amber-800/50">
-              <p className="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider mb-0.5">Surface Rebut (C2 + C3)</p>
+              <p className="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider mb-0.5">Surface Choix commercial (2ème + 3ème)</p>
               <p className="text-xl font-black text-amber-700 dark:text-amber-200">
                 {totalScrap.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} <span className="text-xs font-bold opacity-60">m²</span>
               </p>

@@ -282,7 +282,7 @@ export default function FormatQualitePanel({ data, startDate, endDate }: FormatQ
                         </div>
                         <div className="space-y-0.5 mt-1 pt-1 border-t border-muted/30">
                           <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">C1:</span><span className="font-bold text-emerald-600">{c1Pct.toFixed(0)}%</span></div>
-                          <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Rebut:</span><span className={cn("font-bold", rebut < 2 ? "text-emerald-600" : rebut < 5 ? "text-amber-600" : "text-rose-600")}>{rebut.toFixed(1)}%</span></div>
+                          <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Choix comm:</span><span className={cn("font-bold", rebut < 2 ? "text-emerald-600" : rebut < 5 ? "text-amber-600" : "text-rose-600")}>{rebut.toFixed(1)}%</span></div>
                         </div>
                       </div>
                     );

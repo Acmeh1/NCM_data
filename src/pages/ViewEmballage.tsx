@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useEmballageStore, type EmballageEntry, type EmballageChoix } from "@/hooks/useEmballageStore";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, FileSpreadsheet, Pencil } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, Pencil, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { exportToExcel, exportToCsvGeneric } from "@/lib/exportUtils";
+import { exportToExcel, exportToCsvGeneric, exportToPdf } from "@/lib/exportUtils";
 import TableFilters, { useTableFilters } from "@/components/TableFilters";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const FILTER_CONFIGS = [
-  { key: "Date", label: "Date", type: "date" as const },
+  { key: "Date", label: "Date", type: "dateRange" as const },
   { key: "Groupe", label: "Groupe", type: "select" as const },
   { key: "Horaire", label: "Horaire", type: "select" as const },
 ];
@@ -73,6 +73,8 @@ export default function ViewEmballage() {
     }
   };
 
+  const exportData = filteredData.map(({ _entryId, ...r }) => r);
+
   return (
     <div className="space-y-4 max-w-full">
       <div className="flex items-center justify-between">
@@ -87,12 +89,16 @@ export default function ViewEmballage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="gap-2"
-            onClick={() => exportToCsvGeneric(filteredData.map(({ _entryId, ...r }) => r), "production_emballage")}>
+            onClick={() => exportToCsvGeneric(exportData, "production_emballage")}>
             <Download className="h-4 w-4" /> CSV
           </Button>
           <Button variant="outline" size="sm" className="gap-2"
-            onClick={() => exportToExcel(filteredData.map(({ _entryId, ...r }) => r), "production_emballage")}>
+            onClick={() => exportToExcel(exportData, "production_emballage")}>
             <FileSpreadsheet className="h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2"
+            onClick={() => exportToPdf(exportData, "production_emballage")}>
+            <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
       </div>

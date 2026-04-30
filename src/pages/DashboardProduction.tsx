@@ -1058,7 +1058,7 @@ export default function DashboardProduction() {
                           <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">1er Choix (m²)</TableHead>
                           <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">Rendement (%)</TableHead>
                           <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">Scrap C2+C3 (m²)</TableHead>
-                          <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">Taux Rebut (%)</TableHead>
+                          <TableHead className="text-right font-bold text-sky-900 dark:text-sky-100">Choix commercial (%)</TableHead>
                         </TableRow>
                       </TableHeader>
                       {showQualityDetails && (
@@ -1131,7 +1131,7 @@ export default function DashboardProduction() {
                     </div>
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 rounded-full bg-rose-500"></div>
-                      <span>Taux de Rebut (C2 + C3)</span>
+                      <span>Choix commercial (2ème + 3ème)</span>
                     </div>
                   </div>
                 </CardContent>

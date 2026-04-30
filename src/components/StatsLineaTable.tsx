@@ -2,10 +2,10 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, FileSpreadsheet, Pencil, Trash2 } from "lucide-react";
+import { Download, FileSpreadsheet, Pencil, Trash2, FileText } from "lucide-react";
 import type { StatsLineaEntry } from "@/hooks/useStatsLineaStore";
 import type { ProductionEntry } from "@/hooks/useProductionStore";
-import { exportToExcel, exportToCsvGeneric } from "@/lib/exportUtils";
+import { exportToExcel, exportToCsvGeneric, exportToPdf } from "@/lib/exportUtils";
 import TableFilters, { useTableFilters } from "@/components/TableFilters";
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const FILTER_CONFIGS = [
-  { key: "Date", label: "Date", type: "date" as const },
+  { key: "Date", label: "Date", type: "dateRange" as const },
   { key: "Groupe", label: "Groupe", type: "select" as const },
   { key: "Horaire", label: "Horaire", type: "select" as const },
   { key: "Statut", label: "Statut", type: "select" as const },
@@ -119,6 +119,10 @@ export default function StatsLineaTable({ stats, productions, onEdit, onDelete }
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => exportToExcel(exportData, "stats_linea")}>
             <FileSpreadsheet className="h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2"
+            onClick={() => exportToPdf(exportData, "stats_linea")}>
+            <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
       </div>

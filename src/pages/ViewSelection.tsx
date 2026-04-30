@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useSelectionStore, type SelectionEntry } from "@/hooks/useSelectionStore";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, FileSpreadsheet, Pencil } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, Pencil, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { exportToExcel, exportToCsvGeneric } from "@/lib/exportUtils";
+import { exportToExcel, exportToCsvGeneric, exportToPdf } from "@/lib/exportUtils";
 import TableFilters, { useTableFilters } from "@/components/TableFilters";
 import EditEntryDialog, { type EditColumn } from "@/components/EditEntryDialog";
 import { toast } from "sonner";
@@ -27,7 +27,7 @@ const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
 const EDIT_COLUMNS: EditColumn[] = COLUMNS.map((c) => ({ key: c.key, label: c.label, type: c.type ?? "text" }));
 
 const FILTER_CONFIGS = [
-  { key: "date", label: "Date", type: "date" as const },
+  { key: "date", label: "Date", type: "dateRange" as const },
   { key: "groupe", label: "Groupe", type: "select" as const },
   { key: "horaire", label: "Horaire", type: "select" as const },
 ];
@@ -94,6 +94,10 @@ export default function ViewSelection() {
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => exportToExcel(exportData, "production_selection")}>
             <FileSpreadsheet className="h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2"
+            onClick={() => exportToPdf(exportData, "production_selection")}>
+            <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
       </div>

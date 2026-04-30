@@ -7,10 +7,11 @@ import { useNavigate } from "react-router-dom";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { exportToExcel, exportToCsvGeneric } from "@/lib/exportUtils";
+import { exportToExcel, exportToCsvGeneric, exportToPdf } from "@/lib/exportUtils";
 import TableFilters, { useTableFilters } from "@/components/TableFilters";
 import EditEntryDialog, { type EditColumn } from "@/components/EditEntryDialog";
 import { toast } from "sonner";
+import { FileText } from "lucide-react";
 
 const STAT_FIELDS: { key: string; label: string; type: "number" }[] = [
   { key: "total_pieces", label: "Total pièces", type: "number" },
@@ -39,7 +40,7 @@ const STAT_FIELDS: { key: string; label: string; type: "number" }[] = [
 const EDIT_COLUMNS: EditColumn[] = STAT_FIELDS.map((f) => ({ key: f.key, label: f.label, type: f.type }));
 
 const FILTER_CONFIGS = [
-  { key: "Date", label: "Date", type: "date" as const },
+  { key: "Date", label: "Date", type: "dateRange" as const },
   { key: "Groupe", label: "Groupe", type: "select" as const },
   { key: "Horaire", label: "Horaire", type: "select" as const },
 ];
@@ -108,6 +109,10 @@ export default function ViewStatsLinea() {
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => exportToExcel(exportData, "stats_linea")}>
             <FileSpreadsheet className="h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2"
+            onClick={() => exportToPdf(exportData, "stats_linea")}>
+            <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
       </div>

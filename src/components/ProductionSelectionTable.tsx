@@ -2,9 +2,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Download, FileSpreadsheet, Pencil } from "lucide-react";
+import { Trash2, Download, FileSpreadsheet, Pencil, FileText } from "lucide-react";
 import type { SelectionEntry } from "@/hooks/useSelectionStore";
-import { exportToExcel, exportToCsvGeneric } from "@/lib/exportUtils";
+import { exportToExcel, exportToCsvGeneric, exportToPdf } from "@/lib/exportUtils";
 import TableFilters, { useTableFilters } from "@/components/TableFilters";
 
 interface Props {
@@ -36,7 +36,7 @@ const COLUMNS: { key: keyof SelectionEntry; label: string }[] = [
 ];
 
 const FILTER_CONFIGS = [
-  { key: "date", label: "Date", type: "date" as const },
+  { key: "date", label: "Date", type: "dateRange" as const },
   { key: "groupe", label: "Groupe", type: "select" as const },
   { key: "horaire", label: "Horaire", type: "select" as const },
   { key: "modele", label: "Modèle", type: "select" as const },
@@ -95,6 +95,10 @@ export default function ProductionSelectionTable({ entries, onDelete, onEdit }: 
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => exportToExcel(exportData, "production_selection")}>
             <FileSpreadsheet className="h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2"
+            onClick={() => exportToPdf(exportData, "production_selection")}>
+            <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
       </div>

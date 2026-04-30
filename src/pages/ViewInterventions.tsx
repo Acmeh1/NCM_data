@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, FileSpreadsheet, Edit } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, Edit, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import InterventionForm from "@/components/InterventionForm";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { exportToExcel, exportToCsvGeneric } from "@/lib/exportUtils";
+import { exportToExcel, exportToCsvGeneric, exportToPdf } from "@/lib/exportUtils";
 import TableFilters, { useTableFilters } from "@/components/TableFilters";
 
 const formatDate = (dateString: string) => {
@@ -58,7 +58,7 @@ const COLUMNS = [
 ];
 
 const FILTER_CONFIGS = [
-  { key: "Date", label: "Date", type: "date" as const },
+  { key: "Date", label: "Date", type: "dateRange" as const },
   { key: "Zone", label: "Zone", type: "select" as const },
   { key: "Équipement", label: "Équipement", type: "select" as const },
   { key: "Nature", label: "Nature", type: "select" as const },
@@ -159,6 +159,10 @@ export default function ViewInterventions() {
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => exportToExcel(exportData, "historique_interventions")}>
             <FileSpreadsheet className="h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2"
+            onClick={() => exportToPdf(exportData, "historique_interventions")}>
+            <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
       </div>

@@ -42,7 +42,7 @@ export const DEFAULT_KPI_OBJECTIVES: KpiObjective[] = [
   },
   {
     id: "scrap",
-    label: "Taux de Rebut",
+    label: "Choix commercial (2ème + 3ème)",
     description: "Part de la production déclassée (2ème et 3ème choix) sur la production totale linéa.",
     formula: "(C2 + C3) ÷ Total × 100",
     formulaLatex: "Rebut = \\frac{\\sum (choix2 + choix3)\\_surface\\_m2}{\\sum total\\_surface\\_m2} \\times 100",

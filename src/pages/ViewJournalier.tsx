@@ -3,12 +3,12 @@ import { useProductionStore, type ProductionEntry } from "@/hooks/useProductionS
 import { useSelectionStore, type SelectionEntry } from "@/hooks/useSelectionStore";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, FileSpreadsheet, Pencil } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, Pencil, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { exportToExcel, exportToCsvGeneric } from "@/lib/exportUtils";
+import { exportToExcel, exportToCsvGeneric, exportToPdf } from "@/lib/exportUtils";
 import TableFilters, { useTableFilters } from "@/components/TableFilters";
 import EditEntryDialog, { type EditColumn } from "@/components/EditEntryDialog";
 import { toast } from "sonner";
@@ -49,7 +49,7 @@ const EDIT_COLUMNS: EditColumn[] = COLUMNS.map((c) => ({
 }));
 
 const FILTER_CONFIGS = [
-  { key: "Date", label: "Date", type: "date" as const },
+  { key: "Date", label: "Date", type: "dateRange" as const },
   { key: "Groupe", label: "Groupe", type: "select" as const },
   { key: "Horaire", label: "Horaire", type: "select" as const },
   { key: "Modele", label: "Modèle", type: "select" as const },
@@ -134,6 +134,10 @@ export default function ViewJournalier() {
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => exportToExcel(exportData, "production_journalier")}>
             <FileSpreadsheet className="h-4 w-4" /> Excel
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2"
+            onClick={() => exportToPdf(exportData, "production_journalier")}>
+            <FileText className="h-4 w-4" /> PDF
           </Button>
         </div>
       </div>

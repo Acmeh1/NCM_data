@@ -8,7 +8,7 @@ import { Filter, X } from "lucide-react";
 interface FilterConfig {
   key: string;
   label: string;
-  type: "date" | "select" | "text";
+  type: "date" | "dateRange" | "select" | "text";
 }
 
 interface Props {
@@ -38,6 +38,18 @@ export function useTableFilters<T extends Record<string, any>>(
   const filteredData = useMemo(() => {
     return data.filter((row) => {
       return filterConfigs.every((f) => {
+        if (f.type === "dateRange") {
+          const start = filterValues[`${f.key}_start`];
+          const end = filterValues[`${f.key}_end`];
+          const rowVal = String(row[f.key] ?? "");
+          if (!start && !end) return true;
+          if (!rowVal || rowVal === "—") return false;
+          
+          if (start && rowVal < start) return false;
+          if (end && rowVal > end) return false;
+          return true;
+        }
+
         const val = filterValues[f.key];
         if (!val) return true;
         const rowVal = String(row[f.key] ?? "");
@@ -100,6 +112,24 @@ export default function TableFilters({
               value={filterValues[f.key] ?? ""}
               onChange={(e) => onSetFilter(f.key, e.target.value)}
             />
+          ) : f.type === "dateRange" ? (
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                className="h-8 text-xs w-[130px]"
+                value={filterValues[`${f.key}_start`] ?? ""}
+                onChange={(e) => onSetFilter(`${f.key}_start`, e.target.value)}
+                placeholder="De"
+              />
+              <span className="text-[10px] text-muted-foreground italic">à</span>
+              <Input
+                type="date"
+                className="h-8 text-xs w-[130px]"
+                value={filterValues[`${f.key}_end`] ?? ""}
+                onChange={(e) => onSetFilter(`${f.key}_end`, e.target.value)}
+                placeholder="À"
+              />
+            </div>
           ) : (
             <Select
               value={filterValues[f.key] ?? "__all__"}
