@@ -18,6 +18,7 @@ const KPI_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> 
   rendement: Gauge,
   scrap: AlertTriangle,
   energy: Flame,
+  turnover: TrendingUp,
 };
 
 const KPI_COLOR_MAP: Record<string, { bg: string; text: string; border: string; ring: string; accent: string }> = {
@@ -205,6 +206,13 @@ function KpiCardEditor({ kpi, editValue, onChange, onReset, isDirty }: KpiCardEd
                 <li>📋 Table : <code className="bg-muted px-1 rounded">production_journalier</code></li>
                 <li>📊 Colonnes : <code className="bg-muted px-1 rounded">four_consommation_kwh</code>, <code className="bg-muted px-1 rounded">nb_pieces_four</code></li>
                 <li>🗓️ Filtrée par : <code className="bg-muted px-1 rounded">date</code></li>
+              </ul>
+            )}
+            {kpi.id === "turnover" && (
+              <ul className="space-y-1 text-muted-foreground">
+                <li>📋 Table : <code className="bg-muted px-1 rounded">fichRH</code></li>
+                <li>📊 Colonnes : <code className="bg-muted px-1 rounded">Date_Embauche</code>, <code className="bg-muted px-1 rounded">Date_départ</code></li>
+                <li>🗓️ Filtrée par : <code className="bg-muted px-1 rounded">Période sélectionnée</code></li>
               </ul>
             )}
           </div>

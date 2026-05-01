@@ -64,6 +64,18 @@ export const DEFAULT_KPI_OBJECTIVES: KpiObjective[] = [
     lowerIsBetter: false,
     color: "indigo",
   },
+  {
+    id: "turnover",
+    label: "Taux de Turnover",
+    description: "Mesure le nombre de départs par rapport à l'effectif moyen de l'usine sur la période.",
+    formula: "(Départs ÷ Effectif Moyen) × 100",
+    formulaLatex: "Turnover = \\frac{Départs}{(E_{début} + E_{fin}) / 2} \\times 100",
+    unit: "%",
+    objective: 9,
+    objectiveLabel: "% maximum",
+    lowerIsBetter: true,
+    color: "rose",
+  },
 ];
 
 const STORAGE_KEY = "ncm_kpi_objectives";

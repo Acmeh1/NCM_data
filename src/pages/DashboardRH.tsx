@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDashboardFilters } from "@/hooks/useDashboardFilters";
 import DateRangeFilter from "@/components/DateRangeFilter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
   AreaChart, Area, XAxis, YAxis, CartesianGrid, BarChart, Bar, LineChart, Line, ComposedChart
@@ -14,6 +15,7 @@ import {
   Activity, TrendingUp, LayoutDashboard, GraduationCap, Calendar, 
   UserPlus, UserMinus as UserMinusIcon, MapPin, Smile, UserPlus2, UserMinus2, ArrowUpRight, ArrowDownRight
 } from "lucide-react";
+import { useKpiSettings } from "@/hooks/useKpiSettings";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { 
@@ -43,6 +45,8 @@ export default function DashboardRH() {
     startDate, endDate, currentRange, period, activePreset,
     setRange, setPeriod 
   } = useDashboardFilters();
+  const { getObjective } = useKpiSettings();
+  const turnoverObjective = getObjective("turnover") || 9;
 
   // Fetch ALL RH data
   const { data: rhData = [], isLoading, error: queryError, refetch } = useQuery({
@@ -75,6 +79,7 @@ export default function DashboardRH() {
   const PROP_CAUSE_DEPART = "Cause_Départ";
   const PROP_SITUATION_F = "Situation_F";
   const PROP_MATRICULE = "Matricule";
+  const PROP_NAISSANCE = "Date_de_Naissance";
 
 
   const getProp = (obj: any, key: string) => {
@@ -185,6 +190,10 @@ export default function DashboardRH() {
 
   // 4. Final Headcount at end of period
   const countAtEnd = evolutionData.length > 0 ? evolutionData[evolutionData.length - 1].headcount : 0;
+  const countAtStart = evolutionData.length > 0 ? evolutionData[0].headcount : 0;
+  
+  const avgHeadcount = (countAtStart + countAtEnd) / 2;
+  const turnoverRate = avgHeadcount > 0 ? ((departuresList.length / avgHeadcount) * 100).toFixed(1) : "0";
 
   // 5. Global Active Headcount (regardless of period - those who never left)
   const effectifActifGlobal = useMemo(() => {
@@ -279,44 +288,79 @@ export default function DashboardRH() {
     return { homme, femme, total, pctH, pctF, byService: serviceArray };
   }, [rhData, rangeEnd]);
 
-  // 8. Age Distribution Stats
+  // 8. Age Distribution Stats (Dynamic based on selected date)
   const ageStats = useMemo(() => {
-    const counts: Record<string, number> = {};
+    const counts: Record<string, number> = {
+      "18-25": 0,
+      "26-35": 0,
+      "36-45": 0,
+      "46-55": 0,
+      "55+": 0
+    };
+
     rhData.forEach(emp => {
       const hireDateStr = getProp(emp, PROP_EMBAUCHE);
       const departDateStr = getProp(emp, PROP_DEPART);
-      if (!hireDateStr) return;
-
+      const birthDateStr = getProp(emp, PROP_NAISSANCE);
+      
       const hireDate = parseDate(hireDateStr);
       const departDate = parseDate(departDateStr);
+      const birthDate = parseDate(birthDateStr);
+
       const isActiveAtEnd = hireDate && hireDate <= rangeEnd && (!departDate || isAfter(departDate, rangeEnd));
 
-      if (isActiveAtEnd) {
-        const tranche = getProp(emp, PROP_AGE_TRANCHE) || "Inconnu";
-        counts[tranche] = (counts[tranche] || 0) + 1;
+      if (isActiveAtEnd && birthDate) {
+        const age = Math.floor((rangeEnd.getTime() - birthDate.getTime()) / (1000 * 3600 * 24 * 365.25));
+        
+        let tranche = "";
+        if (age < 26) tranche = "18-25";
+        else if (age < 36) tranche = "26-35";
+        else if (age < 46) tranche = "36-45";
+        else if (age < 56) tranche = "46-55";
+        else tranche = "55+";
+
+        counts[tranche]++;
       }
     });
-    return Object.entries(counts).map(([name, value]) => ({ name, value })).sort();
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [rhData, rangeEnd]);
 
-  // 9. Seniority Distribution Stats
+  // 9. Seniority Distribution Stats (Dynamic based on selected date)
   const seniorityStats = useMemo(() => {
-    const counts: Record<string, number> = {};
+    const counts: Record<string, number> = {
+      "< 1 an": 0,
+      "1-3 ans": 0,
+      "3-5 ans": 0,
+      "5-10 ans": 0,
+      "10-20 ans": 0,
+      "> 20 ans": 0
+    };
+
     rhData.forEach(emp => {
       const hireDateStr = getProp(emp, PROP_EMBAUCHE);
       const departDateStr = getProp(emp, PROP_DEPART);
-      if (!hireDateStr) return;
-
       const hireDate = parseDate(hireDateStr);
       const departDate = parseDate(departDateStr);
+
       const isActiveAtEnd = hireDate && hireDate <= rangeEnd && (!departDate || isAfter(departDate, rangeEnd));
 
-      if (isActiveAtEnd) {
-        const tranche = getProp(emp, PROP_ANCIENNETE_TRANCHE) || "Inconnu";
-        counts[tranche] = (counts[tranche] || 0) + 1;
+      if (isActiveAtEnd && hireDate) {
+        // Calculate seniority in years relative to rangeEnd
+        const diffYears = Math.floor((rangeEnd.getTime() - hireDate.getTime()) / (1000 * 3600 * 24 * 365.25));
+        
+        let tranche = "";
+        if (diffYears < 1) tranche = "< 1 an";
+        else if (diffYears < 3) tranche = "1-3 ans";
+        else if (diffYears < 5) tranche = "3-5 ans";
+        else if (diffYears < 10) tranche = "5-10 ans";
+        else if (diffYears < 20) tranche = "10-20 ans";
+        else tranche = "> 20 ans";
+
+        counts[tranche]++;
       }
     });
-    return Object.entries(counts).map(([name, value]) => ({ name, value })).sort();
+    
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [rhData, rangeEnd]);
 
   // 10. Education Level Stats
@@ -449,77 +493,97 @@ export default function DashboardRH() {
 
         <TabsContent value="overview" className="space-y-6">
           {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <Card className="border-none shadow-md bg-slate-100">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-slate-600 rounded-xl text-white shadow-lg">
-                    <ClipboardList className="h-5 w-5" />
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-slate-600 rounded-lg text-white shadow-lg">
+                    <ClipboardList className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Effectif Total</p>
-                    <div className="text-2xl font-bold">{rhData.length}</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">Base historique</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Total</p>
+                    <div className="text-xl font-bold">{rhData.length}</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-none shadow-md bg-gradient-to-br from-blue-500/10 to-blue-600/5">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-blue-500 rounded-xl text-white shadow-lg">
-                    <Users className="h-5 w-5" />
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500 rounded-lg text-white shadow-lg">
+                    <Users className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Effectif Actif</p>
-                    <div className="text-2xl font-bold">{countAtEnd}</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">À la fin de période</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Actif</p>
+                    <div className="text-xl font-bold">{countAtEnd}</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-none shadow-md bg-gradient-to-br from-emerald-500/10 to-emerald-600/5">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-emerald-500 rounded-xl text-white shadow-lg">
-                    <UserPlus2 className="h-5 w-5" />
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-500 rounded-lg text-white shadow-lg">
+                    <UserPlus2 className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Recrutements</p>
-                    <div className="text-2xl font-bold text-emerald-600">+{newHires.length}</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">Sur la période</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Recrutements</p>
+                    <div className="text-xl font-bold text-emerald-600">+{newHires.length}</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-none shadow-md bg-gradient-to-br from-rose-500/10 to-rose-600/5">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-rose-500 rounded-xl text-white shadow-lg">
-                    <UserMinus2 className="h-5 w-5" />
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-rose-500 rounded-lg text-white shadow-lg">
+                    <UserMinus2 className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Départs</p>
-                    <div className="text-2xl font-bold text-rose-600">-{departuresList.length}</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">Sur la période</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Départs</p>
+                    <div className="text-xl font-bold text-rose-600">-{departuresList.length}</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="border-none shadow-md bg-gradient-to-br from-amber-500/10 to-amber-600/5">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-amber-500 rounded-xl text-white shadow-lg">
-                    <ShieldCheck className="h-5 w-5" />
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "p-2 rounded-lg text-white shadow-lg",
+                    parseFloat(turnoverRate) <= turnoverObjective ? "bg-emerald-500" : "bg-rose-500"
+                  )}>
+                    <TrendingUp className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Taux de CDI</p>
-                    <div className="text-2xl font-bold">{stabilityRate}%</div>
-                    <p className="text-[10px] text-muted-foreground mt-1">Stabilité contractuelle</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Taux Turnover</p>
+                      <Badge variant="outline" className="text-[8px] h-3.5 px-1 border-amber-200 text-amber-700">Obj: {turnoverObjective}%</Badge>
+                    </div>
+                    <div className={cn(
+                      "text-xl font-bold",
+                      parseFloat(turnoverRate) <= turnoverObjective ? "text-emerald-600" : "text-rose-600"
+                    )}>
+                      {turnoverRate}%
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-md bg-gradient-to-br from-indigo-500/10 to-indigo-600/5">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-500 rounded-lg text-white shadow-lg">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Taux de CDI</p>
+                    <div className="text-xl font-bold text-indigo-600">{stabilityRate}%</div>
                   </div>
                 </div>
               </CardContent>
@@ -576,6 +640,220 @@ export default function DashboardRH() {
                       <Legend verticalAlign="bottom" height={36} iconType="circle" />
                     </PieChart>
                   </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="shadow-sm border border-slate-200/60 bg-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  Dynamique de Recrutement vs Départs (12 mois)
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={fluxData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} className="opacity-30" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <Bar dataKey="net" name="Solde Net" fill="#94a3b8" opacity={0.2} barSize={30} />
+                    <Line type="monotone" dataKey="hires" name="Embauches" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="departures" name="Départs" stroke="#f43f5e" strokeWidth={2} dot={{ r: 3 }} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <Card className="shadow-sm border border-slate-200/60 bg-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  Répartition par Ancienneté (Actifs)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={seniorityStats} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} className="opacity-30" />
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <Tooltip cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }} contentStyle={{ borderRadius: '8px' }} />
+                      <Bar dataKey="value" name="Nombre d'employés" fill="hsl(250, 60%, 65%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm border border-slate-200/60 bg-gradient-to-br from-slate-50 to-white flex flex-col justify-center">
+              <CardContent className="p-8 text-center space-y-4">
+                <div className="p-4 bg-primary/10 rounded-full w-fit mx-auto">
+                  <Smile className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-800">Analyse de la Rétention</h3>
+                <p className="text-sm text-slate-600 leading-relaxed italic">
+                  "Ce graphique permet de surveiller la maturité de votre effectif. Un équilibre entre nouveaux talents et piliers expérimentés est la clé de la stabilité opérationnelle."
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            <Card className="lg:col-span-2 shadow-sm border border-slate-200/60 bg-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <UserMinus2 className="h-4 w-4 text-rose-500" />
+                  Motifs de Départ (Analyse sur la période)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 flex flex-col md:flex-row items-center gap-8">
+                <div className="h-[250px] w-full md:w-1/2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie 
+                        data={departureCauses} 
+                        cx="50%" cy="50%" 
+                        innerRadius={60} outerRadius={90} 
+                        paddingAngle={5} 
+                        dataKey="value"
+                      >
+                        {departureCauses.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="w-full md:w-1/2 space-y-4">
+                  {departureCauses.map((item, idx) => {
+                    const total = departureCauses.reduce((acc, curr) => acc + curr.value, 0);
+                    const pct = total > 0 ? ((item.value / total) * 100).toFixed(0) : "0";
+                    return (
+                      <div key={idx} className="flex flex-col gap-1">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="font-medium text-slate-700">{item.name}</span>
+                          <span className="font-bold text-primary">{pct}%</span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary rounded-full transition-all duration-1000" 
+                            style={{ width: `${pct}%`, backgroundColor: COLORS[idx % COLORS.length] }} 
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {departureCauses.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground italic text-sm">
+                      Aucun départ enregistré sur cette période.
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6 mt-6">
+            {/* New Hires Table */}
+            <Card className="shadow-sm border border-slate-200/60 bg-white overflow-hidden">
+              <CardHeader className="bg-blue-50/50 border-b border-slate-100 py-3">
+                <CardTitle className="text-sm font-bold text-blue-800 flex items-center gap-2">
+                  <UserPlus2 className="h-4 w-4" />
+                  Qui a rejoint l'organisation sur cette période ? ({newHires.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-100">
+                        <th className="px-4 py-3">Matricule</th>
+                        <th className="px-4 py-3">Nom Complet</th>
+                        <th className="px-4 py-3">Service</th>
+                        <th className="px-4 py-3">Fonction</th>
+                        <th className="px-4 py-3">Grade</th>
+                        <th className="px-4 py-3 text-right">Âge (Ans)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {newHires.length > 0 ? newHires.map((emp, i) => {
+                        const birthDate = parseDate(getProp(emp, PROP_NAISSANCE));
+                        const age = birthDate ? Math.floor((new Date().getTime() - birthDate.getTime()) / (1000 * 3600 * 24 * 365.25)) : "—";
+                        return (
+                          <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-4 py-3 font-mono text-slate-500">{getProp(emp, PROP_MATRICULE)}</td>
+                            <td className="px-4 py-3 font-bold text-slate-700">{getProp(emp, "Nom")} {getProp(emp, "Prénom")}</td>
+                            <td className="px-4 py-3 text-slate-600">{getProp(emp, PROP_SERVICE)}</td>
+                            <td className="px-4 py-3 text-slate-600">{getProp(emp, PROP_FONCTION)}</td>
+                            <td className="px-4 py-3"><Badge variant="outline" className="text-[10px] py-0">{getProp(emp, PROP_NIVEAU)}</Badge></td>
+                            <td className="px-4 py-3 text-right text-slate-500 font-medium">{age} ans</td>
+                          </tr>
+                        );
+                      }) : (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">Aucun recrutement sur cette période</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Departures Table */}
+            <Card className="shadow-sm border border-slate-200/60 bg-white overflow-hidden">
+              <CardHeader className="bg-rose-50/50 border-b border-slate-100 py-3">
+                <CardTitle className="text-sm font-bold text-rose-800 flex items-center gap-2">
+                  <UserMinus2 className="h-4 w-4" />
+                  Qui a quitté l'organisation sur cette période ? ({departuresList.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold border-b border-slate-100">
+                        <th className="px-4 py-3">Matricule</th>
+                        <th className="px-4 py-3">Nom Complet</th>
+                        <th className="px-4 py-3">Service</th>
+                        <th className="px-4 py-3">Motif</th>
+                        <th className="px-4 py-3">Grade</th>
+                        <th className="px-4 py-3 text-right">Ancienneté (Ans)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {departuresList.length > 0 ? departuresList.map((emp, i) => {
+                        const hireDate = parseDate(getProp(emp, PROP_EMBAUCHE));
+                        const departDate = parseDate(getProp(emp, PROP_DEPART));
+                        let seniority = "—";
+                        if (hireDate && departDate) {
+                          seniority = ((departDate.getTime() - hireDate.getTime()) / (1000 * 3600 * 24 * 365.25)).toFixed(1);
+                        }
+                        return (
+                          <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-4 py-3 font-mono text-slate-500">{getProp(emp, PROP_MATRICULE)}</td>
+                            <td className="px-4 py-3 font-bold text-slate-700">{getProp(emp, "Nom")} {getProp(emp, "Prénom")}</td>
+                            <td className="px-4 py-3 text-slate-600">{getProp(emp, PROP_SERVICE)}</td>
+                            <td className="px-4 py-3 text-rose-600 font-medium">{getProp(emp, PROP_CAUSE_DEPART)}</td>
+                            <td className="px-4 py-3"><Badge variant="outline" className="text-[10px] py-0">{getProp(emp, PROP_NIVEAU)}</Badge></td>
+                            <td className="px-4 py-3 text-right text-slate-500 font-medium">{seniority} ans</td>
+                          </tr>
+                        );
+                      }) : (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">Aucun départ sur cette période</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
