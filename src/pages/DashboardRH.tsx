@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, Briefcase, UserCheck, ShieldCheck, ClipboardList, UserMinus, 
   Activity, TrendingUp, LayoutDashboard, GraduationCap, Calendar, 
-  UserPlus, UserMinus as UserMinusIcon, MapPin, Smile, UserPlus2, UserMinus2, ArrowUpRight, ArrowDownRight
+  UserPlus, UserMinus as UserMinusIcon, MapPin, Smile, UserPlus2, UserMinus2, ArrowUpRight, ArrowDownRight,
+  AlertTriangle, Target
 } from "lucide-react";
 import { useKpiSettings } from "@/hooks/useKpiSettings";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,48 @@ const COLORS = [
 ];
 
 export default function DashboardRH() {
+  const getProp = (obj: any, key: string) => {
+    if (!obj) return undefined;
+    if (obj[key] !== undefined) return obj[key];
+    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[\s_]/g, "");
+    const target = normalize(key);
+    const foundKey = Object.keys(obj).find(k => normalize(k) === target);
+    return foundKey ? obj[foundKey] : undefined;
+  };
+
+  const parseDate = (dateStr: any) => {
+    if (!dateStr) return null;
+    const s = String(dateStr).trim();
+    if (!s) return null;
+    try {
+      const d = parseISO(s);
+      if (!isNaN(d.getTime()) && s.includes('-')) return d;
+      const parts = s.split(/[\/\-]/);
+      if (parts.length === 3) {
+        const p0 = parseInt(parts[0], 10);
+        const p1 = parseInt(parts[1], 10);
+        const p2 = parseInt(parts[2], 10);
+        if (p2 > 1000) return new Date(p2, p1 - 1, p0);
+        return new Date(p0, p1 - 1, p2);
+      }
+    } catch (e) { return null; }
+    return null;
+  };
+
+  const PROP_CONTRAT = "Contrat";
+  const PROP_DEPART = "Date_départ";
+  const PROP_EMBAUCHE = "Date_Embauche";
+  const PROP_SEXE = "Sexe";
+  const PROP_SERVICE = "Service";
+  const PROP_AGE_TRANCHE = "Tranche_d'age";
+  const PROP_ANCIENNETE_TRANCHE = "Tranche_Ancienneté";
+  const PROP_NIVEAU = "Niveau";
+  const PROP_FONCTION = "Fonction";
+  const PROP_CAUSE_DEPART = "Cause_Départ";
+  const PROP_SITUATION_F = "Situation_F";
+  const PROP_MATRICULE = "Matricule";
+  const PROP_NAISSANCE = "Date_de_Naissance";
+
   const { 
     startDate, endDate, currentRange, period, activePreset,
     setRange, setPeriod 
@@ -67,61 +110,104 @@ export default function DashboardRH() {
     },
   });
 
-  const PROP_CONTRAT = "Contrat";
-  const PROP_DEPART = "Date_départ";
-  const PROP_EMBAUCHE = "Date_Embauche";
-  const PROP_SEXE = "Sexe";
-  const PROP_SERVICE = "Service";
-  const PROP_AGE_TRANCHE = "Tranche_d'age";
-  const PROP_ANCIENNETE_TRANCHE = "Tranche_Ancienneté";
-  const PROP_NIVEAU = "Niveau";
-  const PROP_FONCTION = "Fonction";
-  const PROP_CAUSE_DEPART = "Cause_Départ";
-  const PROP_SITUATION_F = "Situation_F";
-  const PROP_MATRICULE = "Matricule";
-  const PROP_NAISSANCE = "Date_de_Naissance";
+  // Fetch Absenteeism data (Pointage)
+  const { data: pointageData = [], isLoading: loadingPointage } = useQuery({
+    queryKey: ["pointage-data", new Date(startDate).toISOString(), new Date(endDate).toISOString()],
+    queryFn: async () => {
+      const sDate = formatDate(new Date(startDate), "yyyy-MM-dd");
+      const eDate = formatDate(new Date(endDate), "yyyy-MM-dd");
 
+      console.log(`📡 Requête Pointage pour la période : ${sDate} au ${eDate}`);
 
-  const getProp = (obj: any, key: string) => {
-    if (!obj) return undefined;
-    if (obj[key] !== undefined) return obj[key];
-    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[\s_]/g, "");
-    const target = normalize(key);
-    const foundKey = Object.keys(obj).find(k => normalize(k) === target);
-    return foundKey ? obj[foundKey] : undefined;
-  };
-
-  const parseDate = (dateStr: any) => {
-    if (!dateStr) return null;
-    const s = String(dateStr).trim();
-    if (!s) return null;
-    
-    try {
-      // Try ISO first (YYYY-MM-DD)
-      const d = parseISO(s);
-      if (!isNaN(d.getTime()) && s.includes('-')) return d;
+      const { data, error } = await supabase
+        .from("Vue_Pointage_Matricule")
+        .select("*")
+        .gte("Date", sDate)
+        .lte("Date", eDate);
       
-      // Try DD/MM/YYYY or DD-MM-YYYY
-      const parts = s.split(/[\/\-]/);
-      if (parts.length === 3) {
-        const p0 = parseInt(parts[0], 10);
-        const p1 = parseInt(parts[1], 10);
-        const p2 = parseInt(parts[2], 10);
-        
-        // Check if it's YYYY-MM-DD or DD-MM-YYYY
-        if (p0 > 1000) { // YYYY-MM-DD
-           const d2 = new Date(p0, p1 - 1, p2);
-           if (!isNaN(d2.getTime())) return d2;
-        } else { // DD-MM-YYYY
-           const d2 = new Date(p2, p1 - 1, p0);
-           if (!isNaN(d2.getTime())) return d2;
+      if (error) {
+        return [];
+      }
+
+      return data || [];
+    }
+  });
+
+  // 13. Absenteeism Calculations
+  const absenteeismStats = useMemo(() => {
+    if (!pointageData.length) return null;
+
+    let totalPlannedHours = 0;
+    let totalAbsentHours = 0;
+    const byService: Record<string, { planned: number; absent: number }> = {};
+    const byDate: Record<string, { planned: number; absent: number }> = {};
+    const byReason: Record<string, number> = {};
+
+    pointageData.forEach(row => {
+      const presenceRaw = getProp(row, "Présence"); // Use the exact name from USER if possible, but getProp handles casing
+      // User says null means not a workday (weekend, etc.)
+      const isWorkday = presenceRaw !== null && presenceRaw !== undefined;
+
+      if (isWorkday) {
+        const service = getProp(row, PROP_SERVICE) || "Inconnu";
+        const dateRaw = getProp(row, "Date");
+        const date = dateRaw ? formatDate(new Date(dateRaw), "yyyy-MM-dd") : "Inconnu";
+        const presence = parseInt(String(presenceRaw));
+        const motif = getProp(row, "Motif_Absence") || "";
+
+        totalPlannedHours += 8;
+        if (!byService[service]) byService[service] = { planned: 0, absent: 0 };
+        if (!byDate[date]) byDate[date] = { planned: 0, absent: 0 };
+
+        byService[service].planned += 8;
+        byDate[date].planned += 8;
+
+        let dayAbsentHours = 0;
+        if (presence === 0) {
+          dayAbsentHours = 8;
+        } else {
+          const match = motif.match(/(\d+)h/i);
+          if (match) {
+            dayAbsentHours = parseInt(match[1]);
+          }
+        }
+
+        if (dayAbsentHours > 0) {
+          totalAbsentHours += dayAbsentHours;
+          byService[service].absent += dayAbsentHours;
+          byDate[date].absent += dayAbsentHours;
+          
+          const reason = motif.replace(/\d+h/i, "").trim() || (presence === 0 ? "Absence Totale" : "Retard/Partiel");
+          byReason[reason] = (byReason[reason] || 0) + dayAbsentHours;
         }
       }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  };
+    });
+
+    const rate = totalPlannedHours > 0 ? ((totalAbsentHours / totalPlannedHours) * 100).toFixed(2) : "0";
+    
+    const serviceData = Object.entries(byService)
+      .map(([name, stats]) => ({
+        name,
+        rate: stats.planned > 0 ? ((stats.absent / stats.planned) * 100).toFixed(1) : 0,
+        absent: stats.absent
+      }))
+      .sort((a, b) => (b.absent as number) - (a.absent as number));
+
+    const trendData = Object.entries(byDate)
+      .map(([date, stats]) => ({
+        date,
+        name: formatDate(new Date(date), "dd/MM", { locale: fr }),
+        rate: stats.planned > 0 ? ((stats.absent / stats.planned) * 100).toFixed(1) : 0
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    const reasonData = Object.entries(byReason)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8);
+
+    return { rate, totalPlannedHours, totalAbsentHours, serviceData, trendData, reasonData };
+  }, [pointageData]);
 
   console.log("DashboardRH: rhData length =", rhData.length);
   if (rhData.length > 0) console.log("Sample row:", rhData[0]);
@@ -480,8 +566,8 @@ export default function DashboardRH() {
           <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <LayoutDashboard className="h-4 w-4" /> Vue Globale
           </TabsTrigger>
-          <TabsTrigger value="demographics" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-            <Smile className="h-4 w-4" /> Démographie
+          <TabsTrigger value="absenteeism" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Activity className="h-4 w-4" /> Absentéisme
           </TabsTrigger>
           <TabsTrigger value="skills" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <GraduationCap className="h-4 w-4" /> Compétences
@@ -594,55 +680,91 @@ export default function DashboardRH() {
             <Card className="lg:col-span-2 shadow-sm border border-slate-200/60 bg-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <Activity className="h-4 w-4 text-primary" />
                   Évolution de l'Effectif
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
-                <div className="h-[300px] w-full">
+                <div className="h-[350px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={evolutionData}>
+                    <AreaChart data={evolutionData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorHeadcount" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="hsl(210, 70%, 55%)" stopOpacity={0.1}/>
+                          <stop offset="95%" stopColor="hsl(210, 70%, 55%)" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} className="opacity-30" />
-                      <XAxis dataKey="date" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                        formatter={(val) => [val, "Effectif"]}
-                      />
-                      <Area type="monotone" dataKey="headcount" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorHeadcount)" />
+                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                      <Area type="monotone" dataKey="headcount" name="Effectif" stroke="hsl(210, 70%, 55%)" fillOpacity={1} fill="url(#colorHeadcount)" strokeWidth={3} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="lg:col-span-1 shadow-sm border border-slate-200/60">
-              <CardHeader>
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4 text-primary" />
-                  Répartition des Contrats
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center">
-                <div className="h-[250px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={contractStats} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                        {contractStats.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
-                      <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col gap-6">
+              <Card className="flex-1 shadow-sm border border-slate-200/60 bg-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                    <Briefcase className="h-3.5 w-3.5" />
+                    Répartition des Contrats
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="h-[120px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={contractStats} cx="50%" cy="50%" innerRadius={35} outerRadius={50} paddingAngle={5} dataKey="value">
+                          {contractStats.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip contentStyle={{ borderRadius: '8px', fontSize: '10px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-1.5 mt-2">
+                    {contractStats.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-[10px]">
+                        <div className="flex items-center gap-1.5 text-slate-600">
+                          <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
+                          {item.name}
+                        </div>
+                        <span className="font-bold text-slate-700">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="flex-1 shadow-sm border border-slate-200/60 bg-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5" />
+                    Mixité Homme / Femme
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-2 space-y-4">
+                  <div className="flex justify-around items-end">
+                    <div className="flex flex-col items-center">
+                      <span className="text-rose-500 text-lg font-black leading-none">{genderStats.pctF.toFixed(0)}%</span>
+                      <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Femmes</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-blue-500 text-lg font-black leading-none">{genderStats.pctH.toFixed(0)}%</span>
+                      <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Hommes</span>
+                    </div>
+                  </div>
+                  
+                  <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                    <div className="bg-rose-500 h-full transition-all" style={{ width: `${genderStats.pctF}%` }} />
+                    <div className="bg-blue-500 h-full transition-all" style={{ width: `${genderStats.pctH}%` }} />
+                  </div>
+                  <p className="text-[9px] text-slate-400 text-center italic">Total : {genderStats.total} employés</p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           <Card className="shadow-sm border border-slate-200/60 bg-white">
@@ -687,22 +809,32 @@ export default function DashboardRH() {
                       <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                       <Tooltip cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }} contentStyle={{ borderRadius: '8px' }} />
-                      <Bar dataKey="value" name="Nombre d'employés" fill="hsl(250, 60%, 65%)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" name="Employés" fill="hsl(250, 60%, 65%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm border border-slate-200/60 bg-gradient-to-br from-slate-50 to-white flex flex-col justify-center">
-              <CardContent className="p-8 text-center space-y-4">
-                <div className="p-4 bg-primary/10 rounded-full w-fit mx-auto">
-                  <Smile className="h-8 w-8 text-primary" />
+            <Card className="shadow-sm border border-slate-200/60 bg-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  Répartition par Tranche d'Âge (Actifs)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={ageStats} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} className="opacity-30" />
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <Tooltip cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }} contentStyle={{ borderRadius: '8px' }} />
+                      <Bar dataKey="value" name="Employés" fill="hsl(210, 70%, 55%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-                <h3 className="text-lg font-bold text-slate-800">Analyse de la Rétention</h3>
-                <p className="text-sm text-slate-600 leading-relaxed italic">
-                  "Ce graphique permet de surveiller la maturité de votre effectif. Un équilibre entre nouveaux talents et piliers expérimentés est la clé de la stabilité opérationnelle."
-                </p>
               </CardContent>
             </Card>
           </div>
@@ -860,65 +992,148 @@ export default function DashboardRH() {
           </div>
         </TabsContent>
 
-        <TabsContent value="demographics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="shadow-sm border border-slate-200/60 bg-white">
-              <CardHeader>
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
-                  Répartition par Tranche d'Âge
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={ageStats} layout="vertical" margin={{ left: 40, right: 40 }}>
-                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} className="opacity-30" />
-                      <XAxis type="number" hide />
-                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={80} />
-                      <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                      <Bar dataKey="value" fill="hsl(210, 70%, 55%)" radius={[0, 4, 4, 0]} barSize={20} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
+        <TabsContent value="absenteeism" className="space-y-6">
+          {!absenteeismStats ? (
+            <Card className="p-12 text-center text-muted-foreground border-dashed">
+              <Activity className="h-12 w-12 mx-auto mb-4 opacity-20" />
+              <p>Aucune donnée de pointage disponible pour la période sélectionnée.</p>
             </Card>
+          ) : (
+            <>
+              {/* Absenteeism Top Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-lg border-none">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-rose-100 text-xs font-bold uppercase tracking-wider">Taux d'Absentéisme</p>
+                        <h3 className="text-4xl font-black mt-1">{absenteeismStats.rate}%</h3>
+                      </div>
+                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+                        <Activity className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center gap-2 text-rose-100 text-xs">
+                      <TrendingUp className="h-3 w-3" />
+                      <span>Basé sur {absenteeismStats.totalPlannedHours}h prévues</span>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="shadow-sm border border-slate-200/60 bg-white">
-              <CardHeader>
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
-                  Mixité Homme / Femme
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-8 pt-4">
-                <div className="flex justify-between items-end px-4">
-                  <div className="flex flex-col items-center">
-                    <span className="text-rose-500 text-lg font-black">{genderStats.pctF.toFixed(0)}%</span>
-                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Femmes</span>
-                    <span className="text-xs font-medium text-slate-400 mt-1">{genderStats.femme} effectifs</span>
-                  </div>
-                  <div className="h-16 w-px bg-slate-100 mx-8" />
-                  <div className="flex flex-col items-center">
-                    <span className="text-blue-500 text-lg font-black">{genderStats.pctH.toFixed(0)}%</span>
-                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Hommes</span>
-                    <span className="text-xs font-medium text-slate-400 mt-1">{genderStats.homme} effectifs</span>
-                  </div>
-                </div>
-                
-                <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
-                  <div className="bg-gradient-to-r from-rose-400 to-rose-500 h-full transition-all flex items-center px-2" style={{ width: `${genderStats.pctF}%` }} />
-                  <div className="bg-gradient-to-r from-blue-400 to-blue-500 h-full transition-all" style={{ width: `${genderStats.pctH}%` }} />
-                </div>
+                <Card className="bg-white shadow-md border border-slate-200/60">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Heures d'Absence</p>
+                        <h3 className="text-3xl font-bold mt-1 text-slate-800">{absenteeismStats.totalAbsentHours}h</h3>
+                      </div>
+                      <div className="p-3 bg-rose-50 rounded-xl">
+                        <UserMinus2 className="h-6 w-6 text-rose-500" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-4 italic">Total cumulé sur la période</p>
+                  </CardContent>
+                </Card>
 
-                <div className="p-4 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                  <p className="text-[11px] text-slate-500 text-center italic">
-                    "La diversité des genres est un pilier de la culture NCM. Nous visons un équilibre constant dans tous les services."
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                <Card className="bg-white shadow-md border border-slate-200/60">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Objectif Max</p>
+                        <h3 className="text-3xl font-bold mt-1 text-slate-800">5.0%</h3>
+                      </div>
+                      <div className="p-3 bg-emerald-50 rounded-xl">
+                        <Target className="h-6 w-6 text-emerald-500" />
+                      </div>
+                    </div>
+                    <div className="mt-4 w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div 
+                        className={cn("h-full rounded-full transition-all duration-1000", parseFloat(absenteeismStats.rate) > 5 ? "bg-rose-500" : "bg-emerald-500")}
+                        style={{ width: `${Math.min(100, (parseFloat(absenteeismStats.rate) / 5) * 100)}%` }}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Trend Chart */}
+                <Card className="shadow-sm border border-slate-200/60">
+                  <CardHeader>
+                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-primary" />
+                      Évolution du Taux d'Absentéisme (%)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={absenteeismStats.trendData}>
+                          <defs>
+                            <linearGradient id="colorAbs" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2}/>
+                              <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} className="opacity-30" />
+                          <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} unit="%" />
+                          <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                          <Area type="monotone" dataKey="rate" name="Taux %" stroke="#f43f5e" fillOpacity={1} fill="url(#colorAbs)" strokeWidth={2} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* By Service Chart */}
+                <Card className="shadow-sm border border-slate-200/60">
+                  <CardHeader>
+                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-primary" />
+                      Taux d'Absentéisme par Service (%)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={absenteeismStats.serviceData} layout="vertical">
+                          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} className="opacity-30" />
+                          <XAxis type="number" hide />
+                          <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={100} />
+                          <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                          <Bar dataKey="rate" name="Taux %" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={20} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* By Reason Chart */}
+                <Card className="shadow-sm border border-slate-200/60 lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      Principaux Motifs d'Absence (Heures cumulées)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[250px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={absenteeismStats.reasonData}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} className="opacity-30" />
+                          <XAxis dataKey="name" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                          <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                          <Bar dataKey="value" name="Heures" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={40} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="skills" className="space-y-6">

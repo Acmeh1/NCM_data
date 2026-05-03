@@ -176,8 +176,8 @@ export function AppSidebar() {
                         <NavLink to="/dashboard/qualite"
                           className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
                           activeClassName="bg-sidebar-accent text-primary font-medium">
-                          <Package className="h-4 w-4" />
-                          GESTION DES STOCKS & APPROVISIONNEMENT
+                          <ShoppingCart className="h-4 w-4" />
+                          Approvisionnement & Achat
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
