@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardFilters } from "@/hooks/useDashboardFilters";
@@ -53,20 +53,30 @@ export default function DashboardRH() {
 
   const parseDate = (dateStr: any) => {
     if (!dateStr) return null;
-    const s = String(dateStr).trim();
+    let s = String(dateStr).trim();
     if (!s) return null;
+    
+    // Standardize slashes to dashes for parseISO
+    s = s.replace(/\//g, "-");
+
     try {
+      // Try YYYY-MM-DD
       const d = parseISO(s);
-      if (!isNaN(d.getTime()) && s.includes('-')) return d;
-      const parts = s.split(/[\/\-]/);
+      if (!isNaN(d.getTime())) return d;
+      
+      // Handle DD-MM-YYYY or other formats
+      const parts = s.split(/[-\s]/).filter(Boolean);
       if (parts.length === 3) {
         const p0 = parseInt(parts[0], 10);
         const p1 = parseInt(parts[1], 10);
         const p2 = parseInt(parts[2], 10);
-        if (p2 > 1000) return new Date(p2, p1 - 1, p0);
-        return new Date(p0, p1 - 1, p2);
+        
+        if (p0 > 1900) return new Date(p0, p1 - 1, p2); // YYYY-MM-DD
+        if (p2 > 1900) return new Date(p2, p1 - 1, p0); // DD-MM-YYYY
       }
-    } catch (e) { return null; }
+    } catch (e) {
+      console.error("Date parsing error:", s, e);
+    }
     return null;
   };
 
@@ -109,6 +119,8 @@ export default function DashboardRH() {
       return data || [];
     },
   });
+  
+  const [selectedService, setSelectedService] = useState<string | null>("Approvisionnement");
 
   // Fetch Absenteeism data (Pointage)
   const { data: pointageData = [], isLoading: loadingPointage } = useQuery({
@@ -231,21 +243,21 @@ export default function DashboardRH() {
       intervals = eachMonthOfInterval({ start: rangeStart, end: rangeEnd });
     }
 
-    return intervals.map(date => {
-      const count = rhData.filter(emp => {
-        const hireDateStr = getProp(emp, PROP_EMBAUCHE);
-        const departDateStr = getProp(emp, PROP_DEPART);
-        if (!hireDateStr) return false;
+      return intervals.map(date => {
+        const count = rhData.filter(emp => {
+          const hireDateStr = getProp(emp, PROP_EMBAUCHE);
+          const departDateStr = getProp(emp, PROP_DEPART);
+          
+          const hireDate = parseDate(hireDateStr);
+          const departDate = parseDate(departDateStr);
 
-        const hireDate = parseDate(hireDateStr);
-        const departDate = parseDate(departDateStr);
-
-        // Active if hired on/before current date AND (no depart OR depart after current date)
-        const isHired = hireDate && hireDate <= date;
-        const isStillActive = !departDate || isAfter(departDate, date);
-        
-        return !!isHired && isStillActive;
-      }).length;
+          // If hireDate is missing, we assume they were hired before this 'date'
+          const isHiredByDate = !hireDate || hireDate <= date;
+          // Still active if no depart date OR departed after this 'date'
+          const isStillActive = !departDate || isAfter(departDate, date);
+          
+          return isHiredByDate && isStillActive;
+        }).length;
 
       return {
         date: formatDate(date, diffDays <= 62 ? "dd MMM" : "MMM yyyy", { locale: fr }),
@@ -296,17 +308,18 @@ export default function DashboardRH() {
     };
 
     // Calculate specifically for people active at the end of the period
-    rhData.forEach((item: any) => {
-      const hireDateStr = getProp(item, PROP_EMBAUCHE);
-      const departDateStr = getProp(item, PROP_DEPART);
-      if (!hireDateStr) return;
+      rhData.forEach((item: any) => {
+        const hireDateStr = getProp(item, PROP_EMBAUCHE);
+        const departDateStr = getProp(item, PROP_DEPART);
+        
+        const hireDate = parseDate(hireDateStr);
+        const departDate = parseDate(departDateStr);
 
-      const hireDate = parseDate(hireDateStr);
-      const departDate = parseDate(departDateStr);
-
-      const isActiveAtEnd = hireDate && hireDate <= rangeEnd && (!departDate || isAfter(departDate, rangeEnd));
-      
-      if (isActiveAtEnd) {
+        const isHiredByDate = !hireDate || hireDate <= rangeEnd;
+        const isStillActive = !departDate || isAfter(departDate, rangeEnd);
+        const isActiveAtEnd = isHiredByDate && isStillActive;
+        
+        if (isActiveAtEnd) {
         const contractValue = getProp(item, PROP_CONTRAT) || "";
         const type = String(contractValue).toUpperCase().trim();
         if (type.includes("CDI")) counts["CDI"]++;
@@ -333,23 +346,21 @@ export default function DashboardRH() {
     rhData.forEach((item: any) => {
       const hireDateStr = getProp(item, PROP_EMBAUCHE);
       const departDateStr = getProp(item, PROP_DEPART);
-      if (!hireDateStr) return;
-
+      
       const hireDate = parseDate(hireDateStr);
       const departDate = parseDate(departDateStr);
-      const isActiveAtEnd = hireDate && hireDate <= rangeEnd && (!departDate || isAfter(departDate, rangeEnd));
+      
+      const isHiredByDate = !hireDate || hireDate <= rangeEnd;
+      const isStillActive = !departDate || isAfter(departDate, rangeEnd);
+      const isActiveAtEnd = isHiredByDate && isStillActive;
       
       if (isActiveAtEnd) {
-        const sexe = String(getProp(item, PROP_SEXE) || "").toUpperCase().trim();
+        const sexeRaw = String(getProp(item, PROP_SEXE) || "").toUpperCase().trim();
         const service = String(getProp(item, PROP_SERVICE) || "Autre").trim() || "Autre";
         
-        let isF = false;
-        if (sexe.startsWith('F')) {
-          femme++;
-          isF = true;
-        } else if (sexe.startsWith('H') || sexe.startsWith('M')) {
-          homme++;
-        }
+        let isF = sexeRaw.startsWith('F') || sexeRaw.includes('FEMME');
+        if (isF) femme++;
+        else homme++;
 
         if (!byService[service]) byService[service] = { F: 0, H: 0, total: 0 };
         byService[service].total++;
@@ -368,7 +379,6 @@ export default function DashboardRH() {
         pctF: data.total > 0 ? (data.F / data.total) * 100 : 0,
         total: data.total
       }))
-      .filter(s => s.total >= 3)
       .sort((a, b) => b.total - a.total);
 
     return { homme, femme, total, pctH, pctF, byService: serviceArray };
@@ -557,7 +567,7 @@ export default function DashboardRH() {
         />
         <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full text-xs font-medium text-muted-foreground">
           <Activity className="h-3.5 w-3.5 text-primary" />
-          {rhData.length} Collaborateurs au total
+          {rhData.length} Collaborateurs dans la base
         </div>
       </div>
 
@@ -587,26 +597,27 @@ export default function DashboardRH() {
                     <ClipboardList className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Total</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Global</p>
                     <div className="text-xl font-bold">{rhData.length}</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md bg-gradient-to-br from-blue-500/10 to-blue-600/5">
+            <Card className="border-none shadow-md bg-white border-l-4 border-l-blue-500">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-500 rounded-lg text-white shadow-lg">
                     <Users className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Actif</p>
-                    <div className="text-xl font-bold">{countAtEnd}</div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Actif (Période)</p>
+                    <div className="text-xl font-bold text-blue-600">{countAtEnd}</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
 
             <Card className="border-none shadow-md bg-gradient-to-br from-emerald-500/10 to-emerald-600/5">
               <CardContent className="p-4">
@@ -1193,7 +1204,16 @@ export default function DashboardRH() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {genderStats.byService.map((srv) => (
-                  <div key={srv.name} className="p-4 bg-slate-50/50 rounded-xl border border-slate-100 hover:border-primary/30 transition-all group">
+                  <div 
+                    key={srv.name} 
+                    onClick={() => setSelectedService(srv.name)}
+                    className={cn(
+                      "p-4 rounded-xl border transition-all cursor-pointer group",
+                      selectedService === srv.name 
+                        ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary/20" 
+                        : "bg-slate-50/50 border-slate-100 hover:border-primary/30 hover:bg-white"
+                    )}
+                  >
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{srv.name}</p>
                     <div className="text-xl font-black">{srv.total}</div>
                     <div className="mt-2 flex items-center justify-between text-[10px]">
@@ -1314,6 +1334,59 @@ export default function DashboardRH() {
       <p className="text-[10px] text-muted-foreground text-center font-medium uppercase tracking-widest opacity-50">
         NCM Céramique · Système de Reporting RH · Dernière mise à jour: {formatDate(new Date(), "dd/MM/yyyy HH:mm")}
       </p>
+
+      {/* SECTION DIAGNOSTIC DYNAMIQUE */}
+      {selectedService && (
+        <Card className="mt-12 border-blue-200 bg-blue-50/20 animate-in slide-in-from-bottom-4 duration-500">
+          <CardHeader className="flex flex-row items-center justify-between py-3">
+            <CardTitle className="text-xs uppercase text-blue-600 font-black tracking-widest">
+              Détails & Diagnostic : Service {selectedService}
+            </CardTitle>
+            <Badge variant="outline" className="bg-white">{rhData.filter(e => getProp(e, PROP_SERVICE) === selectedService).length} Employés au total</Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[10px]">
+                <thead>
+                  <tr className="text-slate-500 uppercase tracking-wider font-bold border-b border-blue-100">
+                    <th className="py-3 px-2">Employé</th>
+                    <th className="px-2">Fonction</th>
+                    <th className="px-2">Embauche</th>
+                    <th className="px-2">Départ (Base)</th>
+                    <th className="px-2">Interprétation</th>
+                    <th className="px-2 text-right">Statut Final</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-blue-50">
+                  {rhData
+                    .filter(e => String(getProp(e, PROP_SERVICE) || "").trim() === selectedService)
+                    .map((e, i) => {
+                      const h = parseDate(getProp(e, PROP_EMBAUCHE));
+                      const d = parseDate(getProp(e, PROP_DEPART));
+                      const active = h && h <= rangeEnd && (!d || d > rangeEnd);
+                      return (
+                        <tr key={i} className="hover:bg-white/50 transition-colors">
+                          <td className="py-2 px-2 font-bold text-slate-700">{getProp(e, "Nom")} {getProp(e, "Prénom")}</td>
+                          <td className="px-2 text-slate-500 italic">{getProp(e, PROP_FONCTION)}</td>
+                          <td className="px-2">{h ? formatDate(h, "dd/MM/yyyy") : <span className="text-rose-500 font-bold">DATE MANQUANTE</span>}</td>
+                          <td className="px-2">{getProp(e, PROP_DEPART) || "—"}</td>
+                          <td className="px-2 text-slate-400">
+                            {d ? `Départ le ${formatDate(d, "dd/MM/yyyy")}` : (getProp(e, PROP_DEPART) ? "Format Invalide" : "Toujours Actif")}
+                          </td>
+                          <td className="px-2 text-right">
+                            <Badge variant={active ? "outline" : "destructive"} className={cn("text-[8px] h-4", active ? "border-emerald-200 text-emerald-700 bg-emerald-50" : "")}>
+                              {active ? "ACTIF" : "EXCLU (SORTI)"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

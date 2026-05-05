@@ -247,10 +247,14 @@ export default function DashboardQualite() {
       .filter(item => item.totalTTC > 0)
       .sort((a, b) => b.totalTTC - a.totalTTC);
 
+    const uniqueCommands = new Set(
+      approData.map(row => String(getProp(row, "Bon de Commande") || getProp(row, "N°") || getProp(row, "code") || "")).filter(Boolean)
+    );
+
     return { 
       totalHT, totalTTC, variationHT, variationTTC, count: approData.length, 
       evolution, recent, typeDistribution, topSuppliers, topProducts, strategicMaterials,
-      countBC: approData.length,
+      countBC: uniqueCommands.size,
       countFournisseurs: new Set(approData.map(row => getProp(row, "fournisseur")).filter(Boolean)).size
     };
   }, [approData, prevApproData]);

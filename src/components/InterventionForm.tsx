@@ -102,7 +102,8 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
   const [selectedZone, setSelectedZone] = useState<string>('');
   const [equipements, setEquipements] = useState<any[]>([]);
   const [numeroExistsWarning, setNumeroExistsWarning] = useState<string | null>(null);
-  const [suggestedNames, setSuggestedNames] = useState<string[]>([]);
+  const [suggestedDemandeurs, setSuggestedDemandeurs] = useState<string[]>([]);
+  const [suggestedIntervenants, setSuggestedIntervenants] = useState<string[]>([]);
 
   React.useEffect(() => {
     const fetchNames = async () => {
@@ -113,22 +114,26 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
           .order('id', { ascending: false })
           .limit(100);
         
-        const namesSet = new Set<string>();
+        const demandeursSet = new Set<string>();
+        const intervenantsSet = new Set<string>();
 
         if (intervs) {
           for (const row of intervs) {
-            if (row.nom_demandeur && row.nom_demandeur.trim()) {
-              namesSet.add(row.nom_demandeur.trim());
+            if (row.nom_demandeur && row.nom_demandeur.trim() && demandeursSet.size < 5) {
+              demandeursSet.add(row.nom_demandeur.trim());
             }
             if (Array.isArray(row.intervenants)) {
               row.intervenants.forEach((i: any) => {
-                if (i.nom && i.nom.trim()) namesSet.add(i.nom.trim());
+                if (i.nom && i.nom.trim() && intervenantsSet.size < 5) {
+                  intervenantsSet.add(i.nom.trim());
+                }
               });
             }
           }
         }
 
-        setSuggestedNames(Array.from(namesSet).filter(Boolean).slice(0, 4));
+        setSuggestedDemandeurs(Array.from(demandeursSet));
+        setSuggestedIntervenants(Array.from(intervenantsSet));
       } catch (err) {
         console.error("Error fetching names for autocomplete:", err);
       }
@@ -356,8 +361,13 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
 
   return (
     <Card>
-      <datalist id="suggested-names">
-        {suggestedNames.map(name => (
+      <datalist id="suggested-demandeurs">
+        {suggestedDemandeurs.map(name => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
+      <datalist id="suggested-intervenants">
+        {suggestedIntervenants.map(name => (
           <option key={name} value={name} />
         ))}
       </datalist>
@@ -446,7 +456,7 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
               <Controller
                 name="nom_demandeur"
                 control={control}
-                render={({ field }) => <Input {...field} placeholder="Saisir nom" list="suggested-names" autoComplete="off" />}
+                render={({ field }) => <Input {...field} placeholder="Saisir nom" list="suggested-demandeurs" autoComplete="off" />}
               />
               {errors.nom_demandeur && <p className="text-red-500 text-sm mt-1">{errors.nom_demandeur.message}</p>}
             </div>
@@ -600,7 +610,7 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
                   <Controller
                     name={`intervenants.${index}.nom`}
                     control={control}
-                    render={({ field: inputField }) => <Input placeholder="Nom intervenant" {...inputField} list="suggested-names" autoComplete="off" />}
+                    render={({ field: inputField }) => <Input placeholder="Nom intervenant" {...inputField} list="suggested-intervenants" autoComplete="off" />}
                   />
                   {errors.intervenants?.[index]?.nom && <p className="text-red-500 text-xs mt-1">{errors.intervenants[index]?.nom?.message}</p>}
                 </div>
