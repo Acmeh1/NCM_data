@@ -1353,7 +1353,7 @@ export default function DashboardRH() {
                     <th className="px-2">Fonction</th>
                     <th className="px-2">Embauche</th>
                     <th className="px-2">Départ (Base)</th>
-                    <th className="px-2">Interprétation</th>
+                    <th className="px-2">Affectation</th>
                     <th className="px-2 text-right">Statut Final</th>
                   </tr>
                 </thead>
@@ -1370,8 +1370,8 @@ export default function DashboardRH() {
                           <td className="px-2 text-slate-500 italic">{getProp(e, PROP_FONCTION)}</td>
                           <td className="px-2">{h ? formatDate(h, "dd/MM/yyyy") : <span className="text-rose-500 font-bold">DATE MANQUANTE</span>}</td>
                           <td className="px-2">{getProp(e, PROP_DEPART) || "—"}</td>
-                          <td className="px-2 text-slate-400">
-                            {d ? `Départ le ${formatDate(d, "dd/MM/yyyy")}` : (getProp(e, PROP_DEPART) ? "Format Invalide" : "Toujours Actif")}
+                          <td className="px-2 text-slate-500">
+                            {getProp(e, "Affectation") || "—"}
                           </td>
                           <td className="px-2 text-right">
                             <Badge variant={active ? "outline" : "destructive"} className={cn("text-[8px] h-4", active ? "border-emerald-200 text-emerald-700 bg-emerald-50" : "")}>
