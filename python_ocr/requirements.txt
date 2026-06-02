@@ -1,0 +1,8 @@
+paddleocr>=2.6.0
+paddlepaddle>=2.4.0
+fastapi
+uvicorn
+python-multipart
+opencv-python
+numpy
+pydantic

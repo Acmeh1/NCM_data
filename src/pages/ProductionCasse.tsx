@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Hammer, Trash2, Pencil, Plus, Save, X } from "lucide-react";
 import { toast } from "sonner";
+import { JsonImport } from "@/components/JsonImport";
 
 export default function ProductionCasse() {
   const { entries: prodEntries, isLoaded: prodLoaded } = useProductionStore();
@@ -208,10 +209,17 @@ export default function ProductionCasse() {
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base text-destructive flex items-center gap-2">
+        <CardHeader className="flex-row items-center justify-between pb-2">
+          <CardTitle className="text-base text-destructive flex items-center gap-2 m-0">
             Historique des Pertes
           </CardTitle>
+          <div className="flex items-center">
+            <JsonImport onImport={async (data) => {
+              for (const item of data) {
+                await addEntry(item);
+              }
+            }} />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-hidden">

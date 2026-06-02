@@ -38,7 +38,7 @@ export default function ViewSelection() {
   const navigate = useNavigate();
   const [editingEntry, setEditingEntry] = useState<SelectionEntry | null>(null);
 
-  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+  const sorted = [...entries].sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
 
   const rows = sorted.map((e) => {
     const row: Record<string, any> = { _id: e.id };

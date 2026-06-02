@@ -1,4 +1,4 @@
-import { Factory, ClipboardList, Package, ChevronDown, Database, CheckSquare, BarChart3, Wrench, Users, PieChart, Target, LayoutDashboard, TrendingUp, ShieldCheck, UserCog, ShoppingCart, Hammer } from "lucide-react";
+import { Factory, ClipboardList, Package, ChevronDown, Database, CheckSquare, BarChart3, Wrench, Users, PieChart, Target, LayoutDashboard, TrendingUp, ShieldCheck, UserCog, ShoppingCart, Hammer, CalendarCheck } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -116,6 +116,48 @@ export function AppSidebar() {
                           activeClassName="bg-sidebar-accent text-primary font-medium">
                           <Wrench className="h-4 w-4" />
                           Demande intervention DI
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
+        )}
+
+        {(isAdmin || dashboard) && (
+          <SidebarGroup>
+            <Collapsible defaultOpen>
+              <CollapsibleTrigger className="w-full">
+                <SidebarGroupLabel className="flex items-center justify-between w-full cursor-pointer hover:bg-sidebar-accent rounded-md px-2">
+                  <span className="flex items-center gap-2">
+                    <UserCog className="h-4 w-4" />
+                    Ressources Humaines
+                  </span>
+                  <ChevronDown className="h-4 w-4 transition-transform" />
+                </SidebarGroupLabel>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/rh/pointage"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <CalendarCheck className="h-4 w-4" />
+                          Pointage Mensuel
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <NavLink to="/dashboard/rh"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <BarChart3 className="h-4 w-4" />
+                          Dashboard RH
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

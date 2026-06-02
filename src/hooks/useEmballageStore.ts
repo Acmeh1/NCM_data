@@ -64,7 +64,7 @@ function groupRows(rows: any[], journalierEntries: any[]): EmballageEntry[] {
     });
   });
 
-  entries.sort((a, b) => b.Date.localeCompare(a.Date));
+  entries.sort((a, b) => String(b.Date || "").localeCompare(String(a.Date || "")));
   return entries;
 }
 

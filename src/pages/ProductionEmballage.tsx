@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { toast } from "sonner";
+import { JsonImport } from "@/components/JsonImport";
 
 export default function ProductionEmballage() {
   const { entries: journalierEntries, isLoaded: jLoaded } = useProductionStore();
@@ -73,9 +74,16 @@ export default function ProductionEmballage() {
       <Card>
         <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-base">Données Emballage</CardTitle>
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/production/emballage/view")}>
-            <Eye className="h-4 w-4" /> Aperçu
-          </Button>
+          <div className="flex gap-2">
+            <JsonImport onImport={async (data) => {
+              for (const item of data) {
+                await addEntry(item);
+              }
+            }} />
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/production/emballage/view")}>
+              <Eye className="h-4 w-4" /> Aperçu
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <EmballageTable

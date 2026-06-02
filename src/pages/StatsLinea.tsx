@@ -11,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, BarChart3, ChevronDown, ChevronRight, Eye, Info, Plus, Save, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import { JsonImport } from "@/components/JsonImport";
 import refProduit from "@/data/REF_PRODUIT.json";
 import formatData from "@/data/Format.json";
 import StatsLineaTable from "@/components/StatsLineaTable";
@@ -821,9 +822,127 @@ export default function StatsLinea() {
       <Card>
         <CardHeader className="pb-3 flex-row items-center justify-between">
           <CardTitle className="text-base">Statistiques enregistrées</CardTitle>
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/production/stats-linea/view")}>
-            <Eye className="h-4 w-4" /> Aperçu
-          </Button>
+          <div className="flex gap-2">
+            <JsonImport onImport={async (data) => {
+              let successCount = 0;
+              let errorCount = 0;
+              for (const item of data) {
+                const formatHour = (h: any) => {
+                  if (typeof h === "number") return `${Math.floor(h).toString().padStart(2, '0')}:00`;
+                  if (typeof h === "string" && !h.includes(':') && h.trim() !== "") return `${h.padStart(2, '0')}:00`;
+                  return h;
+                };
+
+                // Determine production_id
+                let prodId = item.production_id || item.Production_id || item.id_production;
+                
+                // If the provided ID doesn't exist in our actual database (e.g. LLM generated "2026-05-10_matin"), we ignore it.
+                if (prodId && !prodEntries.some(p => p.id === prodId)) {
+                  prodId = null;
+                }
+                
+                if (!prodId) {
+                  const date = item.date || item.Date || item.production_date || item.journal_date;
+                  const heure_debut = formatHour(item.heure_debut || item.Heure_Debut);
+                  const heure_fin = formatHour(item.heure_fin || item.Heure_Fin);
+                  
+                  // Try to find by exact matching hour (e.g. "06:00" and "14:00")
+                  if (date && heure_debut && heure_fin) {
+                    const match = prodEntries.find(p => p.Date === date && p.Heure_Debut === heure_debut && p.Heure_Fin === heure_fin);
+                    if (match) prodId = match.id;
+                  }
+
+                  // Fallback: Use horaire if hours don't perfectly match
+                  if (!prodId) {
+                    let horaire = item.horaire || item.Horaire || "";
+                    let altHoraire = horaire;
+                    
+                    const horLower = horaire.toLowerCase().trim();
+                    if (horLower === "matin" || horLower === "6 h-14 h" || horLower === "6 h - 14 h") { 
+                      horaire = "Matin"; 
+                      altHoraire = "6 h-14 h"; 
+                    } else if (horLower === "soir" || horLower === "14 h-22 h" || horLower === "14 h - 22 h") { 
+                      horaire = "Soir"; 
+                      altHoraire = "14 h-22 h"; 
+                    } else if (horLower === "nuit" || horLower === "22 h-6 h" || horLower === "22 h - 6 h") { 
+                      horaire = "Nuit"; 
+                      altHoraire = "22 h-6 h"; 
+                    }
+
+                    if (date) {
+                      const match = prodEntries.find(p => p.Date === date && (p.Horaire === horaire || p.Horaire === altHoraire || p.Horaire?.toLowerCase() === horLower));
+                      if (match) prodId = match.id;
+                    }
+                  }
+                }
+
+                if (!prodId) {
+                  console.error("Aucune production trouvée pour:", item);
+                  errorCount++;
+                  continue;
+                }
+
+                const mappedItem = {
+                  production_id: prodId,
+                  production_date: item.production_date || item.date || item.Date || "",
+
+                  choix1_pieces: Number(item.choix1_pieces) || 0,
+                  choix1_surface_m2: Number(item.choix1_surface_m2) || 0,
+                  choix1_pourcentage: Number(item.choix1_pourcentage) || 0,
+                  choix2_pieces: Number(item.choix2_pieces) || 0,
+                  choix2_surface_m2: Number(item.choix2_surface_m2) || 0,
+                  choix2_pourcentage: Number(item.choix2_pourcentage) || 0,
+                  choix3_pieces: Number(item.choix3_pieces) || 0,
+                  choix3_surface_m2: Number(item.choix3_surface_m2) || 0,
+                  choix3_pourcentage: Number(item.choix3_pourcentage) || 0,
+                  total_pieces: Number(item.total_pieces) || 0,
+                  total_surface_m2: Number(item.total_surface_m2) || 0,
+
+                  choix1_operateur_pieces: Number(item.choix1_operateur_pieces) || 0,
+                  choix1_operateur_pourcentage: Number(item.choix1_operateur_pourcentage) || 0,
+                  choix1_planar_pieces: Number(item.choix1_planar_pieces) || 0,
+                  choix1_planar_pourcentage: Number(item.choix1_planar_pourcentage) || 0,
+                  choix1_calibre_pieces: Number(item.choix1_calibre_pieces) || 0,
+                  choix1_calibre_pourcentage: Number(item.choix1_calibre_pourcentage) || 0,
+
+                  choix2_operateur_pieces: Number(item.choix2_operateur_pieces) || 0,
+                  choix2_operateur_pourcentage: Number(item.choix2_operateur_pourcentage) || 0,
+                  choix2_planar_pieces: Number(item.choix2_planar_pieces) || 0,
+                  choix2_planar_pourcentage: Number(item.choix2_planar_pourcentage) || 0,
+                  choix2_calibre_pieces: Number(item.choix2_calibre_pieces) || 0,
+                  choix2_calibre_pourcentage: Number(item.choix2_calibre_pourcentage) || 0,
+
+                  choix3_operateur_pieces: Number(item.choix3_operateur_pieces) || 0,
+                  choix3_operateur_pourcentage: Number(item.choix3_operateur_pourcentage) || 0,
+                  choix3_planar_pieces: Number(item.choix3_planar_pieces) || 0,
+                  choix3_planar_pourcentage: Number(item.choix3_planar_pourcentage) || 0,
+                  choix3_calibre_pieces: Number(item.choix3_calibre_pieces) || 0,
+                  choix3_calibre_pourcentage: Number(item.choix3_calibre_pourcentage) || 0,
+
+                  minutes_absence_alimentation: Number(item.minutes_absence_alimentation) || 0,
+                  minutes_urgence_manuelle: Number(item.minutes_urgence_manuelle) || 0,
+                  minutes_machine_saturee: Number(item.minutes_machine_saturee) || 0,
+                  minutes_total_machine: Number(item.minutes_total_machine) || 0,
+
+                  vitesse_moyenne_pieces_min: Number(item.vitesse_moyenne_pieces_min) || 0,
+                  machine_allumee: Number(item.machine_allumee) || 0,
+                  machine_en_marche: Number(item.machine_en_marche) || 0,
+                  production_reelle_m2: Number(item.production_reelle_m2) || 0,
+                  statut_donnees: item.statut_donnees || "Complet",
+                  motif_incomplet: item.motif_incomplet || "",
+                };
+
+                const res = await addEntry(mappedItem);
+                if (res) successCount++;
+                else errorCount++;
+              }
+              if (successCount > 0) toast.success(`${successCount} importations réussies`);
+              if (errorCount > 0) toast.error(`${errorCount} importations échouées (vérifiez la production_id)`);
+            }} />
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/production/stats-linea/view")}>
+              <Eye className="h-4 w-4" /> Aperçu
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <StatsLineaTable

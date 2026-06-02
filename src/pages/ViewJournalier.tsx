@@ -63,7 +63,7 @@ export default function ViewJournalier() {
   const navigate = useNavigate();
   const [editingEntry, setEditingEntry] = useState<ProductionEntry | null>(null);
 
-  const sorted = [...entries].sort((a, b) => b.Date.localeCompare(a.Date));
+  const sorted = [...entries].sort((a, b) => String(b.Date || "").localeCompare(String(a.Date || "")));
 
   const selectionByKey = new Map<string, SelectionEntry>();
   selectionEntries.forEach((s) => {

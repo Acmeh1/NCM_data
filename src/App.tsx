@@ -27,6 +27,7 @@ import DashboardQualite from "@/pages/DashboardQualite";
 import DashboardRH from "@/pages/DashboardRH";
 import DashboardCommercial from "@/pages/DashboardCommercial";
 import ProductionCasse from "@/pages/ProductionCasse";
+import RHPointage from "@/pages/RHPointage";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/dashboard/qualite" element={<DashboardQualite />} />
               <Route path="/dashboard/rh" element={<DashboardRH />} />
               <Route path="/dashboard/commercial" element={<DashboardCommercial />} />
+              <Route path="/rh/pointage" element={<RHPointage />} />
               <Route path="/maintenance" element={<Maintenance />} />
               <Route path="/maintenance/view" element={<ViewInterventions />} />
               <Route path="/admin/backup" element={<AdminBackup />} />

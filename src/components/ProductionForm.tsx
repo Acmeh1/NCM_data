@@ -10,10 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import refProduit from "@/data/REF_PRODUIT.json";
 import formatData from "@/data/Format.json";
 import { useProductionStore, type ProductionEntry } from "@/hooks/useProductionStore";
+import OcrImportDialog from "@/components/OcrImportDialog";
 
 interface Props {
   onSubmit: (entry: Omit<ProductionEntry, "id">) => void;
@@ -381,8 +382,65 @@ export default function ProductionForm({
     }
   };
 
+  const [isOcrOpen, setIsOcrOpen] = useState(false);
+
+  const targetFields = [
+    { key: "Date", label: "Date" },
+    { key: "Horaire", label: "Horaire" },
+    { key: "Groupe", label: "Groupe" },
+    { key: "Chef_Equipe", label: "Chef d'Équipe" },
+    { key: "Modele", label: "Modèle" },
+    { key: "Couleur", label: "Couleur" },
+    { key: "Format", label: "Format" },
+    { key: "Choix_1_m2", label: "Choix 1 (m²)" },
+    { key: "Choix_2_m2", label: "Choix 2 (m²)" },
+    { key: "Choix_3_m2", label: "Choix 3 (m²)" },
+    { key: "Pressage_m2", label: "Pressage (m²)" },
+    { key: "Project_pcs", label: "Projecta (pcs)" },
+    { key: "Emaillage_m2", label: "Émaillage (m²)" },
+    { key: "Cycle_min", label: "Cycle min" },
+    { key: "Nb_Pieces_Four", label: "Nb Pièces Four" },
+    { key: "Four_Minutes_Vides", label: "Min Vides Four" },
+    { key: "Four_Consommation_Kwh", label: "Conso Four (kWh)" },
+  ];
+
+  const handleFieldAssign = (key: string, value: string) => {
+    if (key === "Horaire") {
+      handleHoraireChange(value);
+    } else if (key === "Modele") {
+      handleModelChange(value);
+    } else if (key === "Couleur") {
+      handleCouleurChange(value);
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-6">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-500 shrink-0">
+            <Sparkles className="h-5 w-5 animate-pulse" />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-indigo-950 dark:text-indigo-200">Saisie assistée par IA (OCR)</h4>
+            <p className="text-xs text-muted-foreground">Numérisez une photo de fiche de production avec PaddleOCR pour pré-remplir les champs.</p>
+          </div>
+        </div>
+        <Button
+          type="button"
+          onClick={() => setIsOcrOpen(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 font-medium shadow-md shadow-indigo-600/15 shrink-0 self-stretch sm:self-auto"
+        >
+          <Sparkles className="h-4 w-4" /> Numériser la Fiche
+        </Button>
+      </div>
+
+      <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-6">
       {/* Row 1: Date, Horaire, Heures */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="space-y-1.5">
@@ -686,5 +744,13 @@ export default function ProductionForm({
         )}
       </div>
     </form>
+
+    <OcrImportDialog
+      open={isOcrOpen}
+      onClose={() => setIsOcrOpen(false)}
+      targetFields={targetFields}
+      onFieldAssign={handleFieldAssign}
+    />
+  </div>
   );
 }

@@ -31,7 +31,7 @@ export default function ViewEmballage() {
   const [editChoix, setEditChoix] = useState<EmballageChoix[]>([]);
 
   const flat: Record<string, any>[] = [];
-  [...entries].sort((a, b) => b.Date.localeCompare(a.Date)).forEach((e) => {
+  [...entries].sort((a, b) => String(b.Date || "").localeCompare(String(a.Date || ""))).forEach((e) => {
     e.choix.forEach((c, ci) => {
       flat.push({
         _entryId: e.id,
