@@ -123,22 +123,17 @@ export function usePointageStore(selectedMonth: Date) {
     },
   });
 
-  // Active employees (no departure date)
-  const activeEmployees = useMemo(() => {
-    return employees.filter((emp) => {
-      const depart = getDateDepart(emp);
-      return !depart || depart.toString().trim() === "";
-    });
-  }, [employees]);
+  // All employees (including those with departure dates)
+  const allEmployees = useMemo(() => employees, [employees]);
 
-  // Service list
+  // Service list (derived from all employees)
   const services = useMemo(() => {
     const set = new Set<string>();
-    activeEmployees.forEach((emp) => {
+    allEmployees.forEach((emp) => {
       if (emp.Service) set.add(emp.Service);
     });
     return Array.from(set).sort();
-  }, [activeEmployees]);
+  }, [allEmployees]);
 
   // ── Fetch existing pointage data for the month ──────────────────
   const {
@@ -331,7 +326,7 @@ export function usePointageStore(selectedMonth: Date) {
     let congeCirconcision = 0;
     let recuperation = 0;
 
-    activeEmployees.forEach((emp) => {
+    allEmployees.forEach((emp) => {
       daysOfMonth.forEach((day) => {
         const dateStr = format(day, "yyyy-MM-dd");
         const cell = getCellData(emp.Matricule, dateStr);
@@ -383,11 +378,11 @@ export function usePointageStore(selectedMonth: Date) {
       congeCirconcision,
       recuperation,
     };
-  }, [activeEmployees, daysOfMonth, getCellData]);
+  }, [allEmployees, daysOfMonth, getCellData]);
 
   return {
     // Data
-    employees: activeEmployees,
+    employees: allEmployees,
     services,
     daysOfMonth,
     monthKey,
