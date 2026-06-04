@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.pointage_rh (
   date date NOT NULL,
   statut text NOT NULL DEFAULT 'PRESENT',
   etat text,
+  mise_a_pied boolean DEFAULT false,
   heures_supp numeric DEFAULT 0,
   retard numeric DEFAULT 0,
   commentaire text,
@@ -110,6 +111,7 @@ SELECT
         WHEN 'CONGE_SANS_SOLDE' THEN 'Congé sans solde'
         WHEN 'CONGE_CIRCONCISION' THEN 'Congé Circoncision'
         WHEN 'RECUPERATION' THEN 'Récupération'
+        WHEN 'CONGE_NAISSANCE' THEN 'Congé Naissance'
         ELSE 'Absence Autorisée'
       END
     WHEN p.statut = 'PRESENT' AND p.retard > 0 THEN concat(p.retard, 'h Retard')
