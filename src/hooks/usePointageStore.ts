@@ -19,6 +19,7 @@ export interface PointageRow {
   date: string; // YYYY-MM-DD
   statut: PointageStatut;
   etat?: string;
+  mise_a_pied?: boolean;
   heures_supp?: number;
   retard?: number;
   commentaire?: string;
@@ -55,7 +56,8 @@ export const ETAT_OPTIONS: Record<string, string[]> = {
     "FORMATION",
     "CONGE_SANS_SOLDE",
     "CONGE_CIRCONCISION",
-    "RECUPERATION"
+    "RECUPERATION",
+    "CONGE_NAISSANCE"
   ],
 };
 
@@ -63,6 +65,7 @@ export const ETAT_LABELS: Record<string, string> = {
   CONGE_ANNUEL: "Congé Annuel",
   CONGE_MALADIE: "Congé Maladie",
   CONGE_DECES: "Congé Décès",
+  CONGE_NAISSANCE: "Congé Naissance",
   CONGE_MARIAGE: "Congé Mariage",
   FORMATION: "Formation",
   CONGE_SANS_SOLDE: "Congé sans solde",
@@ -186,6 +189,7 @@ export function usePointageStore(selectedMonth: Date) {
         statut: isWeekend ? "WEEKEND" : "",
         heures_supp: 0,
         retard: 0,
+        mise_a_pied: false,
         ...saved,
         ...local,
       };
@@ -266,6 +270,7 @@ export function usePointageStore(selectedMonth: Date) {
             etat: cell.etat || null as any,
             heures_supp: cell.heures_supp || 0,
             retard: cell.retard || 0,
+            mise_a_pied: cell.mise_a_pied || false,
             commentaire: cell.commentaire || null as any,
           });
         }

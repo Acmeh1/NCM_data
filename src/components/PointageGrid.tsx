@@ -76,6 +76,7 @@ export default function PointageGrid({
     let absNonAutorisee = 0;
     let hsupp = 0;
     let retard = 0;
+    let mise_a_pied = 0;
 
     daysOfMonth.forEach((day) => {
       const dateStr = format(day, "yyyy-MM-dd");
@@ -87,9 +88,10 @@ export default function PointageGrid({
       }
       hsupp += cell.heures_supp || 0;
       retard += cell.retard || 0;
+      if (cell.mise_a_pied) mise_a_pied++;
     });
 
-    return { present, absAutorisee, absNonAutorisee, hsupp, retard };
+    return { present, absAutorisee, absNonAutorisee, hsupp, retard, mise_a_pied };
   };
 
   if (filteredEmployees.length === 0) {
@@ -151,8 +153,11 @@ export default function PointageGrid({
               <th className="px-2 py-2 text-center font-bold text-primary bg-primary/5 min-w-[40px]" rowSpan={2} title="Heures Supplémentaires">
                 <span className="text-[8px] uppercase block leading-tight">H.S</span>
               </th>
-              <th className="px-2 py-2 text-center font-bold text-amber-600 bg-amber-50/5 min-w-[40px] border-r border-slate-200" rowSpan={2} title="Heures de Retard">
-                <span className="text-[8px] uppercase block leading-tight">H.R</span>
+              <th className="px-2 py-2 text-center font-bold text-amber-700 bg-amber-50/30 min-w-[40px]" rowSpan={2} title="Retard">
+                <span className="text-[8px] uppercase block leading-tight">RET</span>
+              </th>
+              <th className="px-2 py-2 text-center font-bold text-purple-600 bg-purple-50/50 min-w-[40px]" rowSpan={2} title="Mise à pied">
+                <span className="text-[8px] uppercase block leading-tight">MP</span>
               </th>
             </tr>
             {/* Day numbers */}
@@ -237,8 +242,11 @@ export default function PointageGrid({
                   <td className="px-1 py-1 text-center font-bold text-primary text-[10px] bg-primary/5">
                     {rowTotals.hsupp || ""}
                   </td>
-                  <td className="px-1 py-1 text-center font-bold text-amber-700 text-[10px] bg-amber-50/5 border-r border-slate-200">
+                  <td className="px-1 py-1 text-center font-bold text-amber-700 text-[10px] bg-amber-50/5">
                     {rowTotals.retard || ""}
+                  </td>
+                  <td className="px-1 py-1 text-center font-bold text-purple-700 text-[10px] bg-purple-50/30 border-r border-slate-200">
+                    {rowTotals.mise_a_pied ? "✓" : ""}
                   </td>
                 </tr>
               );
@@ -271,7 +279,7 @@ export default function PointageGrid({
                   </td>
                 );
               })}
-              <td colSpan={5} className="border-l border-slate-200" />
+              <td colSpan={6} className="border-l border-slate-200" />
             </tr>
           </tfoot>
         </table>
