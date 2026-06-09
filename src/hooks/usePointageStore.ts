@@ -45,6 +45,7 @@ export const STATUT_OPTIONS: { value: PointageStatut; label: string; color: stri
   { value: "FERIE",             label: "Férié",                 color: "#8b5cf6", bgColor: "bg-violet-500",  icon: "F" },
   { value: "DEBUT_CONTRAT",     label: "Début Contrat",         color: "#f59e0b", bgColor: "bg-amber-500",   icon: "DC" },
   { value: "FIN_CONTRAT",       label: "Fin Contrat",           color: "#ea580c", bgColor: "bg-orange-500",  icon: "FC" },
+  { value: "MISE_A_PIED",      label: "Mise à pied",          color: "#22c55e", bgColor: "bg-green-600",   icon: "MP" },
 ];
 
 export const ETAT_OPTIONS: Record<string, string[]> = {
