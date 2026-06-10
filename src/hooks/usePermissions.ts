@@ -8,8 +8,10 @@ interface UserPermissions {
   production: boolean;
   maintenance: boolean;
   dashboard: boolean;
+  rh: boolean;
   productionEdit: boolean;
   maintenanceEdit: boolean;
+  rhEdit: boolean;
   isAdmin: boolean;
   loading: boolean;
 }
@@ -20,8 +22,10 @@ export function usePermissions(): UserPermissions {
     production: false,
     maintenance: false,
     dashboard: false,
+    rh: false,
     productionEdit: false,
     maintenanceEdit: false,
+    rhEdit: false,
   });
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -32,8 +36,10 @@ export function usePermissions(): UserPermissions {
         production: false,
         maintenance: false,
         dashboard: false,
+        rh: false,
         productionEdit: false,
         maintenanceEdit: false,
+        rhEdit: false,
       });
       setIsAdmin(false);
       setLoading(false);
@@ -53,8 +59,10 @@ export function usePermissions(): UserPermissions {
         production: true,
         maintenance: true,
         dashboard: true,
+        rh: true,
         productionEdit: true,
         maintenanceEdit: true,
+        rhEdit: true,
       });
       setLoading(false);
       return;
@@ -69,8 +77,10 @@ export function usePermissions(): UserPermissions {
       production: false,
       maintenance: false,
       dashboard: false,
+      rh: false,
       productionEdit: false,
       maintenanceEdit: false,
+      rhEdit: false,
     };
 
     permData?.forEach((p: any) => {
@@ -82,6 +92,9 @@ export function usePermissions(): UserPermissions {
         perms.maintenanceEdit = p.can_edit;
       } else if (p.permission_key === "dashboard") {
         perms.dashboard = p.can_view;
+      } else if (p.permission_key === "rh") {
+        perms.rh = p.can_view;
+        perms.rhEdit = p.can_edit;
       }
     });
 

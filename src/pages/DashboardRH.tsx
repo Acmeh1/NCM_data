@@ -14,10 +14,13 @@ import {
   Users, Briefcase, UserCheck, ShieldCheck, ClipboardList, UserMinus, 
   Activity, TrendingUp, LayoutDashboard, GraduationCap, Calendar, 
   UserPlus, UserMinus as UserMinusIcon, MapPin, Smile, UserPlus2, UserMinus2, ArrowUpRight, ArrowDownRight,
-  AlertTriangle, Target
+  AlertTriangle, Target, Edit3
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useKpiSettings } from "@/hooks/useKpiSettings";
 import { cn } from "@/lib/utils";
+import Dashboard from "./hr/Dashboard";
+import PointageEditor from "./hr/PointageEditor";
 import { Button } from "@/components/ui/button";
 import { 
   parseISO, 
@@ -121,6 +124,7 @@ export default function DashboardRH() {
   });
   
   const [selectedService, setSelectedService] = useState<string | null>("Approvisionnement");
+  const [turnoverFilter, setTurnoverFilter] = useState<string>("Tous");
 
   // Fetch Absenteeism data (Pointage)
   const { data: pointageData = [], isLoading: loadingPointage } = useQuery({
@@ -523,6 +527,22 @@ export default function DashboardRH() {
     });
   }, [rhData]);
 
+  const turnoverServices = useMemo(() => {
+    const services = new Set([
+      ...newHires.map((e: any) => getProp(e, PROP_SERVICE)),
+      ...departuresList.map((e: any) => getProp(e, PROP_SERVICE))
+    ]);
+    return Array.from(services).filter(Boolean).sort() as string[];
+  }, [newHires, departuresList]);
+
+  const filteredNewHires = useMemo(() => {
+    return turnoverFilter === "Tous" ? newHires : newHires.filter((e: any) => getProp(e, PROP_SERVICE) === turnoverFilter);
+  }, [newHires, turnoverFilter]);
+
+  const filteredDepartures = useMemo(() => {
+    return turnoverFilter === "Tous" ? departuresList : departuresList.filter((e: any) => getProp(e, PROP_SERVICE) === turnoverFilter);
+  }, [departuresList, turnoverFilter]);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
@@ -578,6 +598,9 @@ export default function DashboardRH() {
           </TabsTrigger>
           <TabsTrigger value="absenteeism" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <Activity className="h-4 w-4" /> Absentéisme
+          </TabsTrigger>
+          <TabsTrigger value="pointage_edit" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Edit3 className="h-4 w-4" /> Saisie Pointages
           </TabsTrigger>
           <TabsTrigger value="skills" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <GraduationCap className="h-4 w-4" /> Compétences
@@ -905,12 +928,30 @@ export default function DashboardRH() {
           </div>
 
           <div className="space-y-6 mt-6">
+            <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" />
+                Détails des Mouvements par Service
+              </h3>
+              <Select value={turnoverFilter} onValueChange={setTurnoverFilter}>
+                <SelectTrigger className="w-[250px] h-8 text-xs">
+                  <SelectValue placeholder="Filtrer par service" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tous">Tous les services</SelectItem>
+                  {turnoverServices.map(srv => (
+                    <SelectItem key={srv} value={srv}>{srv}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* New Hires Table */}
             <Card className="shadow-sm border border-slate-200/60 bg-white overflow-hidden">
               <CardHeader className="bg-blue-50/50 border-b border-slate-100 py-3">
                 <CardTitle className="text-sm font-bold text-blue-800 flex items-center gap-2">
                   <UserPlus2 className="h-4 w-4" />
-                  Qui a rejoint l'organisation sur cette période ? ({newHires.length})
+                  Qui a rejoint l'organisation sur cette période ? ({filteredNewHires.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -927,7 +968,7 @@ export default function DashboardRH() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                      {newHires.length > 0 ? newHires.map((emp, i) => {
+                      {filteredNewHires.length > 0 ? filteredNewHires.map((emp: any, i: number) => {
                         const birthDate = parseDate(getProp(emp, PROP_NAISSANCE));
                         const age = birthDate ? Math.floor((new Date().getTime() - birthDate.getTime()) / (1000 * 3600 * 24 * 365.25)) : "—";
                         return (
@@ -956,7 +997,7 @@ export default function DashboardRH() {
               <CardHeader className="bg-rose-50/50 border-b border-slate-100 py-3">
                 <CardTitle className="text-sm font-bold text-rose-800 flex items-center gap-2">
                   <UserMinus2 className="h-4 w-4" />
-                  Qui a quitté l'organisation sur cette période ? ({departuresList.length})
+                  Qui a quitté l'organisation sur cette période ? ({filteredDepartures.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -973,7 +1014,7 @@ export default function DashboardRH() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                      {departuresList.length > 0 ? departuresList.map((emp, i) => {
+                      {filteredDepartures.length > 0 ? filteredDepartures.map((emp: any, i: number) => {
                         const hireDate = parseDate(getProp(emp, PROP_EMBAUCHE));
                         const departDate = parseDate(getProp(emp, PROP_DEPART));
                         let seniority = "—";
@@ -1004,148 +1045,12 @@ export default function DashboardRH() {
         </TabsContent>
 
         <TabsContent value="absenteeism" className="space-y-6">
-          {!absenteeismStats ? (
-            <Card className="p-12 text-center text-muted-foreground border-dashed">
-              <Activity className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p>Aucune donnée de pointage disponible pour la période sélectionnée.</p>
-            </Card>
-          ) : (
-            <>
-              {/* Absenteeism Top Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-lg border-none">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-rose-100 text-xs font-bold uppercase tracking-wider">Taux d'Absentéisme</p>
-                        <h3 className="text-4xl font-black mt-1">{absenteeismStats.rate}%</h3>
-                      </div>
-                      <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md">
-                        <Activity className="h-6 w-6 text-white" />
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-rose-100 text-xs">
-                      <TrendingUp className="h-3 w-3" />
-                      <span>Basé sur {absenteeismStats.totalPlannedHours}h prévues</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white shadow-md border border-slate-200/60">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Heures d'Absence</p>
-                        <h3 className="text-3xl font-bold mt-1 text-slate-800">{absenteeismStats.totalAbsentHours}h</h3>
-                      </div>
-                      <div className="p-3 bg-rose-50 rounded-xl">
-                        <UserMinus2 className="h-6 w-6 text-rose-500" />
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-4 italic">Total cumulé sur la période</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white shadow-md border border-slate-200/60">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Objectif Max</p>
-                        <h3 className="text-3xl font-bold mt-1 text-slate-800">5.0%</h3>
-                      </div>
-                      <div className="p-3 bg-emerald-50 rounded-xl">
-                        <Target className="h-6 w-6 text-emerald-500" />
-                      </div>
-                    </div>
-                    <div className="mt-4 w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className={cn("h-full rounded-full transition-all duration-1000", parseFloat(absenteeismStats.rate) > 5 ? "bg-rose-500" : "bg-emerald-500")}
-                        style={{ width: `${Math.min(100, (parseFloat(absenteeismStats.rate) / 5) * 100)}%` }}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Trend Chart */}
-                <Card className="shadow-sm border border-slate-200/60">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-primary" />
-                      Évolution du Taux d'Absentéisme (%)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={absenteeismStats.trendData}>
-                          <defs>
-                            <linearGradient id="colorAbs" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2}/>
-                              <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} className="opacity-30" />
-                          <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} unit="%" />
-                          <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
-                          <Area type="monotone" dataKey="rate" name="Taux %" stroke="#f43f5e" fillOpacity={1} fill="url(#colorAbs)" strokeWidth={2} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* By Service Chart */}
-                <Card className="shadow-sm border border-slate-200/60">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-primary" />
-                      Taux d'Absentéisme par Service (%)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={absenteeismStats.serviceData} layout="vertical">
-                          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} className="opacity-30" />
-                          <XAxis type="number" hide />
-                          <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={100} />
-                          <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                          <Bar dataKey="rate" name="Taux %" fill="#8b5cf6" radius={[0, 4, 4, 0]} barSize={20} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* By Reason Chart */}
-                <Card className="shadow-sm border border-slate-200/60 lg:col-span-2">
-                  <CardHeader>
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-amber-500" />
-                      Principaux Motifs d'Absence (Heures cumulées)
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[250px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={absenteeismStats.reasonData}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} className="opacity-30" />
-                          <XAxis dataKey="name" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                          <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                          <Bar dataKey="value" name="Heures" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={40} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </>
-          )}
+          <Dashboard startDate={startDate} endDate={endDate} rhData={rhData} />
         </TabsContent>
+
+
+
+
 
         <TabsContent value="skills" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1329,64 +1234,17 @@ export default function DashboardRH() {
             </Card>
           </div>
         </TabsContent>
+
+        <TabsContent value="pointage_edit" className="space-y-6">
+          <PointageEditor rhData={rhData} />
+        </TabsContent>
       </Tabs>
 
       <p className="text-[10px] text-muted-foreground text-center font-medium uppercase tracking-widest opacity-50">
         NCM Céramique · Système de Reporting RH · Dernière mise à jour: {formatDate(new Date(), "dd/MM/yyyy HH:mm")}
       </p>
 
-      {/* SECTION DIAGNOSTIC DYNAMIQUE */}
-      {selectedService && (
-        <Card className="mt-12 border-blue-200 bg-blue-50/20 animate-in slide-in-from-bottom-4 duration-500">
-          <CardHeader className="flex flex-row items-center justify-between py-3">
-            <CardTitle className="text-xs uppercase text-blue-600 font-black tracking-widest">
-              Détails & Diagnostic : Service {selectedService}
-            </CardTitle>
-            <Badge variant="outline" className="bg-white">{rhData.filter(e => getProp(e, PROP_SERVICE) === selectedService).length} Employés au total</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[10px]">
-                <thead>
-                  <tr className="text-slate-500 uppercase tracking-wider font-bold border-b border-blue-100">
-                    <th className="py-3 px-2">Employé</th>
-                    <th className="px-2">Fonction</th>
-                    <th className="px-2">Embauche</th>
-                    <th className="px-2">Départ (Base)</th>
-                    <th className="px-2">Affectation</th>
-                    <th className="px-2 text-right">Statut Final</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-blue-50">
-                  {rhData
-                    .filter(e => String(getProp(e, PROP_SERVICE) || "").trim() === selectedService)
-                    .map((e, i) => {
-                      const h = parseDate(getProp(e, PROP_EMBAUCHE));
-                      const d = parseDate(getProp(e, PROP_DEPART));
-                      const active = h && h <= rangeEnd && (!d || d > rangeEnd);
-                      return (
-                        <tr key={i} className="hover:bg-white/50 transition-colors">
-                          <td className="py-2 px-2 font-bold text-slate-700">{getProp(e, "Nom")} {getProp(e, "Prénom")}</td>
-                          <td className="px-2 text-slate-500 italic">{getProp(e, PROP_FONCTION)}</td>
-                          <td className="px-2">{h ? formatDate(h, "dd/MM/yyyy") : <span className="text-rose-500 font-bold">DATE MANQUANTE</span>}</td>
-                          <td className="px-2">{getProp(e, PROP_DEPART) || "—"}</td>
-                          <td className="px-2 text-slate-500">
-                            {getProp(e, "Affectation") || "—"}
-                          </td>
-                          <td className="px-2 text-right">
-                            <Badge variant={active ? "outline" : "destructive"} className={cn("text-[8px] h-4", active ? "border-emerald-200 text-emerald-700 bg-emerald-50" : "")}>
-                              {active ? "ACTIF" : "EXCLU (SORTI)"}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
     </div>
   );
 }

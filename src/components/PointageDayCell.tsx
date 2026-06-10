@@ -43,6 +43,7 @@ const STATUT_STYLES: Record<string, { bg: string; text: string; border: string; 
   FERIE:             { bg: "bg-violet-100",   text: "text-violet-700",  border: "border-violet-200",  hoverBg: "hover:bg-violet-200" },
   DEBUT_CONTRAT:     { bg: "bg-amber-50/70",  text: "text-amber-700",   border: "border-amber-200 border-dashed", hoverBg: "hover:bg-amber-100/70" },
   FIN_CONTRAT:       { bg: "bg-orange-50/70", text: "text-orange-700",  border: "border-orange-200 border-dashed", hoverBg: "hover:bg-orange-100/70" },
+  MISE_A_PIED:       { bg: "bg-green-100",    text: "text-green-700",   border: "border-green-200",   hoverBg: "hover:bg-green-200" },
   "":                { bg: "bg-white",        text: "text-slate-300",   border: "border-slate-100",   hoverBg: "hover:bg-slate-50" },
 };
 
@@ -54,6 +55,7 @@ const STATUT_ICONS: Record<string, string> = {
   FERIE: "F",
   DEBUT_CONTRAT: "DC",
   FIN_CONTRAT: "FC",
+  MISE_A_PIED: "MP",
   "": "·",
 };
 
@@ -92,10 +94,10 @@ export default function PointageDayCell({
             "relative w-full h-full min-w-[32px] min-h-[28px] flex items-center justify-center",
             "text-[10px] font-bold rounded-md border transition-all duration-150",
             "cursor-pointer select-none",
-            style.bg,
-            style.text,
-            style.border,
-            style.hoverBg,
+            style?.bg ?? "bg-white",
+            style?.text ?? "text-slate-300",
+            style?.border ?? "border-slate-100",
+            style?.hoverBg ?? "hover:bg-slate-50",
             "active:scale-95"
           )}
           title={`${format(day, "EEEE dd MMMM", { locale: fr })} — ${STATUT_OPTIONS.find(s => s.value === cellData.statut)?.label || "Non défini"}`}
@@ -133,7 +135,7 @@ export default function PointageDayCell({
                       ? `${STATUT_STYLES[opt.value].bg} ${STATUT_STYLES[opt.value].border} ${STATUT_STYLES[opt.value].text} ring-2 ring-offset-1`
                       : "bg-white border-slate-200 text-slate-500 hover:bg-slate-50"
                   )}
-                  style={cellData.statut === opt.value ? { ringColor: opt.color } : {}}
+                  style={cellData.statut === opt.value ? ({ "--tw-ring-color": opt.color } as React.CSSProperties) : {}}
                 >
                   {opt.icon} {opt.label}
                 </button>

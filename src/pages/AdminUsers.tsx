@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, Shield, Factory, Wrench, RefreshCw, UserPlus, Eye, Pencil, PieChart, CheckCircle, Clock, Trash2 } from "lucide-react";
+import { Users, Shield, Factory, Wrench, RefreshCw, UserPlus, Eye, Pencil, PieChart, CheckCircle, Clock, Trash2, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { uuidv4 } from "@/lib/uuid";
 import {
@@ -29,6 +29,8 @@ interface UserWithPermissions {
   maintenance_view: boolean;
   maintenance_edit: boolean;
   dashboard_view: boolean;
+  rh_view: boolean;
+  rh_edit: boolean;
 }
 
 export default function AdminUsers() {
@@ -45,6 +47,8 @@ export default function AdminUsers() {
     maintenance_view: false,
     maintenance_edit: false,
     dashboard_view: false,
+    rh_view: false,
+    rh_edit: false,
   });
   const [inviting, setInviting] = useState(false);
 
@@ -68,6 +72,7 @@ export default function AdminUsers() {
         const prodPerm = userPerms.find((pp: any) => pp.permission_key === "production");
         const maintPerm = userPerms.find((pp: any) => pp.permission_key === "maintenance");
         const dashPerm = userPerms.find((pp: any) => pp.permission_key === "dashboard");
+        const rhPerm = userPerms.find((pp: any) => pp.permission_key === "rh");
 
         return {
           id: p.id,
@@ -80,6 +85,8 @@ export default function AdminUsers() {
           maintenance_view: maintPerm?.can_view ?? false,
           maintenance_edit: maintPerm?.can_edit ?? false,
           dashboard_view: dashPerm?.can_view ?? false,
+          rh_view: rhPerm?.can_view ?? false,
+          rh_edit: rhPerm?.can_edit ?? false,
         };
       });
 
@@ -128,8 +135,8 @@ export default function AdminUsers() {
       const user = users.find((u) => u.id === userId);
       if (!user) return;
 
-      const currentView = key === "production" ? user.production_view : key === "maintenance" ? user.maintenance_view : user.dashboard_view;
-      const currentEdit = key === "production" ? user.production_edit : key === "maintenance" ? user.maintenance_edit : false;
+      const currentView = key === "production" ? user.production_view : key === "maintenance" ? user.maintenance_view : key === "rh" ? user.rh_view : user.dashboard_view;
+      const currentEdit = key === "production" ? user.production_edit : key === "maintenance" ? user.maintenance_edit : key === "rh" ? user.rh_edit : false;
 
       const newView = field === "can_view" ? value : currentView;
       const newEdit = field === "can_edit" ? value : currentEdit;
@@ -167,6 +174,9 @@ export default function AdminUsers() {
           }
           if (key === "maintenance") {
             return { ...u, maintenance_view: newView, maintenance_edit: finalEdit };
+          }
+          if (key === "rh") {
+            return { ...u, rh_view: newView, rh_edit: finalEdit };
           }
           return { ...u, dashboard_view: newView };
         })
@@ -268,6 +278,7 @@ export default function AdminUsers() {
             { key: "production", can_view: invitePerms.production_view, can_edit: invitePerms.production_edit },
             { key: "maintenance", can_view: invitePerms.maintenance_view, can_edit: invitePerms.maintenance_edit },
             { key: "dashboard", can_view: invitePerms.dashboard_view, can_edit: false },
+            { key: "rh", can_view: invitePerms.rh_view, can_edit: invitePerms.rh_edit },
           ],
       });
       if (error) throw error;
@@ -278,7 +289,7 @@ export default function AdminUsers() {
       setInviteEmail("");
       setInviteName("");
       setInvitePassword("");
-      setInvitePerms({ production_view: false, production_edit: false, maintenance_view: false, maintenance_edit: false, dashboard_view: false });
+      setInvitePerms({ production_view: false, production_edit: false, maintenance_view: false, maintenance_edit: false, dashboard_view: false, rh_view: false, rh_edit: false });
       await fetchUsers();
     } catch (e: any) {
       toast.error("Erreur: " + e.message);
@@ -422,6 +433,36 @@ export default function AdminUsers() {
                             checked={invitePerms.dashboard_view}
                             onCheckedChange={(v) =>
                               setInvitePerms((p) => ({ ...p, dashboard_view: v }))
+                            }
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm flex items-center gap-2">
+                        <UserCog className="h-4 w-4" /> Ressources Humaines
+                      </span>
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                          <Eye className="h-3.5 w-3.5" /> Voir
+                          <Switch
+                            checked={invitePerms.rh_view}
+                            onCheckedChange={(v) =>
+                              setInvitePerms((p) => ({
+                                ...p,
+                                rh_view: v,
+                                rh_edit: v ? p.rh_edit : false,
+                              }))
+                            }
+                          />
+                        </label>
+                        <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                          <Pencil className="h-3.5 w-3.5" /> Modifier
+                          <Switch
+                            checked={invitePerms.rh_edit}
+                            disabled={!invitePerms.rh_view}
+                            onCheckedChange={(v) =>
+                              setInvitePerms((p) => ({ ...p, rh_edit: v }))
                             }
                           />
                         </label>
@@ -602,6 +643,27 @@ export default function AdminUsers() {
                                 checked={u.dashboard_view}
                                 disabled={saving?.startsWith(u.id)}
                                 onCheckedChange={(v) => updatePermission(u.id, "dashboard", "can_view", v)}
+                              />
+                            </label>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="text-xs font-medium w-24 flex items-center gap-1.5">
+                              <UserCog className="h-3.5 w-3.5" /> RH
+                            </span>
+                            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                              <Eye className="h-3 w-3 text-muted-foreground" />
+                              <Switch
+                                checked={u.rh_view}
+                                disabled={saving?.startsWith(u.id)}
+                                onCheckedChange={(v) => updatePermission(u.id, "rh", "can_view", v)}
+                              />
+                            </label>
+                            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                              <Pencil className="h-3 w-3 text-muted-foreground" />
+                              <Switch
+                                checked={u.rh_edit}
+                                disabled={!u.rh_view || saving?.startsWith(u.id)}
+                                onCheckedChange={(v) => updatePermission(u.id, "rh", "can_edit", v)}
                               />
                             </label>
                           </div>

@@ -11,7 +11,7 @@ import {
 } from "date-fns";
 
 // ── Types ──────────────────────────────────────────────────────────
-export type PointageStatut = "PRESENT" | "ABS_AUTORISEE" | "ABS_NON_AUTORISEE" | "WEEKEND" | "FERIE" | "DEBUT_CONTRAT" | "FIN_CONTRAT" | "";
+export type PointageStatut = "PRESENT" | "ABS_AUTORISEE" | "ABS_NON_AUTORISEE" | "WEEKEND" | "FERIE" | "DEBUT_CONTRAT" | "FIN_CONTRAT" | "MISE_A_PIED" | "";
 
 export interface PointageRow {
   id?: string;
@@ -196,27 +196,50 @@ export function usePointageStore(selectedMonth: Date) {
       };
 
       return base;
+  }, [savedMap, localEdits]);
+
+  // Helper: when a FIN_CONTRAT is set, mark all later days of the month as FIN_CONTRAT
+  const applyFinContratToRemaining = useCallback(
+    (matricule: string, fromDateStr: string) => {
+      const startIdx = daysOfMonth.findIndex(
+        (d) => format(d, "yyyy-MM-dd") === fromDateStr
+      );
+      if (startIdx === -1) return;
+      for (let i = startIdx + 1; i < daysOfMonth.length; i++) {
+        const dateStr = format(daysOfMonth[i], "yyyy-MM-dd");
+        const key = `${matricule}|${dateStr}`;
+        setLocalEdits((prev) => ({
+          ...prev,
+          [key]: {
+            ...(prev[key] || {}),
+            statut: "FIN_CONTRAT",
+          },
+        }));
+        setHasChanges(true);
+      }
     },
-    [savedMap, localEdits]
+    [daysOfMonth]
   );
 
-  // ── Update a cell locally ───────────────────────────────────────
+  // ── Quick cycle through statuts ─────────────────────────────────
+  // ── Helper: update a cell ────────────────────────────────────────
   const updateCell = useCallback(
     (matricule: string, dateStr: string, updates: Partial<PointageRow>) => {
       const key = `${matricule}|${dateStr}`;
       setLocalEdits((prev) => ({
         ...prev,
         [key]: {
-          ...prev[key],
+          ...(prev[key] || {}),
           ...updates,
         },
       }));
       setHasChanges(true);
+      if (updates.statut === "FIN_CONTRAT") {
+        applyFinContratToRemaining(matricule, dateStr);
+      }
     },
-    []
+    [applyFinContratToRemaining]
   );
-
-  // ── Quick cycle through statuts ─────────────────────────────────
   const cycleStatut = useCallback(
     (matricule: string, dateStr: string) => {
       const current = getCellData(matricule, dateStr);

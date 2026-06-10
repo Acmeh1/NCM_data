@@ -10,7 +10,7 @@ import {
 import { usePermissions } from "@/hooks/usePermissions";
 
 export function AppSidebar() {
-  const { production, maintenance, dashboard, isAdmin, loading } = usePermissions();
+  const { production, maintenance, dashboard, rh, isAdmin, loading } = usePermissions();
 
   if (loading) return null;
 
@@ -126,7 +126,7 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {(isAdmin || dashboard) && (
+        {(isAdmin || rh) && (
           <SidebarGroup>
             <Collapsible defaultOpen>
               <CollapsibleTrigger className="w-full">
