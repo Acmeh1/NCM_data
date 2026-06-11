@@ -1,11 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import configData from '@/data/config_data.json';
 import equipementsDataRaw from '@/data/Liste_FINAL_de_codification_des_equipements .json';
-import fileDataRaw from '@/data/pdrrrrr.json';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,17 +30,7 @@ equipementsData.forEach((e) => {
 
 const zonesList = Array.from(uniqueZonesMap.entries()).map(([id, nom]) => ({ id, nom }));
 
-const pdrList = Array.isArray(fileDataRaw) 
-  ? fileDataRaw
-      .filter((item: any) => item?.Intitule && item.Intitule !== 'Intitule')
-      .map((item: any) => {
-        return { 
-          Intitule: item.Intitule,
-          originalName: item.Intitule,
-          ref: item.REF || ''
-        };
-      })
-  : [];
+// pdrList is loaded lazily in the component via fetch (see usePdrList hook below)
 
 const getEquipementsForZone = (zoneId: string) => {
   return equipementsData
@@ -104,6 +93,22 @@ export default function InterventionForm({ initialData, onSuccess }: Props) {
   const [numeroExistsWarning, setNumeroExistsWarning] = useState<string | null>(null);
   const [suggestedDemandeurs, setSuggestedDemandeurs] = useState<string[]>([]);
   const [suggestedIntervenants, setSuggestedIntervenants] = useState<string[]>([]);
+
+  // ── Lazy-load the PDR list from public folder (not bundled) ────────
+  const [pdrList, setPdrList] = useState<{ Intitule: string; originalName: string; ref: string }[]>([]);
+  useEffect(() => {
+    fetch('/pdrrrrr.json')
+      .then(r => r.json())
+      .then((data: any[]) => {
+        const list = Array.isArray(data)
+          ? data
+              .filter(item => item?.Intitule && item.Intitule !== 'Intitule')
+              .map(item => ({ Intitule: item.Intitule, originalName: item.Intitule, ref: item.REF || '' }))
+          : [];
+        setPdrList(list);
+      })
+      .catch(err => console.error('Failed to load PDR list:', err));
+  }, []);
 
   React.useEffect(() => {
     const fetchNames = async () => {

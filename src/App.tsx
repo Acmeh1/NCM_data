@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,33 +6,80 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import AuthGuard from "@/components/AuthGuard";
-import ProductionJournalier from "@/pages/ProductionJournalier";
-import ProductionEmballage from "@/pages/ProductionEmballage";
-import ProductionSelection from "@/pages/ProductionSelection";
-import StatsLinea from "@/pages/StatsLinea";
-import ViewJournalier from "@/pages/ViewJournalier";
-import ViewEmballage from "@/pages/ViewEmballage";
-import ViewSelection from "@/pages/ViewSelection";
-import ViewStatsLinea from "@/pages/ViewStatsLinea";
-import AdminBackup from "@/pages/AdminBackup";
-import AdminUsers from "@/pages/AdminUsers";
-import AdminKpiConfig from "@/pages/AdminKpiConfig";
-import Maintenance from "@/pages/Maintenance";
-import ViewInterventions from "@/pages/ViewInterventions";
-import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
-import DashboardProduction from "@/pages/DashboardProduction";
-import DashboardDirection from "@/pages/DashboardDirection";
-import DashboardGeneral from "@/pages/DashboardGeneral";
-import DashboardMaintenance from "@/pages/DashboardMaintenance";
-import DashboardQualite from "@/pages/DashboardQualite";
-import DashboardRH from "@/pages/DashboardRH";
-import DashboardCommercial from "@/pages/DashboardCommercial";
-import ProductionCasse from "@/pages/ProductionCasse";
-import RHPointage from "@/pages/RHPointage";
-import ResetPassword from "@/pages/ResetPassword";
-import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// ── Lazy-loaded pages (each becomes its own JS chunk) ──────────────
+const ProductionJournalier  = lazy(() => import("@/pages/ProductionJournalier"));
+const ProductionEmballage   = lazy(() => import("@/pages/ProductionEmballage"));
+const ProductionSelection   = lazy(() => import("@/pages/ProductionSelection"));
+const StatsLinea            = lazy(() => import("@/pages/StatsLinea"));
+const ViewJournalier        = lazy(() => import("@/pages/ViewJournalier"));
+const ViewEmballage         = lazy(() => import("@/pages/ViewEmballage"));
+const ViewSelection         = lazy(() => import("@/pages/ViewSelection"));
+const ViewStatsLinea        = lazy(() => import("@/pages/ViewStatsLinea"));
+const AdminBackup           = lazy(() => import("@/pages/AdminBackup"));
+const AdminUsers            = lazy(() => import("@/pages/AdminUsers"));
+const AdminKpiConfig        = lazy(() => import("@/pages/AdminKpiConfig"));
+const Maintenance           = lazy(() => import("@/pages/Maintenance"));
+const ViewInterventions     = lazy(() => import("@/pages/ViewInterventions"));
+const AnalyticsDashboard    = lazy(() => import("@/pages/AnalyticsDashboard"));
+const DashboardProduction   = lazy(() => import("@/pages/DashboardProduction"));
+const DashboardDirection    = lazy(() => import("@/pages/DashboardDirection"));
+const DashboardGeneral      = lazy(() => import("@/pages/DashboardGeneral"));
+const DashboardMaintenance  = lazy(() => import("@/pages/DashboardMaintenance"));
+const DashboardQualite      = lazy(() => import("@/pages/DashboardQualite"));
+const DashboardRH           = lazy(() => import("@/pages/DashboardRH"));
+const DashboardCommercial   = lazy(() => import("@/pages/DashboardCommercial"));
+const ProductionCasse       = lazy(() => import("@/pages/ProductionCasse"));
+const RHPointage            = lazy(() => import("@/pages/RHPointage"));
+const ResetPassword         = lazy(() => import("@/pages/ResetPassword"));
+const NotFound              = lazy(() => import("./pages/NotFound"));
+
+// ── Minimal full-screen loading fallback ───────────────────────────
+const PageLoader = () => (
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      height: "100vh",
+      width: "100vw",
+      background: "#f8fafc",
+      gap: "12px",
+      flexDirection: "column",
+    }}
+  >
+    <svg
+      width="36"
+      height="36"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#6366f1"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ animation: "spin 1s linear infinite" }}
+    >
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+    <span style={{ fontSize: "13px", color: "#94a3b8", fontWeight: 500 }}>
+      Chargement…
+    </span>
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep successful data fresh for 5 minutes before refetching
+      staleTime: 5 * 60 * 1000,
+      // Keep unused data in cache for 10 minutes
+      gcTime: 10 * 60 * 1000,
+      // Don't retry on error more than once
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -39,41 +87,43 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Routes>
-          {/* Public route for password reset */}
-          <Route path="/reset-password" element={<ResetPassword />} />
-          
-          {/* Protected routes */}
-          <Route element={<AuthGuard />}>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Navigate to="/production/journalier" replace />} />
-              <Route path="/production/journalier" element={<ProductionJournalier />} />
-              <Route path="/production/emballage" element={<ProductionEmballage />} />
-              <Route path="/production/selection" element={<ProductionSelection />} />
-              <Route path="/production/stats-linea" element={<StatsLinea />} />
-              <Route path="/production/casse" element={<ProductionCasse />} />
-              <Route path="/production/journalier/view" element={<ViewJournalier />} />
-              <Route path="/production/emballage/view" element={<ViewEmballage />} />
-              <Route path="/production/selection/view" element={<ViewSelection />} />
-              <Route path="/production/stats-linea/view" element={<ViewStatsLinea />} />
-              <Route path="/analytics" element={<AnalyticsDashboard />} />
-              <Route path="/dashboard/production" element={<DashboardProduction />} />
-              <Route path="/dashboard/direction" element={<DashboardDirection />} />
-              <Route path="/dashboard/general" element={<DashboardGeneral />} />
-              <Route path="/dashboard/maintenance" element={<DashboardMaintenance />} />
-              <Route path="/dashboard/qualite" element={<DashboardQualite />} />
-              <Route path="/dashboard/rh" element={<DashboardRH />} />
-              <Route path="/dashboard/commercial" element={<DashboardCommercial />} />
-              <Route path="/rh/pointage" element={<RHPointage />} />
-              <Route path="/maintenance" element={<Maintenance />} />
-              <Route path="/maintenance/view" element={<ViewInterventions />} />
-              <Route path="/admin/backup" element={<AdminBackup />} />
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/kpi" element={<AdminKpiConfig />} />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public route for password reset */}
+            <Route path="/reset-password" element={<ResetPassword />} />
+
+            {/* Protected routes */}
+            <Route element={<AuthGuard />}>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Navigate to="/production/journalier" replace />} />
+                <Route path="/production/journalier"       element={<ProductionJournalier />} />
+                <Route path="/production/emballage"        element={<ProductionEmballage />} />
+                <Route path="/production/selection"        element={<ProductionSelection />} />
+                <Route path="/production/stats-linea"      element={<StatsLinea />} />
+                <Route path="/production/casse"            element={<ProductionCasse />} />
+                <Route path="/production/journalier/view"  element={<ViewJournalier />} />
+                <Route path="/production/emballage/view"   element={<ViewEmballage />} />
+                <Route path="/production/selection/view"   element={<ViewSelection />} />
+                <Route path="/production/stats-linea/view" element={<ViewStatsLinea />} />
+                <Route path="/analytics"                   element={<AnalyticsDashboard />} />
+                <Route path="/dashboard/production"        element={<DashboardProduction />} />
+                <Route path="/dashboard/direction"         element={<DashboardDirection />} />
+                <Route path="/dashboard/general"           element={<DashboardGeneral />} />
+                <Route path="/dashboard/maintenance"       element={<DashboardMaintenance />} />
+                <Route path="/dashboard/qualite"           element={<DashboardQualite />} />
+                <Route path="/dashboard/rh"                element={<DashboardRH />} />
+                <Route path="/dashboard/commercial"        element={<DashboardCommercial />} />
+                <Route path="/rh/pointage"                 element={<RHPointage />} />
+                <Route path="/maintenance"                 element={<Maintenance />} />
+                <Route path="/maintenance/view"            element={<ViewInterventions />} />
+                <Route path="/admin/backup"                element={<AdminBackup />} />
+                <Route path="/admin/users"                 element={<AdminUsers />} />
+                <Route path="/admin/kpi"                   element={<AdminKpiConfig />} />
+              </Route>
             </Route>
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
