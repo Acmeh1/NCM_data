@@ -1,4 +1,5 @@
 import React, { useMemo, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { format, getDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,14 @@ export default function PointageGrid({
   searchQuery,
 }: PointageGridProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Virtualization
+  const rowVirtualizer = useVirtualizer({
+    count: employees.length, // Initial count, will be updated below
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 40,
+    overscan: 5,
+  });
 
   // Filter employees by search
   const filteredEmployees = useMemo(() => {
@@ -102,6 +111,19 @@ export default function PointageGrid({
       </div>
     );
   }
+
+  // Update virtualizer count with filtered employees
+  rowVirtualizer.setOptions({
+    ...rowVirtualizer.options,
+    count: filteredEmployees.length,
+  });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0]?.start || 0 : 0;
+  const paddingBottom = virtualItems.length > 0
+    ? rowVirtualizer.getTotalSize() - (virtualItems[virtualItems.length - 1]?.end || 0)
+    : 0;
+  const colSpanCount = daysOfMonth.length + 7;
 
   return (
     <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
@@ -183,11 +205,20 @@ export default function PointageGrid({
           </thead>
 
           <tbody>
-            {filteredEmployees.map((emp, empIdx) => {
+            {paddingTop > 0 && (
+              <tr>
+                <td style={{ height: `${paddingTop}px` }} colSpan={colSpanCount} />
+              </tr>
+            )}
+            {virtualItems.map((virtualRow) => {
+              const empIdx = virtualRow.index;
+              const emp = filteredEmployees[empIdx];
               const rowTotals = getRowTotals(emp.Matricule);
               return (
                 <tr
                   key={emp.Matricule}
+                  ref={rowVirtualizer.measureElement}
+                  data-index={virtualRow.index}
                   className={cn(
                     "border-b border-slate-100 transition-colors",
                     empIdx % 2 === 0 ? "bg-white" : "bg-slate-50/30",
@@ -251,6 +282,11 @@ export default function PointageGrid({
                 </tr>
               );
             })}
+            {paddingBottom > 0 && (
+              <tr>
+                <td style={{ height: `${paddingBottom}px` }} colSpan={colSpanCount} />
+              </tr>
+            )}
           </tbody>
 
           {/* Footer totals */}

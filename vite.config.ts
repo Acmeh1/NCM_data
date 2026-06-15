@@ -77,7 +77,6 @@ export default defineConfig(({ mode }) => ({
             "clsx",
             "class-variance-authority",
             "tailwind-merge",
-            "lucide-react",
             "zod",
           ],
         },

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import {
   Popover,
   PopoverContent,
@@ -59,7 +59,7 @@ const STATUT_ICONS: Record<string, string> = {
   "": "·",
 };
 
-export default function PointageDayCell({
+function PointageDayCell({
   cellData,
   day,
   onCycleStatut,
@@ -231,3 +231,15 @@ export default function PointageDayCell({
     </Popover>
   );
 }
+
+// ── Memoized export ────────────────────────────────────────────────
+// Only re-render this cell when its OWN data actually changes.
+// Without this, every click on any cell caused ALL 3000 cells to re-render.
+export default memo(PointageDayCell, (prev, next) =>
+  prev.cellData.statut       === next.cellData.statut       &&
+  prev.cellData.etat         === next.cellData.etat         &&
+  prev.cellData.heures_supp  === next.cellData.heures_supp  &&
+  prev.cellData.retard       === next.cellData.retard        &&
+  prev.cellData.commentaire  === next.cellData.commentaire  &&
+  prev.cellData.mise_a_pied  === next.cellData.mise_a_pied
+);

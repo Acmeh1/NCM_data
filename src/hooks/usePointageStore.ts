@@ -125,6 +125,7 @@ export function usePointageStore(selectedMonth: Date) {
       }
       return (data || []) as Employee[];
     },
+    staleTime: 5 * 60 * 1000,
   });
 
   // All employees (including those with departure dates)
@@ -151,7 +152,7 @@ export function usePointageStore(selectedMonth: Date) {
 
       const { data, error } = await supabase
         .from("pointage_rh")
-        .select("*")
+        .select("id, matricule, date, statut, etat, mise_a_pied, heures_supp, retard, commentaire")
         .gte("date", sDate)
         .lte("date", eDate);
 
@@ -161,6 +162,7 @@ export function usePointageStore(selectedMonth: Date) {
       }
       return (data || []) as PointageRow[];
     },
+    staleTime: 5 * 60 * 1000,
   });
 
   // Build a lookup map: "matricule|date" → PointageRow
