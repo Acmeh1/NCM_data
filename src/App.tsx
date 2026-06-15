@@ -31,6 +31,10 @@ const DashboardRH           = lazy(() => import("@/pages/DashboardRH"));
 const DashboardCommercial   = lazy(() => import("@/pages/DashboardCommercial"));
 const ProductionCasse       = lazy(() => import("@/pages/ProductionCasse"));
 const RHPointage            = lazy(() => import("@/pages/RHPointage"));
+const EmployeeList          = lazy(() => import("@/pages/hr/EmployeeList"));
+const EmployeeDetail        = lazy(() => import("@/pages/hr/EmployeeDetail"));
+const EmployeeCreate        = lazy(() => import("@/pages/hr/EmployeeCreate"));
+const EmployeeEdit          = lazy(() => import("@/pages/hr/EmployeeEdit"));
 const ResetPassword         = lazy(() => import("@/pages/ResetPassword"));
 const NotFound              = lazy(() => import("./pages/NotFound"));
 
@@ -114,6 +118,10 @@ const App = () => (
                 <Route path="/dashboard/rh"                element={<DashboardRH />} />
                 <Route path="/dashboard/commercial"        element={<DashboardCommercial />} />
                 <Route path="/rh/pointage"                 element={<RHPointage />} />
+                <Route path="/rh/employes"                 element={<EmployeeList />} />
+                <Route path="/rh/employes/nouveau"         element={<EmployeeCreate />} />
+                <Route path="/rh/employes/:matricule"      element={<EmployeeDetail />} />
+                <Route path="/rh/employes/:matricule/modifier" element={<EmployeeEdit />} />
                 <Route path="/maintenance"                 element={<Maintenance />} />
                 <Route path="/maintenance/view"            element={<ViewInterventions />} />
                 <Route path="/admin/backup"                element={<AdminBackup />} />

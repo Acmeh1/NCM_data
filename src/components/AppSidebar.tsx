@@ -143,6 +143,16 @@ export function AppSidebar() {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
+                        <NavLink to="/rh/employes"
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
+                          activeClassName="bg-sidebar-accent text-primary font-medium">
+                          <Users className="h-4 w-4" />
+                          Fiches Employés
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
                         <NavLink to="/rh/pointage"
                           className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
                           activeClassName="bg-sidebar-accent text-primary font-medium">
