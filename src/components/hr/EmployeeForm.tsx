@@ -115,13 +115,8 @@ export function EmployeeForm({ initialData, isEditMode = false }: EmployeeFormPr
               matricule={formData.Matricule} 
               photoUrl={formData.Photo_URL} 
               onPhotoUploaded={(url) => handleChange("Photo_URL", url)}
-              readOnly={!formData.Matricule}
+              readOnly={isEditMode && false} // Or completely remove readOnly if you never want it completely read-only
             />
-            {!formData.Matricule && (
-              <p className="text-xs text-center text-muted-foreground mt-4 absolute bottom-4">
-                Saisissez d'abord un matricule pour uploader une photo.
-              </p>
-            )}
           </CardContent>
         </Card>
 

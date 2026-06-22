@@ -18,11 +18,12 @@ export function EmployeePhoto({ matricule, photoUrl, onPhotoUploaded, readOnly, 
   const { toast } = useToast();
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !matricule) return;
+    if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
     const fileExt = file.name.split('.').pop();
-    const filePath = `employee-photos/${matricule}.${fileExt}`;
+    const fileName = matricule || `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const filePath = `employee-photos/${fileName}.${fileExt}`;
     
     setUploading(true);
     try {
@@ -80,7 +81,7 @@ export function EmployeePhoto({ matricule, photoUrl, onPhotoUploaded, readOnly, 
 
       {!readOnly && (
         <div className="relative">
-          <Button variant="outline" size="sm" className="relative z-10" disabled={uploading || !matricule}>
+          <Button variant="outline" size="sm" className="relative z-10" disabled={uploading}>
             <Upload className="w-4 h-4 mr-2" />
             {uploading ? "Upload..." : "Changer la photo"}
           </Button>
@@ -89,8 +90,8 @@ export function EmployeePhoto({ matricule, photoUrl, onPhotoUploaded, readOnly, 
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
             accept="image/*"
             onChange={handleUpload}
-            disabled={uploading || !matricule}
-            title={!matricule ? "Veuillez d'abord saisir un matricule" : "Choisir une photo"}
+            disabled={uploading}
+            title="Choisir une photo"
           />
         </div>
       )}
