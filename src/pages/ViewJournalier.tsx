@@ -3,7 +3,7 @@ import { useProductionStore, type ProductionEntry } from "@/hooks/useProductionS
 import { useSelectionStore, type SelectionEntry } from "@/hooks/useSelectionStore";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, FileSpreadsheet, Pencil, FileText } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, Pencil, FileText, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -11,6 +11,7 @@ import {
 import { exportToExcel, exportToCsvGeneric, exportToPdf } from "@/lib/exportUtils";
 import TableFilters, { useTableFilters } from "@/components/TableFilters";
 import EditEntryDialog, { type EditColumn } from "@/components/EditEntryDialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
@@ -30,7 +31,7 @@ const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
   { key: "Pressage_m2", label: "Pressage m²", type: "number" },
   { key: "Project_m2", label: "Projecta m²", type: "number" },
   { key: "Emaillage_m2", label: "Emaillage m²", type: "number" },
-  { key: "Cycle_min", label: "Cycle min", type: "number" },
+
   { key: "Nb_Pieces_Four", label: "Nb Pièces Four", type: "number" },
   { key: "Surface_CAR_m2", label: "Surface CAR m²", type: "number" },
   { key: "Cuisson_M2", label: "Production Four m²", type: "number" },
@@ -57,7 +58,8 @@ const FILTER_CONFIGS = [
 
 export default function ViewJournalier() {
   const [showVideDetails, setShowVideDetails] = useState(false);
-  const { entries, isLoaded, updateEntry } = useProductionStore();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const { entries, isLoaded, updateEntry, deleteEntry, deleteMultipleEntries } = useProductionStore();
   const { entries: selectionEntries, isLoaded: selectionLoaded } = useSelectionStore();
   const { productionEdit } = usePermissions();
   const navigate = useNavigate();
@@ -114,6 +116,43 @@ export default function ViewJournalier() {
     }
   };
 
+  const handleDeleteClick = async (row: Record<string, any>) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer définitivement cette production ?")) {
+      const entry = entries.find((e) => e.id === row._id);
+      if (entry) {
+        await deleteEntry(entry);
+        toast.success("Entrée supprimée avec succès");
+      }
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(filteredData.map(r => r._id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement les ${selectedIds.size} entrées sélectionnées ?`)) {
+      const success = await deleteMultipleEntries(Array.from(selectedIds));
+      if (success) {
+        toast.success(`${selectedIds.size} entrées supprimées avec succès`);
+        setSelectedIds(new Set());
+      }
+    }
+  };
+
   return (
     <div className="space-y-4 max-w-full">
       <div className="flex items-center justify-between">
@@ -126,7 +165,12 @@ export default function ViewJournalier() {
             <p className="text-sm text-muted-foreground">{filteredData.length} entrées</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {selectedIds.size > 0 && productionEdit && (
+            <Button variant="destructive" size="sm" className="gap-2 mr-2" onClick={handleBulkDelete}>
+              <Trash2 className="h-4 w-4" /> Supprimer ({selectedIds.size})
+            </Button>
+          )}
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => exportToCsvGeneric(exportData, "production_journalier")}>
             <Download className="h-4 w-4" /> CSV
@@ -155,7 +199,15 @@ export default function ViewJournalier() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[40px]" />
+              {productionEdit && (
+                <TableHead className="w-[40px] px-3">
+                  <Checkbox 
+                    checked={filteredData.length > 0 && selectedIds.size === filteredData.length}
+                    onCheckedChange={(c) => handleSelectAll(!!c)}
+                  />
+                </TableHead>
+              )}
+              <TableHead className="w-[80px]" />
               {activeColumns.map((c) => (
                 <TableHead 
                   key={c.key} 
@@ -174,14 +226,30 @@ export default function ViewJournalier() {
           </TableHeader>
           <TableBody>
             {filteredData.map((row, idx) => (
-              <TableRow key={idx} className="group">
+              <TableRow key={idx} className={`group ${selectedIds.has(row._id) ? "bg-muted/30" : ""}`}>
+                {productionEdit && (
+                  <TableCell className="px-3">
+                    <Checkbox 
+                      checked={selectedIds.has(row._id)}
+                      onCheckedChange={(c) => handleSelectRow(row._id, !!c)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell>
-                  {productionEdit && (
-                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleRowClick(row)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {productionEdit && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-primary hover:bg-primary/10"
+                        onClick={() => handleRowClick(row)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {productionEdit && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteClick(row)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
                 {activeColumns.map((c) => {
                   const val = row[c.label];

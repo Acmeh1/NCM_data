@@ -71,12 +71,12 @@ export default function MonthlyComparisonView() {
     queryKey: ["monthly-journalier"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("production_journalier")
+        .from("production_globale")
         .select(`
           id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
-          modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
-          total_m2, pressage_m2, Project_m2, emaillage_m2, 
-          cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
+          modele, couleur, format, choix1_surface_m2, choix2_surface_m2, choix3_surface_m2, 
+          total_m2, pressage_m2, project_m2, emaillage_m2, 
+          nb_pieces_four, surface_car_m2, cuisson_m2, 
           four_minutes_vides, four_consommation_kwh, created_at
         `)
         .limit(5000);
@@ -126,9 +126,9 @@ export default function MonthlyComparisonView() {
         objective = avgDailyObj * 30;
       }
 
-      const totalChoix1 = prodInMonth.reduce((acc, r) => acc + (Number(r.choix_1_m2) || 0), 0);
-      const totalChoix2 = prodInMonth.reduce((acc, r) => acc + (Number(r.choix_2_m2) || 0), 0);
-      const totalChoix3 = prodInMonth.reduce((acc, r) => acc + (Number(r.choix_3_m2) || 0), 0);
+      const totalChoix1 = prodInMonth.reduce((acc, r) => acc + (Number(r.choix1_surface_m2 || r.choix_1_m2) || 0), 0);
+      const totalChoix2 = prodInMonth.reduce((acc, r) => acc + (Number(r.choix2_surface_m2 || r.choix_2_m2) || 0), 0);
+      const totalChoix3 = prodInMonth.reduce((acc, r) => acc + (Number(r.choix3_surface_m2 || r.choix_3_m2) || 0), 0);
       const sumChoix = totalChoix1 + totalChoix2 + totalChoix3;
 
       const pertesPresse = selectionInMonth.reduce((acc, r) => acc + (Number(r.zone_presse) || 0), 0);

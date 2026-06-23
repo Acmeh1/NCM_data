@@ -10,12 +10,17 @@ export interface CasseEntry {
   horaire: string;
   groupe: string;
   chef_equipe: string;
-  press_kg: number;
+  presse_casse_kg: number;
+  presse_poudre_recyclee_kg: number;
+  presse_elev_tamis_kg: number;
   sortie_sechoir_kg: number;
   emaillage_kg: number;
   projecta_kg: number;
   entree_four_kg: number;
-  casse_cuite_kg: number;
+  sortie_four_kg: number;
+  marteaux_kg: number;
+  empileur_kg: number;
+  robot_kg: number;
   created_at?: string;
 }
 
@@ -26,12 +31,17 @@ function fromDb(row: any): CasseEntry {
     horaire: row.horaire,
     groupe: row.groupe,
     chef_equipe: row.chef_equipe,
-    press_kg: Number(row.press_kg ?? 0),
+    presse_casse_kg: Number(row.presse_casse_kg ?? row.press_kg ?? 0),
+    presse_poudre_recyclee_kg: Number(row.presse_poudre_recyclee_kg ?? 0),
+    presse_elev_tamis_kg: Number(row.presse_elev_tamis_kg ?? 0),
     sortie_sechoir_kg: Number(row.sortie_sechoir_kg ?? 0),
     emaillage_kg: Number(row.emaillage_kg ?? 0),
     projecta_kg: Number(row.projecta_kg ?? 0),
     entree_four_kg: Number(row.entree_four_kg ?? 0),
-    casse_cuite_kg: Number(row.casse_cuite_kg ?? 0),
+    sortie_four_kg: Number(row.sortie_four_kg ?? row.casse_cuite_kg ?? 0),
+    marteaux_kg: Number(row.marteaux_kg ?? 0),
+    empileur_kg: Number(row.empileur_kg ?? 0),
+    robot_kg: Number(row.robot_kg ?? 0),
     created_at: row.created_at,
   };
 }

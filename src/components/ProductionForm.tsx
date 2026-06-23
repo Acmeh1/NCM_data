@@ -192,9 +192,9 @@ export default function ProductionForm({
       Modele: editingEntry.Modele,
       Couleur: editingEntry.Couleur,
       Format: editingEntry.Format,
-      Choix_1_m2: String(editingEntry.Choix_1_m2),
-      Choix_2_m2: String(editingEntry.Choix_2_m2),
-      Choix_3_m2: String(editingEntry.Choix_3_m2),
+      Choix_1_m2: String(editingEntry.Choix_1_m2 || ""),
+      Choix_2_m2: String(editingEntry.Choix_2_m2 || ""),
+      Choix_3_m2: String(editingEntry.Choix_3_m2 || ""),
       Pressage_m2: String(editingEntry.Pressage_m2),
       Project_m2: String(editingEntry.Project_m2),
       Project_pcs: editingEntry.Surface_CAR_m2 > 0 ? (editingEntry.Project_m2 / editingEntry.Surface_CAR_m2).toFixed(0) : "",
@@ -398,7 +398,7 @@ export default function ProductionForm({
     { key: "Pressage_m2", label: "Pressage (m²)" },
     { key: "Project_pcs", label: "Projecta (pcs)" },
     { key: "Emaillage_m2", label: "Émaillage (m²)" },
-    { key: "Cycle_min", label: "Cycle min" },
+
     { key: "Nb_Pieces_Four", label: "Nb Pièces Four" },
     { key: "Four_Minutes_Vides", label: "Min Vides Four" },
     { key: "Four_Consommation_Kwh", label: "Conso Four (kWh)" },
@@ -560,37 +560,49 @@ export default function ProductionForm({
       {/* Row 4: Choix 1, 2, 3, Total */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">1ère Choix m²</Label>
+          <Label className="text-xs font-medium text-muted-foreground">1er Choix (m²)</Label>
           <Input
             ref={(el) => { inputRefs.current[3] = el; }}
             type="number"
+            step="0.01"
             value={form.Choix_1_m2}
             onChange={(e) => update("Choix_1_m2", e.target.value)}
             onKeyDown={(e) => handleKeyDown(e, 3)}
             placeholder="0"
           />
+          {surfaceCAR > 0 && form.Choix_1_m2 && (
+            <p className="text-[10px] text-primary font-medium">= {Math.round((Number(form.Choix_1_m2) || 0) / surfaceCAR)} pièces</p>
+          )}
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">2ème Choix m²</Label>
+          <Label className="text-xs font-medium text-muted-foreground">2ème Choix (m²)</Label>
           <Input
             ref={(el) => { inputRefs.current[4] = el; }}
             type="number"
+            step="0.01"
             value={form.Choix_2_m2}
             onChange={(e) => update("Choix_2_m2", e.target.value)}
             onKeyDown={(e) => handleKeyDown(e, 4)}
             placeholder="0"
           />
+          {surfaceCAR > 0 && form.Choix_2_m2 && (
+            <p className="text-[10px] text-primary font-medium">= {Math.round((Number(form.Choix_2_m2) || 0) / surfaceCAR)} pièces</p>
+          )}
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">3ème Choix m²</Label>
+          <Label className="text-xs font-medium text-muted-foreground">3ème Choix (m²)</Label>
           <Input
             ref={(el) => { inputRefs.current[5] = el; }}
             type="number"
+            step="0.01"
             value={form.Choix_3_m2}
             onChange={(e) => update("Choix_3_m2", e.target.value)}
             onKeyDown={(e) => handleKeyDown(e, 5)}
             placeholder="0"
           />
+          {surfaceCAR > 0 && form.Choix_3_m2 && (
+            <p className="text-[10px] text-primary font-medium">= {Math.round((Number(form.Choix_3_m2) || 0) / surfaceCAR)} pièces</p>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-medium text-muted-foreground">Total m²</Label>
@@ -598,8 +610,8 @@ export default function ProductionForm({
         </div>
       </div>
 
-      {/* Row 5: Pressage, Emaillage, Cycle */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* Row 5: Pressage, Emaillage, Projecta */}
+      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label className="text-xs font-medium text-muted-foreground">Pressage m²</Label>
           <Input
@@ -638,17 +650,7 @@ export default function ProductionForm({
             placeholder="0"
           />
         </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Cycle min</Label>
-          <Input
-            ref={(el) => { inputRefs.current[9] = el; }}
-            type="number"
-            value={form.Cycle_min}
-            onChange={(e) => update("Cycle_min", e.target.value)}
-            onKeyDown={(e) => handleKeyDown(e, 9)}
-            placeholder="0"
-          />
-        </div>
+
       </div>
 
       {/* Section FOUR */}

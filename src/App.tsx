@@ -8,10 +8,6 @@ import Layout from "@/components/Layout";
 import AuthGuard from "@/components/AuthGuard";
 
 // ── Lazy-loaded pages (each becomes its own JS chunk) ──────────────
-const ProductionJournalier  = lazy(() => import("@/pages/ProductionJournalier"));
-const ProductionEmballage   = lazy(() => import("@/pages/ProductionEmballage"));
-const ProductionSelection   = lazy(() => import("@/pages/ProductionSelection"));
-const StatsLinea            = lazy(() => import("@/pages/StatsLinea"));
 const ViewJournalier        = lazy(() => import("@/pages/ViewJournalier"));
 const ViewEmballage         = lazy(() => import("@/pages/ViewEmballage"));
 const ViewSelection         = lazy(() => import("@/pages/ViewSelection"));
@@ -29,7 +25,6 @@ const DashboardMaintenance  = lazy(() => import("@/pages/DashboardMaintenance"))
 const DashboardQualite      = lazy(() => import("@/pages/DashboardQualite"));
 const DashboardRH           = lazy(() => import("@/pages/DashboardRH"));
 const DashboardCommercial   = lazy(() => import("@/pages/DashboardCommercial"));
-const ProductionCasse       = lazy(() => import("@/pages/ProductionCasse"));
 const RHPointage            = lazy(() => import("@/pages/RHPointage"));
 const EmployeeList          = lazy(() => import("@/pages/hr/EmployeeList"));
 const EmployeeDetail        = lazy(() => import("@/pages/hr/EmployeeDetail"));
@@ -37,6 +32,7 @@ const EmployeeCreate        = lazy(() => import("@/pages/hr/EmployeeCreate"));
 const EmployeeEdit          = lazy(() => import("@/pages/hr/EmployeeEdit"));
 const ResetPassword         = lazy(() => import("@/pages/ResetPassword"));
 const NotFound              = lazy(() => import("./pages/NotFound"));
+const SaisieGlobale         = lazy(() => import("@/pages/SaisieGlobale"));
 
 // ── Minimal full-screen loading fallback ───────────────────────────
 const PageLoader = () => (
@@ -99,12 +95,8 @@ const App = () => (
             {/* Protected routes */}
             <Route element={<AuthGuard />}>
               <Route element={<Layout />}>
-                <Route path="/" element={<Navigate to="/production/journalier" replace />} />
-                <Route path="/production/journalier"       element={<ProductionJournalier />} />
-                <Route path="/production/emballage"        element={<ProductionEmballage />} />
-                <Route path="/production/selection"        element={<ProductionSelection />} />
-                <Route path="/production/stats-linea"      element={<StatsLinea />} />
-                <Route path="/production/casse"            element={<ProductionCasse />} />
+                <Route path="/" element={<Navigate to="/production/saisie-globale" replace />} />
+                <Route path="/production/saisie-globale"   element={<SaisieGlobale />} />
                 <Route path="/production/journalier/view"  element={<ViewJournalier />} />
                 <Route path="/production/emballage/view"   element={<ViewEmballage />} />
                 <Route path="/production/selection/view"   element={<ViewSelection />} />

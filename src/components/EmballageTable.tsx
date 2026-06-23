@@ -34,10 +34,8 @@ function flattenEntries(entries: EmballageEntry[]) {
         Couleur: e.Couleur,
         Format: e.Format,
         "Type Choix": c.Choice_Type,
-        "Nb Palette": c.Nb_Palette,
-        "Surface/Palette": c.Surface_par_palette,
+        "Total Pièces": c.Total_Pieces || c.Nb_Palette || 0,
         "Surface Totale m²": c.Surface_totale_m2,
-        "Reste m²": c.Reste_m2,
         _id: e.id,
       });
     });

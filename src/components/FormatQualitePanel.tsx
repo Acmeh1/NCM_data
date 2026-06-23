@@ -15,6 +15,9 @@ interface JRow {
   choix_1_m2?: number | null;
   choix_2_m2?: number | null;
   choix_3_m2?: number | null;
+  choix1_surface_m2?: number | null;
+  choix2_surface_m2?: number | null;
+  choix3_surface_m2?: number | null;
   total_m2?: number | null;
 }
 
@@ -85,9 +88,9 @@ export default function FormatQualitePanel({ data, startDate, endDate }: FormatQ
       const fmt = String(r.format ?? "").trim();
       if (!fmt) return;
       if (!map[fmt]) map[fmt] = { fmt, c1: 0, c2: 0, c3: 0, total: 0 };
-      map[fmt].c1    += Number(r.choix_1_m2) || 0;
-      map[fmt].c2    += Number(r.choix_2_m2) || 0;
-      map[fmt].c3    += Number(r.choix_3_m2) || 0;
+      map[fmt].c1    += Number(r.choix1_surface_m2 || r.choix_1_m2) || 0;
+      map[fmt].c2    += Number(r.choix2_surface_m2 || r.choix_2_m2) || 0;
+      map[fmt].c3    += Number(r.choix3_surface_m2 || r.choix_3_m2) || 0;
       map[fmt].total += Number(r.total_m2)   || 0;
     });
     return Object.values(map).sort((a, b) => b.total - a.total);
@@ -101,9 +104,9 @@ export default function FormatQualitePanel({ data, startDate, endDate }: FormatQ
       if (String(r.format ?? "").trim() !== selectedFormat) return;
       const nom = String(r.modele ?? "").trim() || "Inconnu";
       if (!map[nom]) map[nom] = { nom, c1: 0, c2: 0, c3: 0, total: 0 };
-      map[nom].c1    += Number(r.choix_1_m2) || 0;
-      map[nom].c2    += Number(r.choix_2_m2) || 0;
-      map[nom].c3    += Number(r.choix_3_m2) || 0;
+      map[nom].c1    += Number(r.choix1_surface_m2 || r.choix_1_m2) || 0;
+      map[nom].c2    += Number(r.choix2_surface_m2 || r.choix_2_m2) || 0;
+      map[nom].c3    += Number(r.choix3_surface_m2 || r.choix_3_m2) || 0;
       map[nom].total += Number(r.total_m2)   || 0;
     });
     return Object.values(map).sort((a, b) => b.total - a.total);
@@ -119,9 +122,9 @@ export default function FormatQualitePanel({ data, startDate, endDate }: FormatQ
       const nom = String(r.modele ?? "").trim() || "Inconnu";
       const fmt = String(r.format  ?? "").trim();
       if (!map[nom]) map[nom] = { nom, c1: 0, c2: 0, c3: 0, total: 0, formats: new Set() };
-      map[nom].c1    += Number(r.choix_1_m2) || 0;
-      map[nom].c2    += Number(r.choix_2_m2) || 0;
-      map[nom].c3    += Number(r.choix_3_m2) || 0;
+      map[nom].c1    += Number(r.choix1_surface_m2 || r.choix_1_m2) || 0;
+      map[nom].c2    += Number(r.choix2_surface_m2 || r.choix_2_m2) || 0;
+      map[nom].c3    += Number(r.choix3_surface_m2 || r.choix_3_m2) || 0;
       map[nom].total += Number(r.total_m2)   || 0;
       if (fmt) map[nom].formats.add(fmt);
     });

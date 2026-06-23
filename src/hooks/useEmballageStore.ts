@@ -6,10 +6,11 @@ import { uuidv4 } from "@/lib/uuid";
 
 export interface EmballageChoix {
   Choice_Type: string;
-  Nb_Palette: number;
-  Surface_par_palette: number;
+  Nb_Palette?: number;
+  Surface_par_palette?: number;
   Surface_totale_m2: number;
-  Reste_m2: number;
+  Reste_m2?: number;
+  Total_Pieces?: number;
 }
 
 export interface EmballageEntry {
@@ -56,10 +57,11 @@ function groupRows(rows: any[], journalierEntries: any[]): EmballageEntry[] {
       Format: j?.format ?? "",
       choix: choixRows.map((c: any) => ({
         Choice_Type: c.choice_type,
-        Nb_Palette: Number(c.nb_palette),
-        Surface_par_palette: Number(c.surface_par_palette),
-        Surface_totale_m2: Number(c.surface_totale_m2),
-        Reste_m2: Number(c.reste_m2),
+        Nb_Palette: Number(c.nb_palette) || 0,
+        Surface_par_palette: Number(c.surface_par_palette) || 0,
+        Surface_totale_m2: Number(c.surface_totale_m2) || 0,
+        Reste_m2: Number(c.reste_m2) || 0,
+        Total_Pieces: Number(c.total_pieces) || 0,
       })),
     });
   });
@@ -76,13 +78,7 @@ export function useEmballageStore() {
   const loadEntries = useCallback(async () => {
     const [embRes, jourRes] = await Promise.all([
       supabase.from("production_emballage").select("*").limit(5000).order("created_at", { ascending: true }),
-      supabase.from("production_journalier").select(`
-        id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
-        modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
-        total_m2, pressage_m2, Project_m2, emaillage_m2, 
-        cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-        four_minutes_vides, four_consommation_kwh, created_at
-      `).limit(5000),
+      supabase.from("production_globale").select(`*`).limit(5000),
     ]);
 
     if (embRes.error) {
@@ -105,10 +101,11 @@ export function useEmballageStore() {
       id: uuidv4(),
       journalier_id: entry.Linked_Journalier_ID,
       choice_type: c.Choice_Type,
-      nb_palette: c.Nb_Palette,
-      surface_par_palette: c.Surface_par_palette,
-      surface_totale_m2: c.Surface_totale_m2,
-      reste_m2: c.Reste_m2,
+      nb_palette: c.Nb_Palette || 0,
+      surface_par_palette: c.Surface_par_palette || 0,
+      surface_totale_m2: c.Surface_totale_m2 || 0,
+      reste_m2: c.Reste_m2 || 0,
+      total_pieces: c.Total_Pieces || 0,
     }));
 
     const { error } = await supabase
@@ -143,10 +140,11 @@ export function useEmballageStore() {
       id: uuidv4(),
       journalier_id: Linked_Journalier_ID,
       choice_type: c.Choice_Type,
-      nb_palette: c.Nb_Palette,
-      surface_par_palette: c.Surface_par_palette,
-      surface_totale_m2: c.Surface_totale_m2,
-      reste_m2: c.Reste_m2,
+      nb_palette: c.Nb_Palette || 0,
+      surface_par_palette: c.Surface_par_palette || 0,
+      surface_totale_m2: c.Surface_totale_m2 || 0,
+      reste_m2: c.Reste_m2 || 0,
+      total_pieces: c.Total_Pieces || 0,
     }));
 
     const { error: insError } = await supabase

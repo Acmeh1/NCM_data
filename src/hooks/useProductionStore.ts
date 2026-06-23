@@ -46,17 +46,17 @@ function fromDb(row: any): ProductionEntry {
     Modele: row.modele,
     Couleur: row.couleur,
     Format: row.format,
-    Choix_1_m2: Number(row.choix_1_m2),
-    Choix_2_m2: Number(row.choix_2_m2),
-    Choix_3_m2: Number(row.choix_3_m2),
-    Total_m2: Number(row.total_m2),
-    Pressage_m2: Number(row.pressage_m2),
+    Choix_1_m2: Number(row.choix_1_m2 ?? row.choix1_surface_m2 ?? 0),
+    Choix_2_m2: Number(row.choix_2_m2 ?? row.choix2_surface_m2 ?? 0),
+    Choix_3_m2: Number(row.choix_3_m2 ?? row.choix3_surface_m2 ?? 0),
+    Total_m2: Number(row.total_m2 ?? 0),
+    Pressage_m2: Number(row.pressage_m2 ?? 0),
     Project_m2: Number(row.Project_m2 ?? row.project_m2 ?? 0),
     Emaillage_m2: Number(row.emaillage_m2 ?? row.Emaillage_m2 ?? 0),
-    Cycle_min: Number(row.cycle_min),
-    Nb_Pieces_Four: Number(row.nb_pieces_four),
-    Surface_CAR_m2: Number(row.surface_car_m2),
-    Cuisson_M2: Number(row.cuisson_m2),
+    Cycle_min: Number(row.cycle_min ?? 0),
+    Nb_Pieces_Four: Number(row.nb_pieces_four ?? 0),
+    Surface_CAR_m2: Number(row.surface_car_m2 ?? 0),
+    Cuisson_M2: Number(row.cuisson_m2 ?? 0),
     Four_Minutes_Vides: Number(row.four_minutes_vides ?? 0),
     Four_Consommation_Kwh: Number(row.four_consommation_kwh ?? 0),
     VIDE_f_maintenance: Number(row.VIDE_f_maintenance ?? 0),
@@ -73,14 +73,8 @@ export function useProductionStore() {
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
-        .from("production_journalier")
-        .select(`
-          id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
-          modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
-          total_m2, pressage_m2, Project_m2, emaillage_m2, 
-          cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-          four_minutes_vides, four_consommation_kwh, VIDE_f_maintenance, VIDE_f_production, created_at
-        `)
+        .from("production_globale")
+        .select(`*`)
         .limit(5000)
         .order("created_at", { ascending: true });
       if (error) {
@@ -97,14 +91,8 @@ export function useProductionStore() {
 
   const reload = useCallback(async () => {
     const { data, error } = await supabase
-      .from("production_journalier")
-      .select(`
-        id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
-        modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
-        total_m2, pressage_m2, Project_m2, emaillage_m2, 
-        cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-        four_minutes_vides, four_consommation_kwh, VIDE_f_maintenance, VIDE_f_production, created_at
-      `)
+      .from("production_globale")
+      .select(`*`)
       .limit(5000)
       .order("created_at", { ascending: true });
     if (error) {
@@ -122,7 +110,7 @@ export function useProductionStore() {
 
   const addEntry = useCallback(async (entry: Omit<ProductionEntry, "id">) => {
     const { data, error } = await supabase
-      .from("production_journalier" as any)
+      .from("production_globale" as any)
       .insert({
         id: uuidv4(),
         date: entry.Date,
@@ -134,35 +122,70 @@ export function useProductionStore() {
         modele: entry.Modele,
         couleur: entry.Couleur,
         format: entry.Format,
-        choix_1_m2: Number(entry.Choix_1_m2) || 0,
-        choix_2_m2: Number(entry.Choix_2_m2) || 0,
-        choix_3_m2: Number(entry.Choix_3_m2) || 0,
+        choix1_surface_m2: Number(entry.Choix_1_m2) || 0,
+        choix2_surface_m2: Number(entry.Choix_2_m2) || 0,
+        choix3_surface_m2: Number(entry.Choix_3_m2) || 0,
         total_m2: Number(entry.Total_m2) || 0,
         pressage_m2: Number(entry.Pressage_m2) || 0,
-        Project_m2: Number(entry.Project_m2) || 0,
+        project_m2: Number(entry.Project_m2) || 0,
         emaillage_m2: Number(entry.Emaillage_m2) || 0,
-        cycle_min: Number(entry.Cycle_min) || 0,
         nb_pieces_four: Number(entry.Nb_Pieces_Four) || 0,
         surface_car_m2: Number(entry.Surface_CAR_m2) || 0,
         cuisson_m2: Number(entry.Cuisson_M2) || 0,
         four_minutes_vides: Number(entry.Four_Minutes_Vides) || 0,
         four_consommation_kwh: Number(entry.Four_Consommation_Kwh) || 0,
-        VIDE_f_maintenance: Number(entry.VIDE_f_maintenance) || 0,
-        VIDE_f_production: Number(entry.VIDE_f_production) || 0,
       })
-      .select(`
-        id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
-        modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
-        total_m2, pressage_m2, Project_m2, emaillage_m2, 
-        cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-        four_minutes_vides, four_consommation_kwh, VIDE_f_maintenance, VIDE_f_production, created_at
-      `)
+      .select(`*`)
       .single();
 
     if (error) {
+      if (error.code === "23505") {
+        const { data: existingData } = await supabase
+          .from("production_globale")
+          .select("*")
+          .eq("date", entry.Date)
+          .eq("horaire", entry.Horaire)
+          .eq("modele", entry.Modele)
+          .eq("couleur", entry.Couleur)
+          .eq("format", entry.Format)
+          .single();
+        if (existingData) {
+          return { duplicateEntry: fromDb(existingData) } as any;
+        }
+      }
       toast.error(handleDbError(error, "Erreur d'enregistrement"));
       return null;
     }
+
+    const surfaceCAR = Number(entry.Surface_CAR_m2) || 0;
+    const m2PerPalette = 0; // Or whatever calculation if needed
+    const emballageInserts = [
+      {
+        journalier_id: data.id,
+        choice_type: "1er Choix",
+        nb_palette: 0,
+        surface_par_palette: 0,
+        surface_totale_m2: Number(entry.Choix_1_m2) || 0,
+        reste_m2: Number(entry.Choix_1_m2) || 0,
+      },
+      {
+        journalier_id: data.id,
+        choice_type: "2ème Choix",
+        nb_palette: 0,
+        surface_par_palette: 0,
+        surface_totale_m2: Number(entry.Choix_2_m2) || 0,
+        reste_m2: Number(entry.Choix_2_m2) || 0,
+      },
+      {
+        journalier_id: data.id,
+        choice_type: "3ème Choix",
+        nb_palette: 0,
+        surface_par_palette: 0,
+        surface_totale_m2: Number(entry.Choix_3_m2) || 0,
+        reste_m2: Number(entry.Choix_3_m2) || 0,
+      }
+    ];
+    await supabase.from("production_emballage").insert(emballageInserts);
 
     const newEntry = fromDb(data);
     setEntries((prev) => [...prev, newEntry]);
@@ -172,7 +195,7 @@ export function useProductionStore() {
   const updateEntry = useCallback(async (entry: ProductionEntry) => {
     const { id, ...rest } = entry;
     const { error, data } = await supabase
-      .from("production_journalier")
+      .from("production_globale")
       .update({
         date: rest.Date,
         horaire: rest.Horaire,
@@ -183,30 +206,21 @@ export function useProductionStore() {
         modele: rest.Modele,
         couleur: rest.Couleur,
         format: rest.Format,
-        choix_1_m2: Number(rest.Choix_1_m2) || 0,
-        choix_2_m2: Number(rest.Choix_2_m2) || 0,
-        choix_3_m2: Number(rest.Choix_3_m2) || 0,
+        choix1_surface_m2: Number(rest.Choix_1_m2) || 0,
+        choix2_surface_m2: Number(rest.Choix_2_m2) || 0,
+        choix3_surface_m2: Number(rest.Choix_3_m2) || 0,
         total_m2: Number(rest.Total_m2) || 0,
         pressage_m2: Number(rest.Pressage_m2) || 0,
-        Project_m2: Number(rest.Project_m2) || 0,
+        project_m2: Number(rest.Project_m2) || 0,
         emaillage_m2: Number(rest.Emaillage_m2) || 0,
-        cycle_min: Number(rest.Cycle_min) || 0,
         nb_pieces_four: Number(rest.Nb_Pieces_Four) || 0,
         surface_car_m2: Number(rest.Surface_CAR_m2) || 0,
         cuisson_m2: Number(rest.Cuisson_M2) || 0,
         four_minutes_vides: Number(rest.Four_Minutes_Vides) || 0,
         four_consommation_kwh: Number(rest.Four_Consommation_Kwh) || 0,
-        VIDE_f_maintenance: Number(rest.VIDE_f_maintenance) || 0,
-        VIDE_f_production: Number(rest.VIDE_f_production) || 0,
       })
       .eq("id", id)
-      .select(`
-        id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
-        modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
-        total_m2, pressage_m2, Project_m2, emaillage_m2, 
-        cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-        four_minutes_vides, four_consommation_kwh, VIDE_f_maintenance, VIDE_f_production, created_at
-      `)
+      .select(`*`)
       .single();
 
     if (error) {
@@ -214,14 +228,49 @@ export function useProductionStore() {
       return null;
     }
 
+    // Auto-update emballage by re-creating it
+    // If we want to reset emballage when updating journalier, we can do it:
+    await supabase.from("production_emballage").delete().eq("journalier_id", id);
+    
+    const surfaceCAR = Number(entry.Surface_CAR_m2) || 0;
+    const emballageInserts = [
+      {
+        journalier_id: id,
+        choice_type: "1er Choix",
+        nb_palette: 0,
+        surface_par_palette: 0,
+        surface_totale_m2: Number(entry.Choix_1_m2) || 0,
+        reste_m2: Number(entry.Choix_1_m2) || 0,
+      },
+      {
+        journalier_id: id,
+        choice_type: "2ème Choix",
+        nb_palette: 0,
+        surface_par_palette: 0,
+        surface_totale_m2: Number(entry.Choix_2_m2) || 0,
+        reste_m2: Number(entry.Choix_2_m2) || 0,
+      },
+      {
+        journalier_id: id,
+        choice_type: "3ème Choix",
+        nb_palette: 0,
+        surface_par_palette: 0,
+        surface_totale_m2: Number(entry.Choix_3_m2) || 0,
+        reste_m2: Number(entry.Choix_3_m2) || 0,
+      }
+    ];
+    await supabase.from("production_emballage").insert(emballageInserts);
+
     const updated = fromDb(data);
     setEntries((prev) => prev.map((e) => (e.id === id ? updated : e)));
     return updated;
   }, []);
 
   const deleteEntry = useCallback(async (entry: ProductionEntry) => {
+    await supabase.from("production_emballage").delete().eq("journalier_id", entry.id);
+
     const { error } = await supabase
-      .from("production_journalier")
+      .from("production_globale")
       .delete()
       .eq("id", entry.id);
 
@@ -232,9 +281,30 @@ export function useProductionStore() {
     setEntries((prev) => prev.filter((e) => e.id !== entry.id));
   }, []);
 
+  const deleteMultipleEntries = useCallback(async (ids: string[]) => {
+    if (!ids.length) return;
+    
+    // Delete linked emballages first
+    await supabase.from("production_emballage").delete().in("journalier_id", ids);
+
+    // Delete global entries
+    const { error } = await supabase
+      .from("production_globale")
+      .delete()
+      .in("id", ids);
+
+    if (error) {
+      toast.error(handleDbError(error, "Erreur lors de la suppression multiple"));
+      return false;
+    }
+    
+    setEntries((prev) => prev.filter((e) => !ids.includes(e.id)));
+    return true;
+  }, []);
+
   const clearAll = useCallback(async () => {
     const { error } = await supabase
-      .from("production_journalier")
+      .from("production_globale")
       .delete()
       .neq("id", "00000000-0000-0000-0000-000000000000");
 
@@ -245,5 +315,5 @@ export function useProductionStore() {
     setEntries([]);
   }, []);
 
-  return { entries, isLoaded, addEntry, updateEntry, deleteEntry, clearAll, reload };
+  return { entries, isLoaded, addEntry, updateEntry, deleteEntry, deleteMultipleEntries, clearAll, reload };
 }

@@ -76,7 +76,7 @@ export default function MonthlyGroupDashboard({ startDate, endDate }: MonthlyGro
     queryKey: ["group-dashboard", from, to],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("production_journalier")
+        .from("production_globale")
         .select("groupe, total_m2, date, horaire")
         .gte("date", from)
         .lte("date", to)

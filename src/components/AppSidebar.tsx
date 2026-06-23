@@ -39,51 +39,21 @@ export function AppSidebar() {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
-                        <NavLink to="/production/journalier"
+                        <NavLink to="/production/saisie-globale"
                           className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
                           activeClassName="bg-sidebar-accent text-primary font-medium">
-                          <ClipboardList className="h-4 w-4" />
-                          Production Journalier
+                          <LayoutDashboard className="h-4 w-4 text-primary" />
+                          Saisie Globale
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild>
-                        <NavLink to="/production/emballage"
+                        <NavLink to="/production/journalier/view"
                           className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
                           activeClassName="bg-sidebar-accent text-primary font-medium">
-                          <Package className="h-4 w-4" />
-                          Production Emballage
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
-                        <NavLink to="/production/selection"
-                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
-                          activeClassName="bg-sidebar-accent text-primary font-medium">
-                          <CheckSquare className="h-4 w-4" />
-                          Sélection & Qualité
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
-                        <NavLink to="/production/stats-linea"
-                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
-                          activeClassName="bg-sidebar-accent text-primary font-medium">
-                          <BarChart3 className="h-4 w-4" />
-                          Statistiques Linea
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
-                        <NavLink to="/production/casse"
-                          className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
-                          activeClassName="bg-sidebar-accent text-primary font-medium">
-                          <Hammer className="h-4 w-4" />
-                          Casse Céramique
+                          <Database className="h-4 w-4 text-primary" />
+                          Historique & Recherche
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

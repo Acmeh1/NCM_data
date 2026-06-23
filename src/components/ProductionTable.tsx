@@ -33,7 +33,7 @@ const COLUMNS: { key: keyof ProductionEntry; label: string }[] = [
   { key: "Pressage_m2", label: "Pressage m²" },
   { key: "Project_m2", label: "Projecta m²" },
   { key: "Emaillage_m2", label: "Emaillage m²" },
-  { key: "Cycle_min", label: "Cycle min" },
+
   { key: "Nb_Pieces_Four", label: "Nb Pièces Four" },
   { key: "Surface_CAR_m2", label: "Surface CAR m²" },
   { key: "Cuisson_M2", label: "Production Four m²" },

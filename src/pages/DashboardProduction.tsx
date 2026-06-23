@@ -131,7 +131,7 @@ export default function DashboardProduction() {
   useEffect(() => {
     const channel = supabase
       .channel("analytics-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "production_journalier" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "production_globale" }, () => {
         queryClient.invalidateQueries({ queryKey: ["analytics-journalier"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "production_emballage" }, () => {
@@ -158,13 +158,13 @@ export default function DashboardProduction() {
     queryKey: ["analytics-journalier-full", prevStartDate, endDateParam],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("production_journalier")
+        .from("production_globale")
         .select(`
           id, date, horaire, heure_debut, heure_fin, groupe, chef_equipe, 
-          modele, couleur, format, choix_1_m2, choix_2_m2, choix_3_m2, 
-          total_m2, pressage_m2, Project_m2, emaillage_m2, 
-          cycle_min, nb_pieces_four, surface_car_m2, cuisson_m2, 
-          four_minutes_vides, four_consommation_kwh, created_at
+          modele, couleur, format, choix1_surface_m2, choix2_surface_m2, choix3_surface_m2, 
+          total_m2, pressage_m2, project_m2, emaillage_m2, 
+          nb_pieces_four, surface_car_m2, cuisson_m2, four_minutes_vides, 
+          four_consommation_kwh, created_at
         `)
         .gte("date", prevStartDate)
         .lte("date", endDateParam)
@@ -183,7 +183,7 @@ export default function DashboardProduction() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("production_emballage")
-        .select("id, date, choice_type, surface_totale_m2, reste_m2, nb_palette")
+        .select("id, date, choice_type, surface_totale_m2, reste_m2, nb_palette, total_pieces")
         .gte("date", startDateParam)
         .lte("date", endDateParam)
         .order("date", { ascending: true });
@@ -261,7 +261,7 @@ export default function DashboardProduction() {
   const totalPressageM2 = statsLinea.reduce((s, r) => s + (Number(r.choix1_surface_m2) || 0), 0);
   const totalDeuxiemeChoixM2 = statsLinea.reduce((s, r) => s + (Number(r.choix2_surface_m2) || 0), 0);
   const totalTroisiemeChoixM2 = statsLinea.reduce((s, r) => s + (Number(r.choix3_surface_m2) || 0), 0);
-  const totalPalettes = filteredEmballage.reduce((s, r) => s + (Number(r.nb_palette) || 0), 0);
+  const totalPiecesEmballage = filteredEmballage.reduce((s, r) => s + (Number(r.total_pieces) || Number(r.nb_palette) || 0), 0);
   const avgCycleMin = filteredJournalier.length
     ? filteredJournalier.reduce((s, r) => s + (r.cycle_min || 0), 0) / filteredJournalier.length
     : 0;
@@ -374,9 +374,9 @@ export default function DashboardProduction() {
     filteredJournalier.forEach((r) => {
       if (!map[r.groupe]) map[r.groupe] = { groupe: r.groupe, total_m2: 0, choix1: 0, choix2: 0, choix3: 0 };
       map[r.groupe].total_m2 += r.total_m2 || 0;
-      map[r.groupe].choix1 += r.choix_1_m2 || 0;
-      map[r.groupe].choix2 += r.choix_2_m2 || 0;
-      map[r.groupe].choix3 += r.choix_3_m2 || 0;
+      map[r.groupe].choix1 += (r.choix1_surface_m2 || r.choix_1_m2) || 0;
+      map[r.groupe].choix2 += (r.choix2_surface_m2 || r.choix_2_m2) || 0;
+      map[r.groupe].choix3 += (r.choix3_surface_m2 || r.choix_3_m2) || 0;
     });
     return Object.values(map).sort((a, b) => (a.groupe || "").localeCompare(b.groupe || ""));
   }, [filteredJournalier]);

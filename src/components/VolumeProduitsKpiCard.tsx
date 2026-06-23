@@ -49,12 +49,12 @@ export default function VolumeProduitsKpiCard({
         {/* ── Header row: big number + mini area chart ─────────────── */}
         <div className="flex justify-between items-start mb-6">
           <div className="space-y-1.5">
-            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
               <div className="p-1 rounded-md bg-orange-500/10">
                 <SquareStack className="h-3.5 w-3.5 text-orange-500" />
               </div>
               Volume Produit
-            </p>
+            </div>
 
             {/* Main value */}
             <div className="flex flex-col gap-0.5">

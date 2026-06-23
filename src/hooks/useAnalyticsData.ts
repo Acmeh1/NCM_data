@@ -15,10 +15,11 @@ export function useAnalyticsData(startDate: string, endDate: string) {
     queryKey: ["analytics-journalier-full", prevStartDate, endDate],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("production_journalier")
+        .from("production_globale")
         .select(`
-          id, date, total_m2, choix_1_m2, choix_2_m2, choix_3_m2, cuisson_m2, 
-          four_minutes_vides, nb_pieces_four, groupe, format
+          id, date, total_m2, choix1_surface_m2, choix2_surface_m2, choix3_surface_m2, cuisson_m2, 
+          four_consommation_kwh, four_minutes_vides, pressage_m2, project_m2, emaillage_m2, 
+          nb_pieces_four, surface_car_m2, groupe, format
         `)
         .gte("date", prevStartDate)
         .lte("date", endDate);
