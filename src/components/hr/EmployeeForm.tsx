@@ -56,7 +56,34 @@ export function EmployeeForm({ initialData, isEditMode = false }: EmployeeFormPr
   }, [initialData]);
 
   const handleChange = (field: keyof EmployeeData, value: string | number | null) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+      
+      // Auto-calculate Age and Tranche d'age when Date de Naissance changes
+      if (field === "Date_de_Naissance" && typeof value === "string") {
+        const birthDate = new Date(value);
+        if (!isNaN(birthDate.getTime())) {
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const m = today.getMonth() - birthDate.getMonth();
+          if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          updated.AGE = age;
+          
+          if (age < 20) updated["Tranche_d'age"] = "Moins de 20 ans";
+          else if (age <= 30) updated["Tranche_d'age"] = "De 20  30 ans";
+          else if (age <= 40) updated["Tranche_d'age"] = "De 31  40 ans";
+          else if (age <= 50) updated["Tranche_d'age"] = "De 41  50 ans";
+          else updated["Tranche_d'age"] = "Plus de 50 ans";
+        } else {
+          updated.AGE = null;
+          updated["Tranche_d'age"] = "";
+        }
+      }
+      
+      return updated;
+    });
   };
 
   const formatDateForInput = (dateStr: string | null | undefined) => {
@@ -162,8 +189,8 @@ export function EmployeeForm({ initialData, isEditMode = false }: EmployeeFormPr
                 <Input id="Date_de_Naissance" type="date" value={formatDateForInput(formData.Date_de_Naissance)} onChange={(e) => handleChange("Date_de_Naissance", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="AGE">Âge</Label>
-                <Input id="AGE" type="number" value={formData.AGE || ""} onChange={(e) => handleChange("AGE", parseInt(e.target.value))} />
+                <Label htmlFor="AGE">'ge</Label>
+                <Input id="AGE" type="number" readOnly className="bg-muted" value={formData.AGE || ""} onChange={(e) => handleChange("AGE", parseInt(e.target.value))} />
               </div>
 
               <div className="space-y-2">
@@ -171,8 +198,8 @@ export function EmployeeForm({ initialData, isEditMode = false }: EmployeeFormPr
                 <Input id="Situation_F" value={formData.Situation_F || ""} onChange={(e) => handleChange("Situation_F", e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="Tranche_d'age">Tranche d'âge</Label>
-                <Input id="Tranche_d'age" value={formData["Tranche_d'age"] || ""} onChange={(e) => handleChange("Tranche_d'age", e.target.value)} />
+                <Label htmlFor="Tranche_d'age">Tranche d'ǽge</Label>
+                <Input id="Tranche_d'age" readOnly className="bg-muted" value={formData["Tranche_d'age"] || ""} onChange={(e) => handleChange("Tranche_d'age", e.target.value)} />
               </div>
             </div>
           </CardContent>

@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router-dom";
-import { format as formatISO, subDays, parseISO } from "date-fns";
+import { format as formatISO, startOfMonth, parseISO } from "date-fns";
 import { useMemo, useCallback } from "react";
 import { DateRange } from "@/components/DateRangeFilter";
 import { AggregationType, DisplayType } from "@/components/AnalyticsFilterBar";
@@ -8,10 +8,10 @@ export function useDashboardFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // URL synced state
-  const startDate = searchParams.get("startDate") || formatISO(subDays(new Date(), 29), "yyyy-MM-dd");
+  const startDate = searchParams.get("startDate") || formatISO(startOfMonth(new Date()), "yyyy-MM-dd");
   const endDate = searchParams.get("endDate") || formatISO(new Date(), "yyyy-MM-dd");
   const period = (searchParams.get("period") || "day") as AggregationType;
-  const activePreset = searchParams.get("preset") || "30d";
+  const activePreset = searchParams.get("preset") || "month";
   const selectedGroups = searchParams.get("groups")?.split(",").filter(Boolean) || [];
   const displayType = (searchParams.get("display") || "Graphiques") as DisplayType;
 
