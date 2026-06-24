@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useKpiSettings } from "@/hooks/useKpiSettings";
 import { cn } from "@/lib/utils";
 import Dashboard from "./hr/Dashboard";
-import PointageEditor from "./hr/PointageEditor";
+import WorkforceDetail from "./hr/WorkforceDetail";
 import { Button } from "@/components/ui/button";
 import { 
   parseISO, 
@@ -635,8 +635,8 @@ export default function DashboardRH() {
           <TabsTrigger value="absenteeism" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <Activity className="h-4 w-4" /> Absentéisme
           </TabsTrigger>
-          <TabsTrigger value="pointage_edit" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-            <Edit3 className="h-4 w-4" /> Saisie Pointages
+          <TabsTrigger value="workforce_detail" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Users className="h-4 w-4" /> Détail Effectif
           </TabsTrigger>
           <TabsTrigger value="skills" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <GraduationCap className="h-4 w-4" /> Compétences
@@ -1098,9 +1098,9 @@ export default function DashboardRH() {
           <Dashboard startDate={startDate} endDate={endDate} rhData={rhData} />
         </TabsContent>
 
-
-
-
+        <TabsContent value="workforce_detail" className="space-y-6">
+          <WorkforceDetail rhData={rhData} />
+        </TabsContent>
 
         <TabsContent value="skills" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1283,10 +1283,6 @@ export default function DashboardRH() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="pointage_edit" className="space-y-6">
-          <PointageEditor rhData={rhData} />
         </TabsContent>
       </Tabs>
 
