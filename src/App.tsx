@@ -9,9 +9,6 @@ import AuthGuard from "@/components/AuthGuard";
 
 // ── Lazy-loaded pages (each becomes its own JS chunk) ──────────────
 const ViewJournalier        = lazy(() => import("@/pages/ViewJournalier"));
-const ViewEmballage         = lazy(() => import("@/pages/ViewEmballage"));
-const ViewSelection         = lazy(() => import("@/pages/ViewSelection"));
-const ViewStatsLinea        = lazy(() => import("@/pages/ViewStatsLinea"));
 const AdminBackup           = lazy(() => import("@/pages/AdminBackup"));
 const AdminUsers            = lazy(() => import("@/pages/AdminUsers"));
 const AdminKpiConfig        = lazy(() => import("@/pages/AdminKpiConfig"));
@@ -98,9 +95,6 @@ const App = () => (
                 <Route path="/" element={<Navigate to="/production/saisie-globale" replace />} />
                 <Route path="/production/saisie-globale"   element={<SaisieGlobale />} />
                 <Route path="/production/journalier/view"  element={<ViewJournalier />} />
-                <Route path="/production/emballage/view"   element={<ViewEmballage />} />
-                <Route path="/production/selection/view"   element={<ViewSelection />} />
-                <Route path="/production/stats-linea/view" element={<ViewStatsLinea />} />
                 <Route path="/analytics"                   element={<AnalyticsDashboard />} />
                 <Route path="/dashboard/production"        element={<DashboardProduction />} />
                 <Route path="/dashboard/direction"         element={<DashboardDirection />} />

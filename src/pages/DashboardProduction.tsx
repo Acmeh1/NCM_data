@@ -192,39 +192,6 @@ export default function DashboardProduction() {
     },
   });
 
-  const { data: statsLinea = [] } = useQuery({
-    queryKey: ["analytics-stats-linea", startDateParam, endDateParam],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stats_linea")
-        .select(`
-          id, production_id, total_surface_m2, choix1_surface_m2, choix2_surface_m2, choix3_surface_m2,
-          production_date
-        `)
-        .gte("production_date", startDateParam)
-        .lte("production_date", endDateParam)
-        .order("production_date", { ascending: true });
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Fetch previous period scrap data for variation
-  const { data: statsLineaPrev = [] } = useQuery({
-    queryKey: ["analytics-stats-linea-prev", prevStartDate, prevEndDate],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("stats_linea")
-        .select(`
-          id, total_surface_m2, choix2_surface_m2, choix3_surface_m2,
-          production_date
-        `)
-        .gte("production_date", prevStartDate)
-        .lte("production_date", prevEndDate);
-      if (error) throw error;
-      return data || [];
-    },
-  });
 
   // Build calendar slicers from data
   const calendarSlicers = useMemo(() => {
@@ -251,6 +218,51 @@ export default function DashboardProduction() {
       return true;
     });
   }, [journalier, selectedGroups]);
+
+  // Derived statsLinea from filteredJournalier
+  const statsLinea = useMemo(() => {
+    return filteredJournalier.map(r => {
+      const c1 = Number(r.choix1_surface_m2) || 0;
+      const c2 = Number(r.choix2_surface_m2) || 0;
+      const c3 = Number(r.choix3_surface_m2) || 0;
+      return {
+        id: r.id,
+        production_date: r.date,
+        production_id: r.id,
+        total_surface_m2: c1 + c2 + c3,
+        choix1_surface_m2: c1,
+        choix2_surface_m2: c2,
+        choix3_surface_m2: c3,
+        choix1_pieces: 0,
+        choix2_pieces: 0,
+        choix3_pieces: 0,
+      };
+    });
+  }, [filteredJournalier]);
+
+  // Derived statsLineaPrev from journalierFull
+  const statsLineaPrev = useMemo(() => {
+    const prevRows = journalierFull.filter(
+      (r) => r.date >= prevStartDate && r.date <= prevEndDate
+    );
+    return prevRows.map(r => {
+      const c1 = Number(r.choix1_surface_m2) || 0;
+      const c2 = Number(r.choix2_surface_m2) || 0;
+      const c3 = Number(r.choix3_surface_m2) || 0;
+      return {
+        id: r.id,
+        production_date: r.date,
+        production_id: r.id,
+        total_surface_m2: c1 + c2 + c3,
+        choix1_surface_m2: c1,
+        choix2_surface_m2: c2,
+        choix3_surface_m2: c3,
+        choix1_pieces: 0,
+        choix2_pieces: 0,
+        choix3_pieces: 0,
+      };
+    });
+  }, [journalierFull, prevStartDate, prevEndDate]);
 
   const filteredEmballage = useMemo(() => {
     return emballage;
@@ -320,13 +332,13 @@ export default function DashboardProduction() {
   }, []);
 
   const trendData = useMemo(() => {
-    const map: Record<string, { period: string; total_m2_scanner: number; total_m2_cuisson: number; sumDailyObj: number; shiftCount: number }> = {};
+    const map: Record<string, { period: string; total_m2_scanner: number; sumDailyObj: number; shiftCount: number }> = {};
     
     // 1. Production Actuals from Scanner (statsLinea)
     statsLinea.forEach((r) => {
       const key = aggregateKey(r.production_date || "", period);
       if (!map[key]) {
-        map[key] = { period: key, total_m2_scanner: 0, total_m2_cuisson: 0, sumDailyObj: 0, shiftCount: 0 };
+        map[key] = { period: key, total_m2_scanner: 0, sumDailyObj: 0, shiftCount: 0 };
       }
       map[key].total_m2_scanner += Number(r.total_surface_m2) || 0;
     });
@@ -335,9 +347,8 @@ export default function DashboardProduction() {
     filteredJournalier.forEach((r) => {
       const key = aggregateKey(r.date, period);
       if (!map[key]) {
-        map[key] = { period: key, total_m2_scanner: 0, total_m2_cuisson: 0, sumDailyObj: 0, shiftCount: 0 };
+        map[key] = { period: key, total_m2_scanner: 0, sumDailyObj: 0, shiftCount: 0 };
       }
-      map[key].total_m2_cuisson += Number(r.cuisson_m2) || 0;
       
       const format = String(r.format || r.modele || "").trim();
       let dailyObj = 8000;
@@ -349,7 +360,7 @@ export default function DashboardProduction() {
     });
     
     return Object.values(map).map(entry => {
-      const avgDailyObj = entry.shiftCount > 0 ? entry.sumDailyObj / entry.shiftCount : 8000;
+      let avgDailyObj = entry.shiftCount > 0 ? entry.sumDailyObj / entry.shiftCount : 8000;
       let finalObj = avgDailyObj;
       if (period === "week") finalObj = avgDailyObj * 7;
       else if (period === "month") finalObj = avgDailyObj * 30;
@@ -358,12 +369,10 @@ export default function DashboardProduction() {
         finalObj = finalObj * (selectedGroups.length / 3);
       }
       
-      const hasScannerData = entry.total_m2_scanner > 0;
-      
       return {
         period: entry.period,
-        total_m2: hasScannerData ? entry.total_m2_scanner : entry.total_m2_cuisson,
-        isFallback: !hasScannerData && entry.total_m2_cuisson > 0,
+        total_m2: entry.total_m2_scanner,
+        isFallback: false,
         objectif: finalObj
       };
     }).sort((a, b) => (a.period || "").localeCompare(b.period || ""));
@@ -502,7 +511,7 @@ export default function DashboardProduction() {
   const qualityTableData = useMemo(() => {
     const map: Record<string, { period: string; total: number; c1: number; c2: number; c3: number; hasScanner: boolean; cuisson: number }> = {};
     
-    // Process journalier for period skeleton and fallback totals
+    // Process journalier for period skeleton
     filteredJournalier.forEach((r) => {
       const key = aggregateKey(r.date, period);
       if (!map[key]) map[key] = { period: key, total: 0, c1: 0, c2: 0, c3: 0, hasScanner: false, cuisson: 0 };
@@ -521,14 +530,13 @@ export default function DashboardProduction() {
 
     return Object.values(map)
       .map(entry => {
-        const isFallback = !entry.hasScanner && entry.cuisson > 0;
-        const total = entry.hasScanner ? entry.total : entry.cuisson;
-        const c1 = entry.hasScanner ? entry.c1 : entry.cuisson;
+        const total = entry.total;
+        const c1 = entry.c1;
         return {
           ...entry,
           total,
           c1,
-          isFallback,
+          isFallback: false,
           rendement: total > 0 ? (c1 / total) * 100 : 0,
           rebut: total > 0 ? ((entry.c2 + entry.c3) / total) * 100 : 0
         };
@@ -582,8 +590,8 @@ export default function DashboardProduction() {
 
     return Object.values(map).map(r => ({
       ...r,
-      isFallback: !r.hasScanner && r.cuisson > 0,
-      scanner: r.hasScanner ? r.scanner : r.cuisson
+      isFallback: false,
+      scanner: r.scanner
     })).sort((a, b) => a.period.localeCompare(b.period));
   }, [filteredJournalier, statsLinea, period]);
 

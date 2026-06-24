@@ -76,9 +76,13 @@ export function useEmballageStore() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const loadEntries = useCallback(async () => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
+
     const [embRes, jourRes] = await Promise.all([
-      supabase.from("production_emballage").select("*").limit(5000).order("created_at", { ascending: true }),
-      supabase.from("production_globale").select(`*`).limit(5000),
+      supabase.from("production_emballage").select("*").gte("created_at", dateFilter).order("created_at", { ascending: true }),
+      supabase.from("production_globale").select(`*`).gte("date", dateFilter),
     ]);
 
     if (embRes.error) {

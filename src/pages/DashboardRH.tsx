@@ -48,16 +48,30 @@ export default function DashboardRH() {
   const getProp = (obj: any, key: string) => {
     if (!obj) return undefined;
     if (obj[key] !== undefined) return obj[key];
-    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[\s_]/g, "");
-    const target = normalize(key);
-    const foundKey = Object.keys(obj).find(k => normalize(k) === target);
+    // try lowercase / normalize
+    const normKey = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const foundKey = Object.keys(obj).find(k => k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === normKey);
     return foundKey ? obj[foundKey] : undefined;
+  };
+
+  const hasDepartureDate = (emp: any) => {
+    const d = getProp(emp, PROP_DEPART);
+    if (!d) return false;
+    const s = String(d).trim().toUpperCase();
+    if (s === "" || s === "-" || s === "N/A" || s === "NA" || s === "NULL" || s === "0") return false;
+    return true; // Has some sort of departure string
   };
 
   const parseDate = (dateStr: any) => {
     if (!dateStr) return null;
     let s = String(dateStr).trim();
-    if (!s) return null;
+    if (!s || s === "-" || s === "N/A" || s === "NA" || s === "NULL" || s === "0") return null;
+    
+    // Excel serial number (e.g., 45000)
+    if (/^\d{5}$/.test(s)) {
+      const serial = parseInt(s, 10);
+      return new Date((serial - 25569) * 86400 * 1000);
+    }
     
     // Standardize slashes to dashes for parseISO
     s = s.replace(/\//g, "-");
@@ -70,9 +84,13 @@ export default function DashboardRH() {
       // Handle DD-MM-YYYY or other formats
       const parts = s.split(/[-\s]/).filter(Boolean);
       if (parts.length === 3) {
-        const p0 = parseInt(parts[0], 10);
-        const p1 = parseInt(parts[1], 10);
-        const p2 = parseInt(parts[2], 10);
+        let p0 = parseInt(parts[0], 10);
+        let p1 = parseInt(parts[1], 10);
+        let p2 = parseInt(parts[2], 10);
+        
+        // Handle 2-digit years
+        if (p2 < 100) p2 += 2000;
+        if (p0 < 100 && p0 > 31) p0 += 2000;
         
         if (p0 > 1900) return new Date(p0, p1 - 1, p2); // YYYY-MM-DD
         if (p2 > 1900) return new Date(p2, p1 - 1, p0); // DD-MM-YYYY
@@ -258,7 +276,8 @@ export default function DashboardRH() {
           // If hireDate is missing, we assume they were hired before this 'date'
           const isHiredByDate = !hireDate || hireDate <= date;
           // Still active if no depart date OR departed after this 'date'
-          const isStillActive = !departDate || isAfter(departDate, date);
+          const hasDepart = hasDepartureDate(emp);
+          const isStillActive = !hasDepart || (departDate && isAfter(departDate, date));
           
           return isHiredByDate && isStillActive;
         }).length;
@@ -283,9 +302,9 @@ export default function DashboardRH() {
   // 3. Departures in period
   const departuresList = useMemo(() => {
     return rhData.filter(emp => {
-      const departDate = getProp(emp, PROP_DEPART);
-      if (!departDate) return false;
-      const date = parseDate(departDate);
+      const departDateStr = getProp(emp, PROP_DEPART);
+      if (!departDateStr) return false;
+      const date = parseDate(departDateStr);
       return date && isWithinInterval(date, { start: rangeStart, end: rangeEnd });
     });
   }, [rhData, rangeStart, rangeEnd]);
@@ -299,7 +318,12 @@ export default function DashboardRH() {
 
   // 5. Global Active Headcount (regardless of period - those who never left)
   const effectifActifGlobal = useMemo(() => {
-    return rhData.filter(emp => !getProp(emp, PROP_DEPART)).length;
+    return rhData.filter(emp => {
+        const departDateStr = getProp(emp, PROP_DEPART);
+        const departDate = parseDate(departDateStr);
+        const hasDepart = hasDepartureDate(emp);
+        return !hasDepart || (departDate && isAfter(departDate, new Date()));
+    }).length;
   }, [rhData]);
 
   // 6. Contract Breakdown at end of period
@@ -320,7 +344,8 @@ export default function DashboardRH() {
         const departDate = parseDate(departDateStr);
 
         const isHiredByDate = !hireDate || hireDate <= rangeEnd;
-        const isStillActive = !departDate || isAfter(departDate, rangeEnd);
+        const hasDepart = hasDepartureDate(item);
+        const isStillActive = !hasDepart || (departDate && isAfter(departDate, rangeEnd));
         const isActiveAtEnd = isHiredByDate && isStillActive;
         
         if (isActiveAtEnd) {
@@ -355,7 +380,8 @@ export default function DashboardRH() {
       const departDate = parseDate(departDateStr);
       
       const isHiredByDate = !hireDate || hireDate <= rangeEnd;
-      const isStillActive = !departDate || isAfter(departDate, rangeEnd);
+      const hasDepart = hasDepartureDate(item);
+      const isStillActive = !hasDepart || (departDate && isAfter(departDate, rangeEnd));
       const isActiveAtEnd = isHiredByDate && isStillActive;
       
       if (isActiveAtEnd) {
@@ -407,7 +433,10 @@ export default function DashboardRH() {
       const departDate = parseDate(departDateStr);
       const birthDate = parseDate(birthDateStr);
 
-      const isActiveAtEnd = hireDate && hireDate <= rangeEnd && (!departDate || isAfter(departDate, rangeEnd));
+      const isHiredByDate = !hireDate || hireDate <= rangeEnd;
+      const hasDepart = hasDepartureDate(emp);
+      const isStillActive = !hasDepart || (departDate && isAfter(departDate, rangeEnd));
+      const isActiveAtEnd = isHiredByDate && isStillActive;
 
       if (isActiveAtEnd && birthDate) {
         const age = Math.floor((rangeEnd.getTime() - birthDate.getTime()) / (1000 * 3600 * 24 * 365.25));
@@ -442,7 +471,10 @@ export default function DashboardRH() {
       const hireDate = parseDate(hireDateStr);
       const departDate = parseDate(departDateStr);
 
-      const isActiveAtEnd = hireDate && hireDate <= rangeEnd && (!departDate || isAfter(departDate, rangeEnd));
+      const isHiredByDate = !hireDate || hireDate <= rangeEnd;
+      const hasDepart = hasDepartureDate(emp);
+      const isStillActive = !hasDepart || (departDate && isAfter(departDate, rangeEnd));
+      const isActiveAtEnd = isHiredByDate && isStillActive;
 
       if (isActiveAtEnd && hireDate) {
         // Calculate seniority in years relative to rangeEnd
@@ -473,7 +505,11 @@ export default function DashboardRH() {
 
       const hireDate = parseDate(hireDateStr);
       const departDate = parseDate(departDateStr);
-      const isActiveAtEnd = hireDate && hireDate <= rangeEnd && (!departDate || isAfter(departDate, rangeEnd));
+      
+      const isHiredByDate = !hireDate || hireDate <= rangeEnd;
+      const hasDepart = hasDepartureDate(emp);
+      const isStillActive = !hasDepart || (departDate && isAfter(departDate, rangeEnd));
+      const isActiveAtEnd = isHiredByDate && isStillActive;
 
       if (isActiveAtEnd) {
         const niveau = getProp(emp, PROP_NIVEAU) || "Inconnu";
@@ -622,6 +658,20 @@ export default function DashboardRH() {
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Global</p>
                     <div className="text-xl font-bold">{rhData.length}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-md bg-white border-l-4 border-l-blue-500">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500 rounded-lg text-white shadow-lg">
+                    <Users className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Actif (Total)</p>
+                    <div className="text-xl font-bold text-blue-600">{effectifActifGlobal}</div>
                   </div>
                 </div>
               </CardContent>

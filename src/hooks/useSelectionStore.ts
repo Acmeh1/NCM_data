@@ -56,10 +56,14 @@ export function useSelectionStore() {
 
   useEffect(() => {
     async function load() {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
+
       const { data, error } = await supabase
         .from("production_selection")
         .select("*")
-        .limit(999999)
+        .gte("date", dateFilter)
         .order("created_at", { ascending: true });
       if (error) {
         console.error("Load error:", error);
@@ -74,10 +78,14 @@ export function useSelectionStore() {
   }, []);
 
   const reload = useCallback(async () => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
+
     const { data, error } = await supabase
       .from("production_selection")
       .select("*")
-      .limit(999999)
+      .gte("date", dateFilter)
       .order("created_at", { ascending: true });
     if (error) {
       console.error("Reload error:", error);

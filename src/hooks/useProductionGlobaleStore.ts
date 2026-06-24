@@ -51,11 +51,15 @@ export function useProductionGlobaleStore() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
+
     const { data, error } = await supabase
       .from("production_globale")
       .select("*")
-      .order("created_at", { ascending: false })
-      .limit(5000);
+      .gte("date", dateFilter)
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("production_globale load error:", error);

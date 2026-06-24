@@ -53,17 +53,18 @@ export default function ProductionForm({
 
   // Suggestions historiques depuis la base (toutes les productions existantes)
   const { entries } = useProductionStore();
-  const chefSuggestions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          (entries || [])
-            .map((e) => e.Chef_Equipe)
-            .filter((name) => typeof name === "string" && name.trim().length > 0)
-        )
-      ).sort(),
-    [entries]
-  );
+  const chefSuggestions = useMemo(() => {
+    const recentNames = new Set<string>();
+    const entriesArray = entries || [];
+    for (let i = entriesArray.length - 1; i >= 0; i--) {
+      const e = entriesArray[i];
+      if (typeof e.Chef_Equipe === "string" && e.Chef_Equipe.trim().length > 0) {
+        recentNames.add(e.Chef_Equipe.trim());
+        if (recentNames.size >= 4) break;
+      }
+    }
+    return Array.from(recentNames);
+  }, [entries]);
 
   const [form, setForm] = useState({
     Date: new Date().toISOString().split("T")[0],

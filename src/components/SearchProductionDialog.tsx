@@ -15,11 +15,12 @@ interface SearchProductionDialogProps {
 
 const formatDateFrench = (dateString: string) => {
   if (!dateString) return "";
-  const parts = dateString.split("-");
+  const dateOnly = dateString.split("T")[0].split(" ")[0];
+  const parts = dateOnly.split("-");
   if (parts.length === 3) {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
-  return dateString;
+  return dateOnly;
 };
 
 export default function SearchProductionDialog({ open, onOpenChange, entries, onSelect }: SearchProductionDialogProps) {
@@ -31,8 +32,9 @@ export default function SearchProductionDialog({ open, onOpenChange, entries, on
     }
     const lowerSearch = searchTerm.toLowerCase();
     return entries.filter(e => {
-      const frDate = formatDateFrench(e.Date);
-      return e.Date.toLowerCase().includes(lowerSearch) ||
+      const dateOnly = (e.Date || "").split("T")[0].split(" ")[0];
+      const frDate = formatDateFrench(dateOnly);
+      return dateOnly.includes(lowerSearch) ||
         frDate.includes(lowerSearch) ||
         e.Modele?.toLowerCase().includes(lowerSearch) ||
         e.Format?.toLowerCase().includes(lowerSearch) ||

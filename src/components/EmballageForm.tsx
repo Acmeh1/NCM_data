@@ -84,6 +84,11 @@ export default function EmballageForm({
       
       if (item.Choice_Type === "1er Choix") {
         item.Surface_totale_m2 = (Number(item.Nb_Palette) || 0) * m2PerPalette + (Number(item.Reste_m2) || 0);
+      } else {
+        // For 2nd and 3rd choice, Surface_totale_m2 is exactly Reste_m2
+        if (field === "Reste_m2") {
+          item.Surface_totale_m2 = Number(item.Reste_m2) || 0;
+        }
       }
       updated[index] = item;
       return updated;
@@ -97,7 +102,7 @@ export default function EmballageForm({
       ...c,
       Surface_totale_m2: c.Choice_Type === "1er Choix" 
         ? ((Number(c.Nb_Palette) || 0) * m2PerPalette + (Number(c.Reste_m2) || 0))
-        : (Number(c.Surface_totale_m2) || 0),
+        : (Number(c.Reste_m2) || 0),
     }));
 
     if (isEditMode && editingEntry && onUpdate) {
@@ -240,18 +245,14 @@ export default function EmballageForm({
                       )}
                     </td>
                     <td className="px-3 py-2">
-                      {idx === 0 ? (
-                        <Input
-                          type="number"
-                          value={choix.Reste_m2 || ""}
-                          onChange={(e) => updateChoix(idx, "Reste_m2", Number(e.target.value) || 0)}
-                          placeholder="0"
-                          className="h-8 max-w-[120px]"
-                          step="0.01"
-                        />
-                      ) : (
-                        <span className="text-muted-foreground text-xs italic">-</span>
-                      )}
+                      <Input
+                        type="number"
+                        value={choix.Reste_m2 || ""}
+                        onChange={(e) => updateChoix(idx, "Reste_m2", Number(e.target.value) || 0)}
+                        placeholder="0"
+                        className="h-8 max-w-[120px]"
+                        step="0.01"
+                      />
                     </td>
                     <td className="px-3 py-2">
                       {idx === 0 ? (
@@ -259,14 +260,9 @@ export default function EmballageForm({
                           {((Number(choix.Nb_Palette) || 0) * m2PerPalette + (Number(choix.Reste_m2) || 0)).toFixed(2)}
                         </span>
                       ) : (
-                        <Input
-                          type="number"
-                          value={choix.Surface_totale_m2 || ""}
-                          onChange={(e) => updateChoix(idx, "Surface_totale_m2", Number(e.target.value) || 0)}
-                          placeholder="0"
-                          className="h-8 max-w-[120px] border-primary/50 focus-visible:ring-primary"
-                          step="0.01"
-                        />
+                        <span className="font-semibold text-primary">
+                          {(Number(choix.Reste_m2) || 0).toFixed(2)}
+                        </span>
                       )}
                     </td>
                   </tr>

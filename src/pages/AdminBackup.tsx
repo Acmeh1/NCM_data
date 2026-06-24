@@ -7,11 +7,16 @@ import { toast } from "sonner";
 
 // Tables complètes à exporter / importer de Supabase
 const TABLES_TO_SYNC = [
-  "production_journalier",
+  "production_globale",
   "production_emballage",
   "production_selection",
   "stats_linea",
+  "casse_ceramique",
   "interventions",
+  "employees",
+  "pointage_rh",
+  "pointage_rh_details",
+  "kpi_config",
   "profiles",
   "user_roles",
   "user_permissions"

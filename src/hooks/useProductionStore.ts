@@ -31,6 +31,27 @@ export interface ProductionEntry {
   Four_Consommation_Kwh: number;
   VIDE_f_maintenance: number;
   VIDE_f_production: number;
+  Scanner_Choix1_m2?: number;
+  Scanner_Choix2_m2?: number;
+  Scanner_Choix3_m2?: number;
+  Choix1_Pieces?: number;
+  Choix2_Pieces?: number;
+  Choix3_Pieces?: number;
+  Casse_Presse_Casse_kg?: number;
+  Casse_Sortie_Sechoir_kg?: number;
+  Casse_Emaillage_kg?: number;
+  Casse_Projecta_kg?: number;
+  Casse_Entree_Four_kg?: number;
+  Casse_Cuite_kg?: number;
+  Emballage_C1_Palettes?: number;
+  Emballage_C1_Reste_m2?: number;
+  Emballage_C1_Surface_m2?: number;
+  Emballage_C2_Palettes?: number;
+  Emballage_C2_Reste_m2?: number;
+  Emballage_C2_Surface_m2?: number;
+  Emballage_C3_Palettes?: number;
+  Emballage_C3_Reste_m2?: number;
+  Emballage_C3_Surface_m2?: number;
 }
 
 // Map DB row to frontend interface
@@ -46,13 +67,13 @@ function fromDb(row: any): ProductionEntry {
     Modele: row.modele,
     Couleur: row.couleur,
     Format: row.format,
-    Choix_1_m2: Number(row.choix_1_m2 ?? row.choix1_surface_m2 ?? 0),
-    Choix_2_m2: Number(row.choix_2_m2 ?? row.choix2_surface_m2 ?? 0),
-    Choix_3_m2: Number(row.choix_3_m2 ?? row.choix3_surface_m2 ?? 0),
+    Choix_1_m2: Number(row.choix_1_m2 ?? 0),
+    Choix_2_m2: Number(row.choix_2_m2 ?? 0),
+    Choix_3_m2: Number(row.choix_3_m2 ?? 0),
     Total_m2: Number(row.total_m2 ?? 0),
     Pressage_m2: Number(row.pressage_m2 ?? 0),
     Project_m2: Number(row.Project_m2 ?? row.project_m2 ?? 0),
-    Emaillage_m2: Number(row.emaillage_m2 ?? row.Emaillage_m2 ?? 0),
+    Emaillage_m2: Number(row.emaillage_m2 ?? 0),
     Cycle_min: Number(row.cycle_min ?? 0),
     Nb_Pieces_Four: Number(row.nb_pieces_four ?? 0),
     Surface_CAR_m2: Number(row.surface_car_m2 ?? 0),
@@ -61,6 +82,27 @@ function fromDb(row: any): ProductionEntry {
     Four_Consommation_Kwh: Number(row.four_consommation_kwh ?? 0),
     VIDE_f_maintenance: Number(row.VIDE_f_maintenance ?? 0),
     VIDE_f_production: Number(row.VIDE_f_production ?? 0),
+    Scanner_Choix1_m2: Number(row.choix1_surface_m2 ?? 0),
+    Scanner_Choix2_m2: Number(row.choix2_surface_m2 ?? 0),
+    Scanner_Choix3_m2: Number(row.choix3_surface_m2 ?? 0),
+    Choix1_Pieces: Number(row.choix1_pieces ?? 0),
+    Choix2_Pieces: Number(row.choix2_pieces ?? 0),
+    Choix3_Pieces: Number(row.choix3_pieces ?? 0),
+    Casse_Presse_Casse_kg: Number(row.casse_presse_casse_kg ?? 0),
+    Casse_Sortie_Sechoir_kg: Number(row.casse_sortie_sechoir_kg ?? 0),
+    Casse_Emaillage_kg: Number(row.casse_emaillage_kg ?? 0),
+    Casse_Projecta_kg: Number(row.casse_projecta_kg ?? 0),
+    Casse_Entree_Four_kg: Number(row.casse_entree_four_kg ?? 0),
+    Casse_Cuite_kg: Number(row.casse_cuite_kg ?? 0),
+    Emballage_C1_Palettes: Number(row.emballage_c1_palettes ?? 0),
+    Emballage_C1_Reste_m2: Number(row.emballage_c1_reste_m2 ?? 0),
+    Emballage_C1_Surface_m2: Number(row.emballage_c1_surface_m2 ?? 0),
+    Emballage_C2_Palettes: Number(row.emballage_c2_palettes ?? 0),
+    Emballage_C2_Reste_m2: Number(row.emballage_c2_reste_m2 ?? 0),
+    Emballage_C2_Surface_m2: Number(row.emballage_c2_surface_m2 ?? 0),
+    Emballage_C3_Palettes: Number(row.emballage_c3_palettes ?? 0),
+    Emballage_C3_Reste_m2: Number(row.emballage_c3_reste_m2 ?? 0),
+    Emballage_C3_Surface_m2: Number(row.emballage_c3_surface_m2 ?? 0),
   };
 }
 
@@ -72,10 +114,14 @@ export function useProductionStore() {
   // Load from cloud DB
   useEffect(() => {
     async function load() {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
+
       const { data, error } = await supabase
         .from("production_globale")
         .select(`*`)
-        .limit(5000)
+        .gte("date", dateFilter)
         .order("created_at", { ascending: true });
       if (error) {
         console.error("Load error:", error);
@@ -90,16 +136,36 @@ export function useProductionStore() {
   }, []);
 
   const reload = useCallback(async () => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
+
     const { data, error } = await supabase
       .from("production_globale")
       .select(`*`)
-      .limit(5000)
+      .gte("date", dateFilter)
       .order("created_at", { ascending: true });
     if (error) {
       console.error("Reload error:", error);
     } else {
       setEntries((data || []).map(fromDb));
     }
+  }, []);
+
+  const loadAll = useCallback(async () => {
+    setIsLoaded(false);
+    const { data, error } = await supabase
+      .from("production_globale")
+      .select(`*`)
+      .order("created_at", { ascending: true });
+    if (error) {
+      console.error("LoadAll error:", error);
+      toast.error("Erreur de chargement complet");
+    } else {
+      setEntries((data || []).map(fromDb));
+      toast.success("Historique complet chargé");
+    }
+    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -134,6 +200,27 @@ export function useProductionStore() {
         cuisson_m2: Number(entry.Cuisson_M2) || 0,
         four_minutes_vides: Number(entry.Four_Minutes_Vides) || 0,
         four_consommation_kwh: Number(entry.Four_Consommation_Kwh) || 0,
+        choix1_surface_m2: entry.Scanner_Choix1_m2 !== undefined ? Number(entry.Scanner_Choix1_m2) || 0 : undefined,
+        choix2_surface_m2: entry.Scanner_Choix2_m2 !== undefined ? Number(entry.Scanner_Choix2_m2) || 0 : undefined,
+        choix3_surface_m2: entry.Scanner_Choix3_m2 !== undefined ? Number(entry.Scanner_Choix3_m2) || 0 : undefined,
+        choix1_pieces: entry.Choix1_Pieces !== undefined ? Number(entry.Choix1_Pieces) || 0 : undefined,
+        choix2_pieces: entry.Choix2_Pieces !== undefined ? Number(entry.Choix2_Pieces) || 0 : undefined,
+        choix3_pieces: entry.Choix3_Pieces !== undefined ? Number(entry.Choix3_Pieces) || 0 : undefined,
+        casse_presse_casse_kg: entry.Casse_Presse_Casse_kg !== undefined ? Number(entry.Casse_Presse_Casse_kg) || 0 : undefined,
+        casse_sortie_sechoir_kg: entry.Casse_Sortie_Sechoir_kg !== undefined ? Number(entry.Casse_Sortie_Sechoir_kg) || 0 : undefined,
+        casse_emaillage_kg: entry.Casse_Emaillage_kg !== undefined ? Number(entry.Casse_Emaillage_kg) || 0 : undefined,
+        casse_projecta_kg: entry.Casse_Projecta_kg !== undefined ? Number(entry.Casse_Projecta_kg) || 0 : undefined,
+        casse_entree_four_kg: entry.Casse_Entree_Four_kg !== undefined ? Number(entry.Casse_Entree_Four_kg) || 0 : undefined,
+        casse_cuite_kg: entry.Casse_Cuite_kg !== undefined ? Number(entry.Casse_Cuite_kg) || 0 : undefined,
+        emballage_c1_palettes: entry.Emballage_C1_Palettes !== undefined ? Number(entry.Emballage_C1_Palettes) || 0 : undefined,
+        emballage_c1_reste_m2: entry.Emballage_C1_Reste_m2 !== undefined ? Number(entry.Emballage_C1_Reste_m2) || 0 : undefined,
+        emballage_c1_surface_m2: entry.Emballage_C1_Surface_m2 !== undefined ? Number(entry.Emballage_C1_Surface_m2) || 0 : undefined,
+        emballage_c2_palettes: entry.Emballage_C2_Palettes !== undefined ? Number(entry.Emballage_C2_Palettes) || 0 : undefined,
+        emballage_c2_reste_m2: entry.Emballage_C2_Reste_m2 !== undefined ? Number(entry.Emballage_C2_Reste_m2) || 0 : undefined,
+        emballage_c2_surface_m2: entry.Emballage_C2_Surface_m2 !== undefined ? Number(entry.Emballage_C2_Surface_m2) || 0 : undefined,
+        emballage_c3_palettes: entry.Emballage_C3_Palettes !== undefined ? Number(entry.Emballage_C3_Palettes) || 0 : undefined,
+        emballage_c3_reste_m2: entry.Emballage_C3_Reste_m2 !== undefined ? Number(entry.Emballage_C3_Reste_m2) || 0 : undefined,
+        emballage_c3_surface_m2: entry.Emballage_C3_Surface_m2 !== undefined ? Number(entry.Emballage_C3_Surface_m2) || 0 : undefined,
       })
       .select(`*`)
       .single();
@@ -218,6 +305,27 @@ export function useProductionStore() {
         cuisson_m2: Number(rest.Cuisson_M2) || 0,
         four_minutes_vides: Number(rest.Four_Minutes_Vides) || 0,
         four_consommation_kwh: Number(rest.Four_Consommation_Kwh) || 0,
+        choix1_surface_m2: rest.Scanner_Choix1_m2 !== undefined ? Number(rest.Scanner_Choix1_m2) || 0 : undefined,
+        choix2_surface_m2: rest.Scanner_Choix2_m2 !== undefined ? Number(rest.Scanner_Choix2_m2) || 0 : undefined,
+        choix3_surface_m2: rest.Scanner_Choix3_m2 !== undefined ? Number(rest.Scanner_Choix3_m2) || 0 : undefined,
+        choix1_pieces: rest.Choix1_Pieces !== undefined ? Number(rest.Choix1_Pieces) || 0 : undefined,
+        choix2_pieces: rest.Choix2_Pieces !== undefined ? Number(rest.Choix2_Pieces) || 0 : undefined,
+        choix3_pieces: rest.Choix3_Pieces !== undefined ? Number(rest.Choix3_Pieces) || 0 : undefined,
+        casse_presse_casse_kg: rest.Casse_Presse_Casse_kg !== undefined ? Number(rest.Casse_Presse_Casse_kg) || 0 : undefined,
+        casse_sortie_sechoir_kg: rest.Casse_Sortie_Sechoir_kg !== undefined ? Number(rest.Casse_Sortie_Sechoir_kg) || 0 : undefined,
+        casse_emaillage_kg: rest.Casse_Emaillage_kg !== undefined ? Number(rest.Casse_Emaillage_kg) || 0 : undefined,
+        casse_projecta_kg: rest.Casse_Projecta_kg !== undefined ? Number(rest.Casse_Projecta_kg) || 0 : undefined,
+        casse_entree_four_kg: rest.Casse_Entree_Four_kg !== undefined ? Number(rest.Casse_Entree_Four_kg) || 0 : undefined,
+        casse_cuite_kg: rest.Casse_Cuite_kg !== undefined ? Number(rest.Casse_Cuite_kg) || 0 : undefined,
+        emballage_c1_palettes: rest.Emballage_C1_Palettes !== undefined ? Number(rest.Emballage_C1_Palettes) || 0 : undefined,
+        emballage_c1_reste_m2: rest.Emballage_C1_Reste_m2 !== undefined ? Number(rest.Emballage_C1_Reste_m2) || 0 : undefined,
+        emballage_c1_surface_m2: rest.Emballage_C1_Surface_m2 !== undefined ? Number(rest.Emballage_C1_Surface_m2) || 0 : undefined,
+        emballage_c2_palettes: rest.Emballage_C2_Palettes !== undefined ? Number(rest.Emballage_C2_Palettes) || 0 : undefined,
+        emballage_c2_reste_m2: rest.Emballage_C2_Reste_m2 !== undefined ? Number(rest.Emballage_C2_Reste_m2) || 0 : undefined,
+        emballage_c2_surface_m2: rest.Emballage_C2_Surface_m2 !== undefined ? Number(rest.Emballage_C2_Surface_m2) || 0 : undefined,
+        emballage_c3_palettes: rest.Emballage_C3_Palettes !== undefined ? Number(rest.Emballage_C3_Palettes) || 0 : undefined,
+        emballage_c3_reste_m2: rest.Emballage_C3_Reste_m2 !== undefined ? Number(rest.Emballage_C3_Reste_m2) || 0 : undefined,
+        emballage_c3_surface_m2: rest.Emballage_C3_Surface_m2 !== undefined ? Number(rest.Emballage_C3_Surface_m2) || 0 : undefined,
       })
       .eq("id", id)
       .select(`*`)
@@ -315,5 +423,5 @@ export function useProductionStore() {
     setEntries([]);
   }, []);
 
-  return { entries, isLoaded, addEntry, updateEntry, deleteEntry, deleteMultipleEntries, clearAll, reload };
+  return { entries, isLoaded, addEntry, updateEntry, deleteEntry, deleteMultipleEntries, clearAll, reload, loadAll };
 }

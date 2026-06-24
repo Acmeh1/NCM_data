@@ -85,12 +85,51 @@ export function useStatsLineaStore() {
   const [entries, setEntries] = useState<StatsLineaEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  const reload = useCallback(async () => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+      .from("stats_linea")
+      .select("*")
+      .gte("production_date", dateFilter)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Reload error:", error);
+    } else {
+      setEntries((data || []).map(fromDb));
+    }
+  }, []);
+
+  const loadAll = useCallback(async () => {
+    setIsLoaded(false);
+    const { data, error } = await supabase
+      .from("stats_linea")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("LoadAll error:", error);
+      toast.error("Erreur de chargement complet");
+    } else {
+      setEntries((data || []).map(fromDb));
+      toast.success("Historique complet chargé");
+    }
+    setIsLoaded(true);
+  }, []);
+
   useEffect(() => {
     async function load() {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
+
       const { data, error } = await supabase
         .from("stats_linea")
         .select("*")
-        .limit(999999)
+        .gte("production_date", dateFilter)
         .order("created_at", { ascending: true });
 
       if (error) {
@@ -152,6 +191,6 @@ export function useStatsLineaStore() {
     setEntries((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
-  return { entries, isLoaded, addEntry, updateEntry, deleteEntry };
+  return { entries, isLoaded, addEntry, updateEntry, deleteEntry, reload, loadAll };
 }
 

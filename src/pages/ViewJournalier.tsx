@@ -24,9 +24,12 @@ const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
   { key: "Modele", label: "Modèle" },
   { key: "Couleur", label: "Couleur" },
   { key: "Format", label: "Format" },
-  { key: "Choix_1_m2", label: "1er Choix m²", type: "number" },
-  { key: "Choix_2_m2", label: "2ème Choix m²", type: "number" },
-  { key: "Choix_3_m2", label: "3ème Choix m²", type: "number" },
+  { key: "Choix1_Pieces", label: "1er Choix (Pièces)", type: "number" },
+  { key: "Choix_1_m2", label: "1er Choix (m²)", type: "number" },
+  { key: "Choix2_Pieces", label: "2ème Choix (Pièces)", type: "number" },
+  { key: "Choix_2_m2", label: "2ème Choix (m²)", type: "number" },
+  { key: "Choix3_Pieces", label: "3ème Choix (Pièces)", type: "number" },
+  { key: "Choix_3_m2", label: "3ème Choix (m²)", type: "number" },
   { key: "Total_m2", label: "Total m²", type: "number" },
   { key: "Pressage_m2", label: "Pressage m²", type: "number" },
   { key: "Project_m2", label: "Projecta m²", type: "number" },
@@ -39,6 +42,16 @@ const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
   { key: "VIDE_f_maintenance", label: "Vide Maintenance", type: "number" },
   { key: "VIDE_f_production", label: "Vide Production", type: "number" },
   { key: "Four_Consommation_Kwh", label: "Consommation Four kW/h", type: "number" },
+  { key: "Casse_Presse_Casse_kg", label: "Casse Presse (kg)", type: "number" },
+  { key: "Casse_Sortie_Sechoir_kg", label: "Casse Sortie Séchoir (kg)", type: "number" },
+  { key: "Casse_Emaillage_kg", label: "Casse Émaillage (kg)", type: "number" },
+  { key: "Casse_Projecta_kg", label: "Casse Projecta (kg)", type: "number" },
+  { key: "Casse_Entree_Four_kg", label: "Casse Entrée Four (kg)", type: "number" },
+  { key: "Casse_Cuite_kg", label: "Casse Cuite (kg)", type: "number" },
+  { key: "Emballage_C1_Palettes", label: "1er Choix (Palettes)", type: "number" },
+  { key: "Emballage_C1_Reste_m2", label: "1er Choix (Reste m²)", type: "number" },
+  { key: "Emballage_C2_Reste_m2", label: "2ème Choix (Reste m²)", type: "number" },
+  { key: "Emballage_C3_Reste_m2", label: "3ème Choix (Reste m²)", type: "number" },
 ];
 
 const EXTRA_SELECTION_COLUMNS: { key: keyof SelectionEntry; label: string; type?: "text" | "number" }[] = [];
@@ -59,7 +72,7 @@ const FILTER_CONFIGS = [
 export default function ViewJournalier() {
   const [showVideDetails, setShowVideDetails] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const { entries, isLoaded, updateEntry, deleteEntry, deleteMultipleEntries } = useProductionStore();
+  const { entries, isLoaded, updateEntry, deleteEntry, deleteMultipleEntries, loadAll } = useProductionStore();
   const { entries: selectionEntries, isLoaded: selectionLoaded } = useSelectionStore();
   const { productionEdit } = usePermissions();
   const navigate = useNavigate();
@@ -157,7 +170,7 @@ export default function ViewJournalier() {
     <div className="space-y-4 max-w-full">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate("/production/journalier")}>
+          <Button variant="outline" size="icon" onClick={() => navigate("/production/saisie-globale")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
@@ -171,6 +184,9 @@ export default function ViewJournalier() {
               <Trash2 className="h-4 w-4" /> Supprimer ({selectedIds.size})
             </Button>
           )}
+          <Button variant="secondary" size="sm" className="gap-2" onClick={loadAll}>
+            Charger tout l'historique
+          </Button>
           <Button variant="outline" size="sm" className="gap-2"
             onClick={() => exportToCsvGeneric(exportData, "production_journalier")}>
             <Download className="h-4 w-4" /> CSV

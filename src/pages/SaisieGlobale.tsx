@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronRight, LayoutDashboard, PackageSearch, PackageOpen, Hammer } from "lucide-react";
@@ -11,6 +11,7 @@ import { useProductionStore, type ProductionEntry } from "@/hooks/useProductionS
 import { useEmballageStore } from "@/hooks/useEmballageStore";
 import { useStatsLineaStore } from "@/hooks/useStatsLineaStore";
 import { useCasseStore } from "@/hooks/useCasseStore";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import SearchProductionDialog from "@/components/SearchProductionDialog";
 import { Search } from "lucide-react";
 
@@ -25,11 +26,14 @@ export default function SaisieGlobale() {
   const [currentStep, setCurrentStep] = useState(0);
   const [createdJournalier, setCreatedJournalier] = useState<ProductionEntry | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const formContainerRef = useRef<HTMLDivElement>(null);
 
   const { addEntry: addJournalier, updateEntry: updateJournalier, entries: productionEntries } = useProductionStore();
   const { updateEntry: updateEmballage, entries: emballageEntries } = useEmballageStore();
   const { addEntry: addStatLinea } = useStatsLineaStore();
   const { addEntry: addCasse, updateEntry: updateCasse, entries: casseEntries } = useCasseStore();
+
+  useKeyboardNavigation(formContainerRef);
 
   // Scroll to top on step change
   useEffect(() => {
@@ -56,14 +60,48 @@ export default function SaisieGlobale() {
   const handleEmballageSubmit = async (entry: any) => {
     const result = await updateEmballage(entry as any);
     if (result) {
+      if (createdJournalier) {
+        const c1 = entry.choix.find((c: any) => c.Choice_Type === "1er Choix");
+        const c2 = entry.choix.find((c: any) => c.Choice_Type === "2ème Choix");
+        const c3 = entry.choix.find((c: any) => c.Choice_Type === "3ème Choix");
+        
+        const updated = await updateJournalier({
+          ...createdJournalier,
+          Emballage_C1_Palettes: c1?.Nb_Palette || 0,
+          Emballage_C1_Reste_m2: c1?.Reste_m2 || 0,
+          Emballage_C1_Surface_m2: c1?.Surface_totale_m2 || 0,
+          Emballage_C2_Palettes: c2?.Nb_Palette || 0,
+          Emballage_C2_Reste_m2: c2?.Reste_m2 || 0,
+          Emballage_C2_Surface_m2: c2?.Surface_totale_m2 || 0,
+          Emballage_C3_Palettes: c3?.Nb_Palette || 0,
+          Emballage_C3_Reste_m2: c3?.Reste_m2 || 0,
+          Emballage_C3_Surface_m2: c3?.Surface_totale_m2 || 0,
+        });
+        if (updated) setCreatedJournalier(updated);
+      }
       toast.success("Emballage enregistré");
       setCurrentStep(2);
     }
   };
 
   const handleStatLineaSubmit = async (entry: any) => {
+    // Save to stats_linea for backward compatibility with Dashboards
     const result = await addStatLinea(entry);
+    
     if (result) {
+      if (createdJournalier) {
+        // Also update production_globale with the stats linea fields!
+        const updated = await updateJournalier({
+          ...createdJournalier,
+          Choix1_Pieces: entry.choix1_pieces,
+          Choix2_Pieces: entry.choix2_pieces,
+          Choix3_Pieces: entry.choix3_pieces,
+          Scanner_Choix1_m2: entry.choix1_surface_m2,
+          Scanner_Choix2_m2: entry.choix2_surface_m2,
+          Scanner_Choix3_m2: entry.choix3_surface_m2,
+        });
+        if (updated) setCreatedJournalier(updated);
+      }
       toast.success("Stat Linea enregistré");
       setCurrentStep(3);
     }
@@ -71,7 +109,21 @@ export default function SaisieGlobale() {
 
   const handleCasseSubmit = async (entry: any) => {
     const result = await addCasse(entry);
+    
     if (result) {
+      if (createdJournalier) {
+        // Also update production_globale with the casse fields!
+        const updated = await updateJournalier({
+          ...createdJournalier,
+          Casse_Presse_Casse_kg: entry.presse_casse_kg,
+          Casse_Sortie_Sechoir_kg: entry.sortie_sechoir_kg,
+          Casse_Emaillage_kg: entry.emaillage_kg,
+          Casse_Projecta_kg: entry.projecta_kg,
+          Casse_Entree_Four_kg: entry.entree_four_kg,
+          Casse_Cuite_kg: entry.cuite_kg,
+        });
+        if (updated) setCreatedJournalier(updated);
+      }
       toast.success("Saisie Casse enregistrée avec succès. Cycle terminé !");
       setCreatedJournalier(null);
       setCurrentStep(0);
@@ -91,8 +143,8 @@ export default function SaisieGlobale() {
     : null;
 
   return (
-    <div className="max-w-[1200px] mx-auto space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-500 pb-12" ref={formContainerRef}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200/60 shadow-sm">
         <div>
           <h1 className="text-2xl font-bold">Saisie Globale de Production</h1>
           <p className="text-sm text-muted-foreground">
@@ -209,6 +261,18 @@ export default function SaisieGlobale() {
                   onUpdate={async (entry) => {
                     const result = await updateCasse(entry);
                     if (result) {
+                      if (createdJournalier) {
+                        const updated = await updateJournalier({
+                          ...createdJournalier,
+                          Casse_Presse_Casse_kg: entry.presse_casse_kg,
+                          Casse_Sortie_Sechoir_kg: entry.sortie_sechoir_kg,
+                          Casse_Emaillage_kg: entry.emaillage_kg,
+                          Casse_Projecta_kg: entry.projecta_kg,
+                          Casse_Entree_Four_kg: entry.entree_four_kg,
+                          Casse_Cuite_kg: entry.cuite_kg,
+                        });
+                        if (updated) setCreatedJournalier(updated);
+                      }
                       toast.success("Saisie Casse mise à jour avec succès. Cycle terminé !");
                       setCreatedJournalier(null);
                       setCurrentStep(0);

@@ -53,7 +53,7 @@ export function AppSidebar() {
                           className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-sidebar-accent"
                           activeClassName="bg-sidebar-accent text-primary font-medium">
                           <Database className="h-4 w-4 text-primary" />
-                          Historique & Recherche
+                          Historique Four
                         </NavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
