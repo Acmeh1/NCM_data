@@ -31,6 +31,9 @@ export interface ProductionEntry {
   Four_Consommation_Kwh: number;
   VIDE_f_maintenance: number;
   VIDE_f_production: number;
+  type_arret?: string;
+  cause_arret?: string;
+  impact_arret?: string;
   Scanner_Choix1_m2?: number;
   Scanner_Choix2_m2?: number;
   Scanner_Choix3_m2?: number;
@@ -38,20 +41,28 @@ export interface ProductionEntry {
   Choix2_Pieces?: number;
   Choix3_Pieces?: number;
   Casse_Presse_Casse_kg?: number;
+  Casse_Presse_Poudre_Recyclee_kg?: number;
+  Casse_Presse_Elev_Tamis_kg?: number;
   Casse_Sortie_Sechoir_kg?: number;
   Casse_Emaillage_kg?: number;
   Casse_Projecta_kg?: number;
   Casse_Entree_Four_kg?: number;
+  Casse_Sortie_Four_kg?: number;
+  Casse_Marteaux_kg?: number;
+  Casse_Empileur_kg?: number;
+  Casse_Robot_kg?: number;
   Casse_Cuite_kg?: number;
   Emballage_C1_Palettes?: number;
   Emballage_C1_Reste_m2?: number;
   Emballage_C1_Surface_m2?: number;
+  emballage_c1_calibres?: any[];
   Emballage_C2_Palettes?: number;
   Emballage_C2_Reste_m2?: number;
   Emballage_C2_Surface_m2?: number;
   Emballage_C3_Palettes?: number;
   Emballage_C3_Reste_m2?: number;
   Emballage_C3_Surface_m2?: number;
+  Ligne?: string;
 }
 
 // Map DB row to frontend interface
@@ -67,9 +78,9 @@ function fromDb(row: any): ProductionEntry {
     Modele: row.modele,
     Couleur: row.couleur,
     Format: row.format,
-    Choix_1_m2: Number(row.choix_1_m2 ?? 0),
-    Choix_2_m2: Number(row.choix_2_m2 ?? 0),
-    Choix_3_m2: Number(row.choix_3_m2 ?? 0),
+    Choix_1_m2: Number(row["1er-CH"] ?? row.choix_1_m2 ?? 0),
+    Choix_2_m2: Number(row["2eme-CH"] ?? row.choix_2_m2 ?? 0),
+    Choix_3_m2: Number(row["3eme-CH"] ?? row.choix_3_m2 ?? 0),
     Total_m2: Number(row.total_m2 ?? 0),
     Pressage_m2: Number(row.pressage_m2 ?? 0),
     Project_m2: Number(row.Project_m2 ?? row.project_m2 ?? 0),
@@ -82,6 +93,9 @@ function fromDb(row: any): ProductionEntry {
     Four_Consommation_Kwh: Number(row.four_consommation_kwh ?? 0),
     VIDE_f_maintenance: Number(row.VIDE_f_maintenance ?? 0),
     VIDE_f_production: Number(row.VIDE_f_production ?? 0),
+    type_arret: row.type_arret,
+    cause_arret: row.cause_arret,
+    impact_arret: row.impact_arret,
     Scanner_Choix1_m2: Number(row.choix1_surface_m2 ?? 0),
     Scanner_Choix2_m2: Number(row.choix2_surface_m2 ?? 0),
     Scanner_Choix3_m2: Number(row.choix3_surface_m2 ?? 0),
@@ -89,14 +103,22 @@ function fromDb(row: any): ProductionEntry {
     Choix2_Pieces: Number(row.choix2_pieces ?? 0),
     Choix3_Pieces: Number(row.choix3_pieces ?? 0),
     Casse_Presse_Casse_kg: Number(row.casse_presse_casse_kg ?? 0),
+    Casse_Presse_Poudre_Recyclee_kg: Number(row.casse_presse_poudre_recyclee_kg ?? 0),
+    Casse_Presse_Elev_Tamis_kg: Number(row.casse_presse_elev_tamis_kg ?? 0),
     Casse_Sortie_Sechoir_kg: Number(row.casse_sortie_sechoir_kg ?? 0),
     Casse_Emaillage_kg: Number(row.casse_emaillage_kg ?? 0),
     Casse_Projecta_kg: Number(row.casse_projecta_kg ?? 0),
     Casse_Entree_Four_kg: Number(row.casse_entree_four_kg ?? 0),
+    Casse_Sortie_Four_kg: Number(row.casse_sortie_four_kg ?? 0),
+    Casse_Marteaux_kg: Number(row.casse_marteaux_kg ?? 0),
+    Casse_Empileur_kg: Number(row.casse_empileur_kg ?? 0),
+    Casse_Robot_kg: Number(row.casse_robot_kg ?? 0),
     Casse_Cuite_kg: Number(row.casse_cuite_kg ?? 0),
+    Ligne: row.ligne,
     Emballage_C1_Palettes: Number(row.emballage_c1_palettes ?? 0),
     Emballage_C1_Reste_m2: Number(row.emballage_c1_reste_m2 ?? 0),
     Emballage_C1_Surface_m2: Number(row.emballage_c1_surface_m2 ?? 0),
+    emballage_c1_calibres: row.emballage_c1_calibres || [],
     Emballage_C2_Palettes: Number(row.emballage_c2_palettes ?? 0),
     Emballage_C2_Reste_m2: Number(row.emballage_c2_reste_m2 ?? 0),
     Emballage_C2_Surface_m2: Number(row.emballage_c2_surface_m2 ?? 0),
@@ -188,9 +210,9 @@ export function useProductionStore() {
         modele: entry.Modele,
         couleur: entry.Couleur,
         format: entry.Format,
-        choix1_surface_m2: Number(entry.Choix_1_m2) || 0,
-        choix2_surface_m2: Number(entry.Choix_2_m2) || 0,
-        choix3_surface_m2: Number(entry.Choix_3_m2) || 0,
+        "1er-CH": Number(entry.Choix_1_m2) || 0,
+        "2eme-CH": Number(entry.Choix_2_m2) || 0,
+        "3eme-CH": Number(entry.Choix_3_m2) || 0,
         total_m2: Number(entry.Total_m2) || 0,
         pressage_m2: Number(entry.Pressage_m2) || 0,
         project_m2: Number(entry.Project_m2) || 0,
@@ -200,6 +222,9 @@ export function useProductionStore() {
         cuisson_m2: Number(entry.Cuisson_M2) || 0,
         four_minutes_vides: Number(entry.Four_Minutes_Vides) || 0,
         four_consommation_kwh: Number(entry.Four_Consommation_Kwh) || 0,
+        type_arret: entry.type_arret || null,
+        cause_arret: entry.cause_arret || null,
+        impact_arret: entry.impact_arret || null,
         choix1_surface_m2: entry.Scanner_Choix1_m2 !== undefined ? Number(entry.Scanner_Choix1_m2) || 0 : undefined,
         choix2_surface_m2: entry.Scanner_Choix2_m2 !== undefined ? Number(entry.Scanner_Choix2_m2) || 0 : undefined,
         choix3_surface_m2: entry.Scanner_Choix3_m2 !== undefined ? Number(entry.Scanner_Choix3_m2) || 0 : undefined,
@@ -207,20 +232,28 @@ export function useProductionStore() {
         choix2_pieces: entry.Choix2_Pieces !== undefined ? Number(entry.Choix2_Pieces) || 0 : undefined,
         choix3_pieces: entry.Choix3_Pieces !== undefined ? Number(entry.Choix3_Pieces) || 0 : undefined,
         casse_presse_casse_kg: entry.Casse_Presse_Casse_kg !== undefined ? Number(entry.Casse_Presse_Casse_kg) || 0 : undefined,
+        casse_presse_poudre_recyclee_kg: entry.Casse_Presse_Poudre_Recyclee_kg !== undefined ? Number(entry.Casse_Presse_Poudre_Recyclee_kg) || 0 : undefined,
+        casse_presse_elev_tamis_kg: entry.Casse_Presse_Elev_Tamis_kg !== undefined ? Number(entry.Casse_Presse_Elev_Tamis_kg) || 0 : undefined,
         casse_sortie_sechoir_kg: entry.Casse_Sortie_Sechoir_kg !== undefined ? Number(entry.Casse_Sortie_Sechoir_kg) || 0 : undefined,
         casse_emaillage_kg: entry.Casse_Emaillage_kg !== undefined ? Number(entry.Casse_Emaillage_kg) || 0 : undefined,
         casse_projecta_kg: entry.Casse_Projecta_kg !== undefined ? Number(entry.Casse_Projecta_kg) || 0 : undefined,
         casse_entree_four_kg: entry.Casse_Entree_Four_kg !== undefined ? Number(entry.Casse_Entree_Four_kg) || 0 : undefined,
+        casse_sortie_four_kg: entry.Casse_Sortie_Four_kg !== undefined ? Number(entry.Casse_Sortie_Four_kg) || 0 : undefined,
+        casse_marteaux_kg: entry.Casse_Marteaux_kg !== undefined ? Number(entry.Casse_Marteaux_kg) || 0 : undefined,
+        casse_empileur_kg: entry.Casse_Empileur_kg !== undefined ? Number(entry.Casse_Empileur_kg) || 0 : undefined,
+        casse_robot_kg: entry.Casse_Robot_kg !== undefined ? Number(entry.Casse_Robot_kg) || 0 : undefined,
         casse_cuite_kg: entry.Casse_Cuite_kg !== undefined ? Number(entry.Casse_Cuite_kg) || 0 : undefined,
         emballage_c1_palettes: entry.Emballage_C1_Palettes !== undefined ? Number(entry.Emballage_C1_Palettes) || 0 : undefined,
         emballage_c1_reste_m2: entry.Emballage_C1_Reste_m2 !== undefined ? Number(entry.Emballage_C1_Reste_m2) || 0 : undefined,
         emballage_c1_surface_m2: entry.Emballage_C1_Surface_m2 !== undefined ? Number(entry.Emballage_C1_Surface_m2) || 0 : undefined,
+        emballage_c1_calibres: entry.emballage_c1_calibres || [],
         emballage_c2_palettes: entry.Emballage_C2_Palettes !== undefined ? Number(entry.Emballage_C2_Palettes) || 0 : undefined,
         emballage_c2_reste_m2: entry.Emballage_C2_Reste_m2 !== undefined ? Number(entry.Emballage_C2_Reste_m2) || 0 : undefined,
         emballage_c2_surface_m2: entry.Emballage_C2_Surface_m2 !== undefined ? Number(entry.Emballage_C2_Surface_m2) || 0 : undefined,
         emballage_c3_palettes: entry.Emballage_C3_Palettes !== undefined ? Number(entry.Emballage_C3_Palettes) || 0 : undefined,
         emballage_c3_reste_m2: entry.Emballage_C3_Reste_m2 !== undefined ? Number(entry.Emballage_C3_Reste_m2) || 0 : undefined,
         emballage_c3_surface_m2: entry.Emballage_C3_Surface_m2 !== undefined ? Number(entry.Emballage_C3_Surface_m2) || 0 : undefined,
+        ligne: entry.Ligne || null,
       })
       .select(`*`)
       .single();
@@ -293,9 +326,9 @@ export function useProductionStore() {
         modele: rest.Modele,
         couleur: rest.Couleur,
         format: rest.Format,
-        choix1_surface_m2: Number(rest.Choix_1_m2) || 0,
-        choix2_surface_m2: Number(rest.Choix_2_m2) || 0,
-        choix3_surface_m2: Number(rest.Choix_3_m2) || 0,
+        "1er-CH": Number(rest.Choix_1_m2) || 0,
+        "2eme-CH": Number(rest.Choix_2_m2) || 0,
+        "3eme-CH": Number(rest.Choix_3_m2) || 0,
         total_m2: Number(rest.Total_m2) || 0,
         pressage_m2: Number(rest.Pressage_m2) || 0,
         project_m2: Number(rest.Project_m2) || 0,
@@ -305,6 +338,9 @@ export function useProductionStore() {
         cuisson_m2: Number(rest.Cuisson_M2) || 0,
         four_minutes_vides: Number(rest.Four_Minutes_Vides) || 0,
         four_consommation_kwh: Number(rest.Four_Consommation_Kwh) || 0,
+        type_arret: rest.type_arret || null,
+        cause_arret: rest.cause_arret || null,
+        impact_arret: rest.impact_arret || null,
         choix1_surface_m2: rest.Scanner_Choix1_m2 !== undefined ? Number(rest.Scanner_Choix1_m2) || 0 : undefined,
         choix2_surface_m2: rest.Scanner_Choix2_m2 !== undefined ? Number(rest.Scanner_Choix2_m2) || 0 : undefined,
         choix3_surface_m2: rest.Scanner_Choix3_m2 !== undefined ? Number(rest.Scanner_Choix3_m2) || 0 : undefined,
@@ -312,20 +348,28 @@ export function useProductionStore() {
         choix2_pieces: rest.Choix2_Pieces !== undefined ? Number(rest.Choix2_Pieces) || 0 : undefined,
         choix3_pieces: rest.Choix3_Pieces !== undefined ? Number(rest.Choix3_Pieces) || 0 : undefined,
         casse_presse_casse_kg: rest.Casse_Presse_Casse_kg !== undefined ? Number(rest.Casse_Presse_Casse_kg) || 0 : undefined,
+        casse_presse_poudre_recyclee_kg: rest.Casse_Presse_Poudre_Recyclee_kg !== undefined ? Number(rest.Casse_Presse_Poudre_Recyclee_kg) || 0 : undefined,
+        casse_presse_elev_tamis_kg: rest.Casse_Presse_Elev_Tamis_kg !== undefined ? Number(rest.Casse_Presse_Elev_Tamis_kg) || 0 : undefined,
         casse_sortie_sechoir_kg: rest.Casse_Sortie_Sechoir_kg !== undefined ? Number(rest.Casse_Sortie_Sechoir_kg) || 0 : undefined,
         casse_emaillage_kg: rest.Casse_Emaillage_kg !== undefined ? Number(rest.Casse_Emaillage_kg) || 0 : undefined,
         casse_projecta_kg: rest.Casse_Projecta_kg !== undefined ? Number(rest.Casse_Projecta_kg) || 0 : undefined,
         casse_entree_four_kg: rest.Casse_Entree_Four_kg !== undefined ? Number(rest.Casse_Entree_Four_kg) || 0 : undefined,
+        casse_sortie_four_kg: rest.Casse_Sortie_Four_kg !== undefined ? Number(rest.Casse_Sortie_Four_kg) || 0 : undefined,
+        casse_marteaux_kg: rest.Casse_Marteaux_kg !== undefined ? Number(rest.Casse_Marteaux_kg) || 0 : undefined,
+        casse_empileur_kg: rest.Casse_Empileur_kg !== undefined ? Number(rest.Casse_Empileur_kg) || 0 : undefined,
+        casse_robot_kg: rest.Casse_Robot_kg !== undefined ? Number(rest.Casse_Robot_kg) || 0 : undefined,
         casse_cuite_kg: rest.Casse_Cuite_kg !== undefined ? Number(rest.Casse_Cuite_kg) || 0 : undefined,
         emballage_c1_palettes: rest.Emballage_C1_Palettes !== undefined ? Number(rest.Emballage_C1_Palettes) || 0 : undefined,
         emballage_c1_reste_m2: rest.Emballage_C1_Reste_m2 !== undefined ? Number(rest.Emballage_C1_Reste_m2) || 0 : undefined,
         emballage_c1_surface_m2: rest.Emballage_C1_Surface_m2 !== undefined ? Number(rest.Emballage_C1_Surface_m2) || 0 : undefined,
+        emballage_c1_calibres: rest.emballage_c1_calibres || [],
         emballage_c2_palettes: rest.Emballage_C2_Palettes !== undefined ? Number(rest.Emballage_C2_Palettes) || 0 : undefined,
         emballage_c2_reste_m2: rest.Emballage_C2_Reste_m2 !== undefined ? Number(rest.Emballage_C2_Reste_m2) || 0 : undefined,
         emballage_c2_surface_m2: rest.Emballage_C2_Surface_m2 !== undefined ? Number(rest.Emballage_C2_Surface_m2) || 0 : undefined,
         emballage_c3_palettes: rest.Emballage_C3_Palettes !== undefined ? Number(rest.Emballage_C3_Palettes) || 0 : undefined,
         emballage_c3_reste_m2: rest.Emballage_C3_Reste_m2 !== undefined ? Number(rest.Emballage_C3_Reste_m2) || 0 : undefined,
         emballage_c3_surface_m2: rest.Emballage_C3_Surface_m2 !== undefined ? Number(rest.Emballage_C3_Surface_m2) || 0 : undefined,
+        ligne: rest.Ligne || null,
       })
       .eq("id", id)
       .select(`*`)

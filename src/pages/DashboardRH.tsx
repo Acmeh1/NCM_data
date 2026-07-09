@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDashboardFilters } from "@/hooks/useDashboardFilters";
@@ -40,7 +40,7 @@ import { fr } from "date-fns/locale";
 const COLORS = [
   "hsl(150, 60%, 45%)", // CDI - Green (Stability)
   "hsl(210, 70%, 55%)", // CDD - Blue
-  "hsl(45, 80%, 55%)",  // Intérim - Orange/Yellow
+  "hsl(45, 80%, 55%)",  // IntÃ©rim - Orange/Yellow
   "hsl(340, 65%, 50%)", // Others
 ];
 
@@ -102,15 +102,15 @@ export default function DashboardRH() {
   };
 
   const PROP_CONTRAT = "Contrat";
-  const PROP_DEPART = "Date_départ";
+  const PROP_DEPART = "Date_dÃ©part";
   const PROP_EMBAUCHE = "Date_Embauche";
   const PROP_SEXE = "Sexe";
   const PROP_SERVICE = "Service";
   const PROP_AGE_TRANCHE = "Tranche_d'age";
-  const PROP_ANCIENNETE_TRANCHE = "Tranche_Ancienneté";
+  const PROP_ANCIENNETE_TRANCHE = "Tranche_AnciennetÃ©";
   const PROP_NIVEAU = "Niveau";
   const PROP_FONCTION = "Fonction";
-  const PROP_CAUSE_DEPART = "Cause_Départ";
+  const PROP_CAUSE_DEPART = "Cause_DÃ©part";
   const PROP_SITUATION_F = "Situation_F";
   const PROP_MATRICULE = "Matricule";
   const PROP_NAISSANCE = "Date_de_Naissance";
@@ -151,13 +151,13 @@ export default function DashboardRH() {
       const sDate = formatDate(new Date(startDate), "yyyy-MM-dd");
       const eDate = formatDate(new Date(endDate), "yyyy-MM-dd");
 
-      console.log(`📡 Requête Pointage pour la période : ${sDate} au ${eDate}`);
+      console.log(`ðŸ“¡ RequÃªte Pointage pour la pÃ©riode : ${sDate} au ${eDate}`);
 
       const { data, error } = await supabase
-        .from("Vue_Pointage_Matricule")
+        .from("pointage_rh")
         .select("*")
-        .gte("Date", sDate)
-        .lte("Date", eDate);
+        .gte("date", sDate)
+        .lte("date", eDate);
       
       if (error) {
         return [];
@@ -177,18 +177,22 @@ export default function DashboardRH() {
     const byDate: Record<string, { planned: number; absent: number }> = {};
     const byReason: Record<string, number> = {};
 
+    const employeesByMatricule = new Map();
+    rhData.forEach(emp => {
+      const mat = getProp(emp, PROP_MATRICULE);
+      if (mat) employeesByMatricule.set(String(mat).trim().toUpperCase(), emp);
+    });
+
     pointageData.forEach(row => {
-      const presenceRaw = getProp(row, "Présence"); // Use the exact name from USER if possible, but getProp handles casing
-      // User says null means not a workday (weekend, etc.)
-      const isWorkday = presenceRaw !== null && presenceRaw !== undefined;
+      const matricule = String(row.matricule || "").trim().toUpperCase();
+      const emp = employeesByMatricule.get(matricule);
+      const service = emp ? (getProp(emp, PROP_SERVICE) || "Inconnu") : "Inconnu";
+      const date = row.date || "Inconnu";
+      const statut = row.statut || "";
+      
+      const isWorkday = statut !== "WEEKEND" && statut !== "FERIE" && statut !== "" && statut !== "DEBUT_CONTRAT" && statut !== "FIN_CONTRAT";
 
       if (isWorkday) {
-        const service = getProp(row, PROP_SERVICE) || "Inconnu";
-        const dateRaw = getProp(row, "Date");
-        const date = dateRaw ? formatDate(new Date(dateRaw), "yyyy-MM-dd") : "Inconnu";
-        const presence = parseInt(String(presenceRaw));
-        const motif = getProp(row, "Motif_Absence") || "";
-
         totalPlannedHours += 8;
         if (!byService[service]) byService[service] = { planned: 0, absent: 0 };
         if (!byDate[date]) byDate[date] = { planned: 0, absent: 0 };
@@ -197,12 +201,18 @@ export default function DashboardRH() {
         byDate[date].planned += 8;
 
         let dayAbsentHours = 0;
-        if (presence === 0) {
+        let reason = "";
+
+        if (statut === "ABS_AUTORISEE") {
           dayAbsentHours = 8;
-        } else {
-          const match = motif.match(/(\d+)h/i);
-          if (match) {
-            dayAbsentHours = parseInt(match[1]);
+          reason = "Absence AutorisÃ©e";
+        } else if (statut === "ABS_NON_AUTORISEE" || statut === "MISE_A_PIED") {
+          dayAbsentHours = 8;
+          reason = statut === "MISE_A_PIED" ? "Mise Ã  Pied" : "Absence Non AutorisÃ©e";
+        } else if (statut === "PRESENT") {
+          if (row.retard && row.retard > 0) {
+            dayAbsentHours = row.retard;
+            reason = "Retard/Partiel";
           }
         }
 
@@ -211,8 +221,9 @@ export default function DashboardRH() {
           byService[service].absent += dayAbsentHours;
           byDate[date].absent += dayAbsentHours;
           
-          const reason = motif.replace(/\d+h/i, "").trim() || (presence === 0 ? "Absence Totale" : "Retard/Partiel");
-          byReason[reason] = (byReason[reason] || 0) + dayAbsentHours;
+          if (reason) {
+            byReason[reason] = (byReason[reason] || 0) + dayAbsentHours;
+          }
         }
       }
     });
@@ -331,7 +342,7 @@ export default function DashboardRH() {
     const counts: Record<string, number> = {
       "CDI": 0,
       "CDD": 0,
-      "Intérim": 0,
+      "IntÃ©rim": 0,
       "Autre": 0
     };
 
@@ -353,7 +364,7 @@ export default function DashboardRH() {
         const type = String(contractValue).toUpperCase().trim();
         if (type.includes("CDI")) counts["CDI"]++;
         else if (type.includes("CDD")) counts["CDD"]++;
-        else if (type.includes("INTÉRIM") || type.includes("INTERIM")) counts["Intérim"]++;
+        else if (type.includes("INTÃ‰RIM") || type.includes("INTERIM")) counts["IntÃ©rim"]++;
         else if (type) counts["Autre"]++;
       }
     });
@@ -524,7 +535,7 @@ export default function DashboardRH() {
   const departureCauses = useMemo(() => {
     const counts: Record<string, number> = {};
     departuresList.forEach(emp => {
-      const cause = getProp(emp, PROP_CAUSE_DEPART) || "Non spécifié";
+      const cause = getProp(emp, PROP_CAUSE_DEPART) || "Non spÃ©cifiÃ©";
       counts[cause] = (counts[cause] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }))
@@ -589,7 +600,7 @@ export default function DashboardRH() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Tableau de Bord RH</h1>
-            <p className="text-sm text-muted-foreground font-medium">Analyse stratégique du capital humain</p>
+            <p className="text-sm text-muted-foreground font-medium">Analyse stratÃ©gique du capital humain</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2 transition-all hover:bg-primary hover:text-white">
@@ -604,9 +615,9 @@ export default function DashboardRH() {
           <CardContent className="p-4 text-sm text-destructive/80 flex items-center gap-3">
             <ShieldCheck className="h-5 w-5 shrink-0" />
             {queryError ? (
-              <p>Erreur de base de données : {(queryError as any).message}</p>
+              <p>Erreur de base de donnÃ©es : {(queryError as any).message}</p>
             ) : (
-              <p>La table <strong>fichRH</strong> semble vide ou inaccessible. Vérifiez l'importation des données et les politiques RLS dans Supabase.</p>
+              <p>La table <strong>fichRH</strong> semble vide ou inaccessible. VÃ©rifiez l'importation des donnÃ©es et les politiques RLS dans Supabase.</p>
             )}
           </CardContent>
         </Card>
@@ -633,13 +644,13 @@ export default function DashboardRH() {
             <LayoutDashboard className="h-4 w-4" /> Vue Globale
           </TabsTrigger>
           <TabsTrigger value="absenteeism" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-            <Activity className="h-4 w-4" /> Absentéisme
+            <Activity className="h-4 w-4" /> AbsentÃ©isme
           </TabsTrigger>
           <TabsTrigger value="workforce_detail" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-            <Users className="h-4 w-4" /> Détail Effectif
+            <Users className="h-4 w-4" /> DÃ©tail Effectif
           </TabsTrigger>
           <TabsTrigger value="skills" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-            <GraduationCap className="h-4 w-4" /> Compétences
+            <GraduationCap className="h-4 w-4" /> CompÃ©tences
           </TabsTrigger>
           <TabsTrigger value="turnover" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <TrendingUp className="h-4 w-4" /> Mouvements
@@ -684,7 +695,7 @@ export default function DashboardRH() {
                     <Users className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Actif (Période)</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Effectif Actif (PÃ©riode)</p>
                     <div className="text-xl font-bold text-blue-600">{countAtEnd}</div>
                   </div>
                 </div>
@@ -713,7 +724,7 @@ export default function DashboardRH() {
                     <UserMinus2 className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">Départs</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-nowrap">DÃ©parts</p>
                     <div className="text-xl font-bold text-rose-600">-{departuresList.length}</div>
                   </div>
                 </div>
@@ -765,7 +776,7 @@ export default function DashboardRH() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Activity className="h-4 w-4 text-primary" />
-                  Évolution de l'Effectif
+                  Ã‰volution de l'Effectif
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
@@ -794,7 +805,7 @@ export default function DashboardRH() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
                     <Briefcase className="h-3.5 w-3.5" />
-                    Répartition des Contrats
+                    RÃ©partition des Contrats
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -826,7 +837,7 @@ export default function DashboardRH() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
                     <Users className="h-3.5 w-3.5" />
-                    Mixité Homme / Femme
+                    MixitÃ© Homme / Femme
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-2 space-y-4">
@@ -845,7 +856,7 @@ export default function DashboardRH() {
                     <div className="bg-rose-500 h-full transition-all" style={{ width: `${genderStats.pctF}%` }} />
                     <div className="bg-blue-500 h-full transition-all" style={{ width: `${genderStats.pctH}%` }} />
                   </div>
-                  <p className="text-[9px] text-slate-400 text-center italic">Total : {genderStats.total} employés</p>
+                  <p className="text-[9px] text-slate-400 text-center italic">Total : {genderStats.total} employÃ©s</p>
                 </CardContent>
               </Card>
             </div>
@@ -856,7 +867,7 @@ export default function DashboardRH() {
               <CardTitle className="text-sm font-bold flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-primary" />
-                  Dynamique de Recrutement vs Départs (12 mois)
+                  Dynamique de Recrutement vs DÃ©parts (12 mois)
                 </div>
               </CardTitle>
             </CardHeader>
@@ -870,7 +881,7 @@ export default function DashboardRH() {
                     <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
                     <Bar dataKey="net" name="Solde Net" fill="#94a3b8" opacity={0.2} barSize={30} />
                     <Line type="monotone" dataKey="hires" name="Embauches" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
-                    <Line type="monotone" dataKey="departures" name="Départs" stroke="#f43f5e" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="departures" name="DÃ©parts" stroke="#f43f5e" strokeWidth={2} dot={{ r: 3 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -882,7 +893,7 @@ export default function DashboardRH() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-primary" />
-                  Répartition par Ancienneté (Actifs)
+                  RÃ©partition par AnciennetÃ© (Actifs)
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
@@ -893,7 +904,7 @@ export default function DashboardRH() {
                       <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                       <Tooltip cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }} contentStyle={{ borderRadius: '8px' }} />
-                      <Bar dataKey="value" name="Employés" fill="hsl(250, 60%, 65%)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" name="EmployÃ©s" fill="hsl(250, 60%, 65%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -904,7 +915,7 @@ export default function DashboardRH() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
-                  Répartition par Tranche d'Âge (Actifs)
+                  RÃ©partition par Tranche d'Ã‚ge (Actifs)
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
@@ -915,7 +926,7 @@ export default function DashboardRH() {
                       <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                       <Tooltip cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }} contentStyle={{ borderRadius: '8px' }} />
-                      <Bar dataKey="value" name="Employés" fill="hsl(210, 70%, 55%)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" name="EmployÃ©s" fill="hsl(210, 70%, 55%)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -928,7 +939,7 @@ export default function DashboardRH() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <UserMinus2 className="h-4 w-4 text-rose-500" />
-                  Motifs de Départ (Analyse sur la période)
+                  Motifs de DÃ©part (Analyse sur la pÃ©riode)
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4 flex flex-col md:flex-row items-center gap-8">
@@ -969,7 +980,7 @@ export default function DashboardRH() {
                   })}
                   {departureCauses.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground italic text-sm">
-                      Aucun départ enregistré sur cette période.
+                      Aucun dÃ©part enregistrÃ© sur cette pÃ©riode.
                     </div>
                   )}
                 </div>
@@ -981,7 +992,7 @@ export default function DashboardRH() {
             <div className="flex items-center justify-between bg-white p-3 rounded-xl border shadow-sm">
               <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2">
                 <Target className="h-4 w-4 text-primary" />
-                Détails des Mouvements par Service
+                DÃ©tails des Mouvements par Service
               </h3>
               <Select value={turnoverFilter} onValueChange={setTurnoverFilter}>
                 <SelectTrigger className="w-[250px] h-8 text-xs">
@@ -1001,7 +1012,7 @@ export default function DashboardRH() {
               <CardHeader className="bg-blue-50/50 border-b border-slate-100 py-3">
                 <CardTitle className="text-sm font-bold text-blue-800 flex items-center gap-2">
                   <UserPlus2 className="h-4 w-4" />
-                  Qui a rejoint l'organisation sur cette période ? ({filteredNewHires.length})
+                  Qui a rejoint l'organisation sur cette pÃ©riode ? ({filteredNewHires.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -1014,17 +1025,17 @@ export default function DashboardRH() {
                         <th className="px-4 py-3">Service</th>
                         <th className="px-4 py-3">Fonction</th>
                         <th className="px-4 py-3">Grade</th>
-                        <th className="px-4 py-3 text-right">Âge (Ans)</th>
+                        <th className="px-4 py-3 text-right">Ã‚ge (Ans)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {filteredNewHires.length > 0 ? filteredNewHires.map((emp: any, i: number) => {
                         const birthDate = parseDate(getProp(emp, PROP_NAISSANCE));
-                        const age = birthDate ? Math.floor((new Date().getTime() - birthDate.getTime()) / (1000 * 3600 * 24 * 365.25)) : "—";
+                        const age = birthDate ? Math.floor((new Date().getTime() - birthDate.getTime()) / (1000 * 3600 * 24 * 365.25)) : "â€”";
                         return (
                           <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-4 py-3 font-mono text-slate-500">{getProp(emp, PROP_MATRICULE)}</td>
-                            <td className="px-4 py-3 font-bold text-slate-700">{getProp(emp, "Nom")} {getProp(emp, "Prénom")}</td>
+                            <td className="px-4 py-3 font-bold text-slate-700">{getProp(emp, "Nom")} {getProp(emp, "PrÃ©nom")}</td>
                             <td className="px-4 py-3 text-slate-600">{getProp(emp, PROP_SERVICE)}</td>
                             <td className="px-4 py-3 text-slate-600">{getProp(emp, PROP_FONCTION)}</td>
                             <td className="px-4 py-3"><Badge variant="outline" className="text-[10px] py-0">{getProp(emp, PROP_NIVEAU)}</Badge></td>
@@ -1033,7 +1044,7 @@ export default function DashboardRH() {
                         );
                       }) : (
                         <tr>
-                          <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">Aucun recrutement sur cette période</td>
+                          <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">Aucun recrutement sur cette pÃ©riode</td>
                         </tr>
                       )}
                     </tbody>
@@ -1047,7 +1058,7 @@ export default function DashboardRH() {
               <CardHeader className="bg-rose-50/50 border-b border-slate-100 py-3">
                 <CardTitle className="text-sm font-bold text-rose-800 flex items-center gap-2">
                   <UserMinus2 className="h-4 w-4" />
-                  Qui a quitté l'organisation sur cette période ? ({filteredDepartures.length})
+                  Qui a quittÃ© l'organisation sur cette pÃ©riode ? ({filteredDepartures.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -1060,21 +1071,21 @@ export default function DashboardRH() {
                         <th className="px-4 py-3">Service</th>
                         <th className="px-4 py-3">Motif</th>
                         <th className="px-4 py-3">Grade</th>
-                        <th className="px-4 py-3 text-right">Ancienneté (Ans)</th>
+                        <th className="px-4 py-3 text-right">AnciennetÃ© (Ans)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {filteredDepartures.length > 0 ? filteredDepartures.map((emp: any, i: number) => {
                         const hireDate = parseDate(getProp(emp, PROP_EMBAUCHE));
                         const departDate = parseDate(getProp(emp, PROP_DEPART));
-                        let seniority = "—";
+                        let seniority = "â€”";
                         if (hireDate && departDate) {
                           seniority = ((departDate.getTime() - hireDate.getTime()) / (1000 * 3600 * 24 * 365.25)).toFixed(1);
                         }
                         return (
                           <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                             <td className="px-4 py-3 font-mono text-slate-500">{getProp(emp, PROP_MATRICULE)}</td>
-                            <td className="px-4 py-3 font-bold text-slate-700">{getProp(emp, "Nom")} {getProp(emp, "Prénom")}</td>
+                            <td className="px-4 py-3 font-bold text-slate-700">{getProp(emp, "Nom")} {getProp(emp, "PrÃ©nom")}</td>
                             <td className="px-4 py-3 text-slate-600">{getProp(emp, PROP_SERVICE)}</td>
                             <td className="px-4 py-3 text-rose-600 font-medium">{getProp(emp, PROP_CAUSE_DEPART)}</td>
                             <td className="px-4 py-3"><Badge variant="outline" className="text-[10px] py-0">{getProp(emp, PROP_NIVEAU)}</Badge></td>
@@ -1083,7 +1094,7 @@ export default function DashboardRH() {
                         );
                       }) : (
                         <tr>
-                          <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">Aucun départ sur cette période</td>
+                          <td colSpan={6} className="px-4 py-8 text-center text-slate-400 italic">Aucun dÃ©part sur cette pÃ©riode</td>
                         </tr>
                       )}
                     </tbody>
@@ -1108,7 +1119,7 @@ export default function DashboardRH() {
               <CardHeader>
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <GraduationCap className="h-4 w-4 text-primary" />
-                  Niveau d'Études / Formation
+                  Niveau d'Ã‰tudes / Formation
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1130,7 +1141,7 @@ export default function DashboardRH() {
               <CardHeader>
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-primary" />
-                  Répartition par Ancienneté
+                  RÃ©partition par AnciennetÃ©
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1153,7 +1164,7 @@ export default function DashboardRH() {
             <CardHeader>
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary" />
-                Effectifs par Département
+                Effectifs par DÃ©partement
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1191,11 +1202,11 @@ export default function DashboardRH() {
               <CardTitle className="text-sm font-bold flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-primary" />
-                  Flux Mensuel : Recrutements vs Départs (12 derniers mois)
+                  Flux Mensuel : Recrutements vs DÃ©parts (12 derniers mois)
                 </div>
                 <div className="flex items-center gap-4 text-[10px] font-normal">
                   <div className="flex items-center gap-1"><div className="w-2 h-2 bg-emerald-500 rounded-full" /> Embauches</div>
-                  <div className="flex items-center gap-1"><div className="w-2 h-2 bg-rose-500 rounded-full" /> Départs</div>
+                  <div className="flex items-center gap-1"><div className="w-2 h-2 bg-rose-500 rounded-full" /> DÃ©parts</div>
                   <div className="flex items-center gap-1"><div className="w-2 h-2 bg-slate-400 rounded-full" /> Solde Net</div>
                 </div>
               </CardTitle>
@@ -1213,7 +1224,7 @@ export default function DashboardRH() {
                     <Legend />
                     <Bar dataKey="net" name="Solde (Flux Net)" fill="#94a3b8" opacity={0.2} barSize={40} />
                     <Line type="monotone" dataKey="hires" name="Recrutements" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="departures" name="Départs" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="departures" name="DÃ©parts" stroke="#f43f5e" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -1225,7 +1236,7 @@ export default function DashboardRH() {
               <CardHeader>
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <UserMinus2 className="h-4 w-4 text-rose-500" />
-                  Causes des Départs
+                  Causes des DÃ©parts
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1241,7 +1252,7 @@ export default function DashboardRH() {
                     </ResponsiveContainer>
                   ) : (
                     <div className="h-full flex items-center justify-center text-muted-foreground italic text-sm">
-                      Aucun départ enregistré sur cette période
+                      Aucun dÃ©part enregistrÃ© sur cette pÃ©riode
                     </div>
                   )}
                 </div>
@@ -1266,7 +1277,7 @@ export default function DashboardRH() {
                 <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-100">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-rose-100 rounded-lg"><UserMinus2 className="h-4 w-4 text-rose-600" /></div>
-                    <span className="text-sm font-medium">Taux de Départ (Rotation)</span>
+                    <span className="text-sm font-medium">Taux de DÃ©part (Rotation)</span>
                   </div>
                   <span className="text-lg font-bold text-rose-600">
                     {countAtEnd > 0 ? ((departuresList.length / countAtEnd) * 100).toFixed(1) : 0}%
@@ -1274,10 +1285,10 @@ export default function DashboardRH() {
                 </div>
 
                 <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10">
-                  <h5 className="text-xs font-black uppercase tracking-widest text-primary mb-2">Note de Synthèse</h5>
+                  <h5 className="text-xs font-black uppercase tracking-widest text-primary mb-2">Note de SynthÃ¨se</h5>
                   <p className="text-xs text-muted-foreground leading-relaxed italic">
-                    Un taux de rotation inférieur à 5% est généralement considéré comme un signe de bonne rétention. 
-                    Actuellement, la tendance est {departuresList.length > newHires.length ? "à la baisse d'effectif" : "à la croissance"}.
+                    Un taux de rotation infÃ©rieur Ã  5% est gÃ©nÃ©ralement considÃ©rÃ© comme un signe de bonne rÃ©tention. 
+                    Actuellement, la tendance est {departuresList.length > newHires.length ? "Ã  la baisse d'effectif" : "Ã  la croissance"}.
                   </p>
                 </div>
               </CardContent>
@@ -1287,10 +1298,11 @@ export default function DashboardRH() {
       </Tabs>
 
       <p className="text-[10px] text-muted-foreground text-center font-medium uppercase tracking-widest opacity-50">
-        NCM Céramique · Système de Reporting RH · Dernière mise à jour: {formatDate(new Date(), "dd/MM/yyyy HH:mm")}
+        NCM CÃ©ramique Â· SystÃ¨me de Reporting RH Â· DerniÃ¨re mise Ã  jour: {formatDate(new Date(), "dd/MM/yyyy HH:mm")}
       </p>
 
 
     </div>
   );
 }
+

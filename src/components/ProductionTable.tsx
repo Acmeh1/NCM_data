@@ -18,6 +18,7 @@ interface Props {
 
 const COLUMNS: { key: keyof ProductionEntry; label: string }[] = [
   { key: "Date", label: "Date" },
+  { key: "Ligne", label: "Ligne" },
   { key: "Horaire", label: "Horaire" },
   { key: "Heure_Debut", label: "H. Début" },
   { key: "Heure_Fin", label: "H. Fin" },
@@ -38,8 +39,9 @@ const COLUMNS: { key: keyof ProductionEntry; label: string }[] = [
   { key: "Surface_CAR_m2", label: "Surface CAR m²" },
   { key: "Cuisson_M2", label: "Production Four m²" },
   { key: "Four_Minutes_Vides", label: "Minutes vides Four" },
-  { key: "VIDE_f_maintenance", label: "Vide Maintenance" },
-  { key: "VIDE_f_production", label: "Vide Production" },
+  { key: "type_arret", label: "Type Arrêt" },
+  { key: "cause_arret", label: "Cause Arrêt" },
+  { key: "impact_arret", label: "Impact Arrêt" },
   { key: "Four_Consommation_Kwh", label: "Consommation Four kW/h" },
 ];
 
@@ -54,6 +56,18 @@ const FILTER_CONFIGS = [
 
 function buildKey(date: string, groupe: string, horaire: string) {
   return `${date}||${groupe}||${horaire}`;
+}
+
+function formatCauseArret(value: any) {
+  if (!value) return "—";
+  if (typeof value !== "string") return String(value);
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+       return parsed.map((a: any) => `${a.duree || '?'}m: ${a.cause_arret || '—'}`).join(" | ");
+    }
+  } catch {}
+  return value;
 }
 
 export default function ProductionTable({ entries, selectionEntries, onDelete, onEdit }: Props) {
@@ -94,7 +108,7 @@ export default function ProductionTable({ entries, selectionEntries, onDelete, o
   const exportData = filteredData.map(({ _entry_id, _f_Date, _f_Groupe, _f_Horaire, _f_Modele, ...rest }) => rest);
   
   const activeColumns = COLUMNS.filter(c => {
-    if (c.key === "VIDE_f_maintenance" || c.key === "VIDE_f_production") {
+    if (c.key === "type_arret" || c.key === "cause_arret" || c.key === "impact_arret") {
       return showVideDetails;
     }
     return true;
@@ -194,9 +208,11 @@ export default function ProductionTable({ entries, selectionEntries, onDelete, o
                         className={`font-mono text-xs whitespace-nowrap ${hasVideValue ? "cursor-pointer text-primary font-bold hover:bg-primary/5" : ""}`}
                         onClick={() => hasVideValue && setShowVideDetails(!showVideDetails)}
                       >
-                        {typeof value === "number"
-                          ? (value as number).toFixed(2)
-                          : String(value ?? "—")}
+                        {col.key === "cause_arret" 
+                          ? formatCauseArret(value) 
+                          : typeof value === "number"
+                            ? (value as number).toFixed(2)
+                            : String(value ?? "—")}
                       </TableCell>
                     );
                   })}

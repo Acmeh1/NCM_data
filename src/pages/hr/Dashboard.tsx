@@ -204,10 +204,20 @@ export default function Dashboard({ startDate, endDate, rhData }: DashboardProps
   });
 
   // ─── filtered data for the selected dept ──────────────────────────────────
-  const filteredData = useMemo(() => {
-    if (selectedDept === "Tous") return vueMonth as any[];
-    return (vueMonth as any[]).filter(r => r["Service"] === selectedDept);
-  }, [vueMonth, selectedDept]);
+    const filteredData = useMemo(() => {
+    const mapped = (vueMonth as any[]).map(row => {
+      const emp = (rhData || []).find(e => String(e.Matricule || '').trim().toUpperCase() === String(row.matricule || '').trim().toUpperCase());
+      const service = emp ? (emp.Service || 'Inconnu') : 'Inconnu';
+      let presence = 1; let motif = '';
+      if (row.statut === 'ABS_AUTORISEE') { presence = 0; motif = 'Absence Autorisée'; }
+      else if (row.statut === 'ABS_NON_AUTORISEE') { presence = 0; motif = 'Absence Non Autorisée'; }
+      else if (row.statut === 'MISE_A_PIED') { presence = 0; motif = 'Mise à Pied'; }
+      else if (row.statut === 'WEEKEND' || row.statut === 'FERIE' || row.statut === 'DEBUT_CONTRAT' || row.statut === 'FIN_CONTRAT') { presence = -1; }
+      return { ...row, Service: service, Présence: presence, Motif_Absence: motif };
+    }).filter(r => r.Présence !== -1);
+    if (selectedDept === 'Tous') return mapped;
+    return mapped.filter(r => r.Service === selectedDept);
+  }, [vueMonth, selectedDept, rhData]);
 
   const filteredRetard = useMemo(() => {
     let rows = retardRows as any[];
@@ -734,3 +744,4 @@ export default function Dashboard({ startDate, endDate, rhData }: DashboardProps
     </div>
   );
 }
+

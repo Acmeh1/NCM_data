@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Save } from "lucide-react";
+import { Save, Plus, Trash2 } from "lucide-react";
 import refProduit from "@/data/REF_PRODUIT.json";
 import formatData from "@/data/Format.json";
 import type { ProductionEntry } from "@/hooks/useProductionStore";
@@ -50,7 +50,7 @@ function getM2PerPalette(modele: string, couleur: string, format: string): numbe
 }
 
 const defaultChoix = (): any[] => [
-  { Choice_Type: "1er Choix", Nb_Palette: 0, Reste_m2: 0, Surface_totale_m2: 0 },
+  { Choice_Type: "1er Choix", Nb_Palette: 0, Reste_m2: 0, Surface_totale_m2: 0, calibres: [] },
   { Choice_Type: "2ème Choix", Nb_Palette: 0, Reste_m2: 0, Surface_totale_m2: 0 },
   { Choice_Type: "3ème Choix", Nb_Palette: 0, Reste_m2: 0, Surface_totale_m2: 0 },
 ];
@@ -91,6 +91,35 @@ export default function EmballageForm({
         }
       }
       updated[index] = item;
+      return updated;
+    });
+  };
+
+  const addCalibre = () => {
+    setChoixList(prev => {
+      const updated = [...prev];
+      if (!updated[0].calibres) updated[0].calibres = [];
+      updated[0].calibres.push({ id: Math.random().toString(36).substr(2, 9), calibre: 'A', pallets: 0 });
+      return updated;
+    });
+  };
+
+  const updateCalibre = (id: string, field: string, value: any) => {
+    setChoixList(prev => {
+      const updated = [...prev];
+      if (updated[0].calibres) {
+        updated[0].calibres = updated[0].calibres.map((c: any) => c.id === id ? { ...c, [field]: value } : c);
+      }
+      return updated;
+    });
+  };
+
+  const removeCalibre = (id: string) => {
+    setChoixList(prev => {
+      const updated = [...prev];
+      if (updated[0].calibres) {
+        updated[0].calibres = updated[0].calibres.filter((c: any) => c.id !== id);
+      }
       return updated;
     });
   };
@@ -166,6 +195,15 @@ export default function EmballageForm({
         newChoix[targetIdx].Surface_totale_m2 = c.Surface_totale_m2 || 0;
       }
     });
+    
+    // Restore calibres for 1st choice if available
+    if (editingEntry.Linked_Journalier_ID) {
+      const parentEntry = journalierEntries.find(j => j.id === editingEntry.Linked_Journalier_ID);
+      if (parentEntry && parentEntry.emballage_c1_calibres) {
+        newChoix[0].calibres = parentEntry.emballage_c1_calibres;
+      }
+    }
+    
     setChoixList(newChoix);
   }, [editingEntry]);
 
@@ -270,6 +308,62 @@ export default function EmballageForm({
               </tbody>
             </table>
           </div>
+
+          {/* Section Calibres pour 1er Choix */}
+          <div className="mt-4 p-4 border rounded-md bg-muted/30">
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-sm font-medium text-primary">Détail des Calibres (1er Choix)</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addCalibre} className="h-8 text-xs gap-1">
+                <Plus className="h-3.5 w-3.5" /> Ajouter Calibre
+              </Button>
+            </div>
+            
+            {choixList[0]?.calibres?.length > 0 ? (
+              <div className="space-y-2">
+                {choixList[0].calibres.map((cal: any) => (
+                  <div key={cal.id} className="flex items-center gap-2">
+                    <Select 
+                      value={cal.calibre} 
+                      onValueChange={(val) => updateCalibre(cal.id, 'calibre', val)}
+                    >
+                      <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectValue placeholder="Calibre" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="A">A</SelectItem>
+                        <SelectItem value="B">B</SelectItem>
+                        <SelectItem value="C">C</SelectItem>
+                        <SelectItem value="D">D</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Input 
+                      type="number" 
+                      placeholder="Palettes"
+                      value={cal.pallets || ''}
+                      onChange={(e) => updateCalibre(cal.id, 'pallets', Number(e.target.value))}
+                      className="w-full h-8 text-xs"
+                    />
+                    
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => removeCalibre(cal.id)}
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-muted-foreground italic text-center py-2">
+                Aucun calibre détaillé pour le moment.
+              </div>
+            )}
+          </div>
+
         </div>
       )}
 

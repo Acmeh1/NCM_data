@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { 
   ShoppingCart, Truck, Wallet, Package, Clock, ArrowUpRight, 
   ArrowDownRight, MoreHorizontal, FileText, CheckCircle2, 
-  AlertCircle, LayoutDashboard, TrendingUp, BarChart3, PieChart as PieChartIcon, Search
+  AlertCircle, LayoutDashboard, TrendingUp, BarChart3, PieChart as PieChartIcon, Search, Calendar, ChevronDown
 } from "lucide-react";
 import { format as formatDate } from "date-fns";
 import { useDashboardFilters } from "@/hooks/useDashboardFilters";
@@ -274,35 +274,54 @@ export default function DashboardQualite() {
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 bg-slate-50/50 min-h-screen animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-black tracking-tight text-slate-900 uppercase">Approvisionnement & Achat</h2>
-          <p className="text-muted-foreground font-medium">Analyse des dépenses, fournisseurs et flux logistiques.</p>
+      {/* DARK HEADER BAR - QUALITY DASHBOARD */}
+      <div className="bg-slate-900 rounded-xl p-4 md:p-5 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6 border border-slate-800">
+        
+        {/* Left: Title & Subtitle */}
+        <div className="flex flex-col">
+          <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white uppercase">Qualité - Tableau de bord</h2>
+          <p className="text-slate-400 font-medium text-sm mt-1">Vue d'ensemble de la qualité de production</p>
         </div>
-        <div className="bg-white p-1 rounded-xl border shadow-sm flex items-center gap-2">
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
-            <ShoppingCart className="h-5 w-5" />
-          </div>
-          <div className="pr-4">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none mb-1">Période d'analyse</p>
-            <p className="text-xs font-black text-slate-900 truncate max-w-[150px]">
-              {activePreset || "Personnalisé"}
-            </p>
-          </div>
-        </div>
-      </div>
 
-      <div className="bg-card p-4 rounded-xl border shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <DateRangeFilter
-          range={currentRange}
-          onRangeChange={setRange}
-          granularity={period}
-          onGranularityChange={setPeriod}
-          activePreset={activePreset}
-        />
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full text-xs font-medium text-muted-foreground">
-          <Truck className="h-3.5 w-3.5 text-primary" />
-          Suivi logistique actif
+        {/* Right: Filters */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          {/* Date Filter */}
+          <div className="relative w-full sm:w-auto group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Calendar className="h-4 w-4 text-slate-400 group-hover:text-white transition-colors" />
+            </div>
+            <input 
+              type="text" 
+              defaultValue="22/06/2026 - 28/06/2026"
+              className="bg-slate-800/80 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full sm:w-[220px] pl-9 p-2.5 hover:bg-slate-800 transition-colors font-medium text-center" 
+            />
+          </div>
+
+          {/* Ligne Filter */}
+          <div className="relative w-full sm:w-auto group">
+            <select className="bg-slate-800/80 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 pr-8 appearance-none hover:bg-slate-800 transition-colors font-medium cursor-pointer">
+              <option>Ligne : Toutes</option>
+              <option>Ligne 1</option>
+              <option>Ligne 2</option>
+              <option>Ligne 3</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none">
+              <ChevronDown className="h-4 w-4 text-slate-400 group-hover:text-white transition-colors" />
+            </div>
+          </div>
+
+          {/* Quart Filter */}
+          <div className="relative w-full sm:w-auto group">
+            <select className="bg-slate-800/80 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block w-full p-2.5 pr-8 appearance-none hover:bg-slate-800 transition-colors font-medium cursor-pointer">
+              <option>Quart : Tous</option>
+              <option>Matin (06h-14h)</option>
+              <option>Soir (14h-22h)</option>
+              <option>Nuit (22h-06h)</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none">
+              <ChevronDown className="h-4 w-4 text-slate-400 group-hover:text-white transition-colors" />
+            </div>
+          </div>
         </div>
       </div>
 

@@ -17,7 +17,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  ComposedChart, Line,
+  ComposedChart, Line, Area,
 } from "recharts";
 import {
    Factory, TrendingUp, Package, BarChart3,
@@ -34,6 +34,7 @@ import ScrapRateKpiCard from "@/components/ScrapRateKpiCard";
 import RendementKpiCard from "@/components/RendementKpiCard";
 import VolumeProduitsKpiCard from "@/components/VolumeProduitsKpiCard";
 import MachineUtilizationKpiCard from "@/components/MachineUtilizationKpiCard";
+import ColoredKpiCard from "@/components/ColoredKpiCard";
 import FormatQualitePanel from "@/components/FormatQualitePanel";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useKpiSettings } from "@/hooks/useKpiSettings";
@@ -332,13 +333,13 @@ export default function DashboardProduction() {
   }, []);
 
   const trendData = useMemo(() => {
-    const map: Record<string, { period: string; total_m2_scanner: number; sumDailyObj: number; shiftCount: number }> = {};
+    const map: Record<string, { period: string; total_m2_scanner: number; cuisson_m2: number; sumDailyObj: number; shiftCount: number }> = {};
     
     // 1. Production Actuals from Scanner (statsLinea)
     statsLinea.forEach((r) => {
       const key = aggregateKey(r.production_date || "", period);
       if (!map[key]) {
-        map[key] = { period: key, total_m2_scanner: 0, sumDailyObj: 0, shiftCount: 0 };
+        map[key] = { period: key, total_m2_scanner: 0, cuisson_m2: 0, sumDailyObj: 0, shiftCount: 0 };
       }
       map[key].total_m2_scanner += Number(r.total_surface_m2) || 0;
     });
@@ -347,8 +348,10 @@ export default function DashboardProduction() {
     filteredJournalier.forEach((r) => {
       const key = aggregateKey(r.date, period);
       if (!map[key]) {
-        map[key] = { period: key, total_m2_scanner: 0, sumDailyObj: 0, shiftCount: 0 };
+        map[key] = { period: key, total_m2_scanner: 0, cuisson_m2: 0, sumDailyObj: 0, shiftCount: 0 };
       }
+      
+      map[key].cuisson_m2 += Number(r.cuisson_m2) || 0;
       
       const format = String(r.format || r.modele || "").trim();
       let dailyObj = 8000;
@@ -372,6 +375,7 @@ export default function DashboardProduction() {
       return {
         period: entry.period,
         total_m2: entry.total_m2_scanner,
+        cuisson_m2: entry.cuisson_m2,
         isFallback: false,
         objectif: finalObj
       };
@@ -702,83 +706,61 @@ export default function DashboardProduction() {
 
           {/* KPIs */}
           {(displayType === "KPIs" || displayType === "Graphiques") && visibleWidgets.has("kpis") && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6 pt-2">
-              {[
-                { 
-                  id: "volume", 
-                  component: VolumeProduitsKpiCard, 
-                  props: {
-                    totalVolume: volumeMetrics.totalVolume,
-                    prevVolume: volumeMetrics.prevVolume,
-                    trendData: volumeMetrics.trendData,
-                    groupBreakdown: volumeMetrics.groupBreakdown,
-                    periodDays: volumeMetrics.periodDays,
-                  } 
-                },
-                { 
-                  id: "rendement", 
-                  component: RendementKpiCard, 
-                  props: {
-                    currentRate: rendementMetrics.rate,
-                    variation: rendementMetrics.variation,
-                    trendData: rendementMetrics.trendData,
-                    choix1Pct: rendementMetrics.choix1Pct,
-                    nonChoix1Pct: rendementMetrics.nonChoix1Pct,
-                    recordCount: statsLinea.length,
-                    totalC1: totalPressageM2,
-                  } 
-                },
-                { 
-                  id: "scrap", 
-                  component: ScrapRateKpiCard, 
-                  props: {
-                    currentRate: scrapMetrics.rate,
-                    variation: scrapMetrics.variation,
-                    trendData: scrapMetrics.trendData,
-                    choix2Pct: scrapMetrics.c2Pct,
-                    choix3Pct: scrapMetrics.c3Pct,
-                    recordCount: statsLinea.length,
-                    totalScrap: totalDeuxiemeChoixM2 + totalTroisiemeChoixM2,
-                  } 
-                },
-                { 
-                  id: "utilization", 
-                  component: MachineUtilizationKpiCard, 
-                  props: {
-                    currentRate: utilizationMetrics.rate,
-                    prevRate: utilizationMetrics.prevRate,
-                    trendData: utilizationMetrics.trendData,
-                    totalAvailableHours: utilizationMetrics.totalAvailableHours,
-                    totalProductionHours: utilizationMetrics.totalProductionHours,
-                  } 
-                }
-              ].map((kpi) => {
-                const isFocused = focusedKpi === kpi.id;
-                const Component = kpi.component;
-                const kpiConfig = kpiObjectives.find((k) => k.id === kpi.id);
-                const extraProps: Record<string, unknown> = kpiConfig
-                  ? { objective: kpiConfig.objective, formula: kpiConfig.formula }
-                  : {};
-                return (
-                  <div
-                    key={kpi.id}
-                    className={cn(
-                      "transition-all duration-500 ease-out cursor-pointer relative",
-                      isFocused 
-                        ? "scale-[1.03] z-20 shadow-2xl" 
-                        : "scale-100 z-10 hover:scale-[1.015] hover:z-15"
-                    )}
-                    onMouseEnter={() => setFocusedKpi(kpi.id)}
-                    onMouseLeave={() => setFocusedKpi(null)}
-                    onClick={() => setFocusedKpi(focusedKpi === kpi.id ? null : kpi.id)}
-                  >
-                    <Component {...kpi.props as any} {...extraProps} />
-                    {isFocused && (
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 -z-10" />
-                    )}
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-2 md:grid-cols-4 2xl:grid-cols-6 gap-4 xl:gap-6 pt-2">
+              <ColoredKpiCard 
+                title="Production du jour"
+                value={volumeMetrics.totalVolume.toLocaleString("fr-FR", {maximumFractionDigits:0})}
+                unit="m²"
+                bgColorClass="bg-[#1e3a8a]" 
+                objectiveLabel="Objectif"
+                objectiveValue={`${(MONTHLY_M2_OBJECTIVE / 30).toLocaleString("fr-FR")} m²`}
+                progressPercent={Math.min(100, (volumeMetrics.totalVolume / (MONTHLY_M2_OBJECTIVE / 30)) * 100)}
+              />
+              <ColoredKpiCard 
+                title="Palettes du jour"
+                value={totalPiecesEmballage.toLocaleString("fr-FR", {maximumFractionDigits:0})}
+                bgColorClass="bg-[#14532d]"
+                objectiveLabel="Objectif"
+                objectiveValue="640"
+                progressPercent={Math.min(100, (totalPiecesEmballage / 640) * 100)}
+                progressColorClass="bg-emerald-400"
+              />
+              <ColoredKpiCard 
+                title="Taux de Rendement"
+                value={rendementMetrics.rate.toFixed(1)}
+                unit="%"
+                bgColorClass="bg-[#7c2d12]"
+                variationLabel="Hier"
+                variationValue={`${(rendementMetrics.rate - (rendementMetrics.variation * rendementMetrics.rate / 100)).toFixed(1)}%`}
+                variationPercent={rendementMetrics.variation}
+                isPositive={rendementMetrics.variation >= 0}
+              />
+              <ColoredKpiCard 
+                title="Taux de Rebut"
+                value={scrapMetrics.rate.toFixed(1)}
+                unit="%"
+                bgColorClass="bg-[#7f1d1d]"
+                variationLabel="Hier"
+                variationValue={`${(scrapMetrics.rate - (scrapMetrics.variation * scrapMetrics.rate / 100)).toFixed(1)}%`}
+                variationPercent={scrapMetrics.variation}
+                isPositive={scrapMetrics.variation <= 0}
+              />
+              <ColoredKpiCard 
+                title="Arrêts Four"
+                value={(utilizationMetrics.totalAvailableHours - utilizationMetrics.totalProductionHours).toFixed(1)}
+                unit="h"
+                bgColorClass="bg-[#0f766e]"
+                variationLabel="Disponibilité"
+                variationValue={`${utilizationMetrics.rate.toFixed(1)}%`}
+              />
+              <ColoredKpiCard 
+                title="Consommation Gaz"
+                value={filteredJournalier.reduce((acc, curr) => acc + (Number(curr.four_consommation_kwh) || 0), 0).toLocaleString("fr-FR")}
+                unit="kWh"
+                bgColorClass="bg-[#713f12]"
+                variationLabel="Période"
+                variationValue={`${duration} jours`}
+              />
             </div>
           )}
 
@@ -808,11 +790,8 @@ export default function DashboardProduction() {
                         <YAxis tick={{ fontSize: 10 }} />
                         <Tooltip formatter={(v: number) => v.toLocaleString("fr-FR", {maximumFractionDigits: 0}) + " m²"} />
                         <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                        <Bar dataKey="total_m2" name="Total m² (Scanner / Four)" radius={[4, 4, 0, 0]}>
-                          {trendData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.isFallback ? "#f97316" : COLORS[1]} />
-                          ))}
-                        </Bar>
+                        <Area type="monotone" dataKey="cuisson_m2" name="Production Four (m²)" fill="#f97316" stroke="#f97316" fillOpacity={0.2} />
+                        <Area type="monotone" dataKey="total_m2" name="Production Sélection (m²)" fill={COLORS[1]} stroke={COLORS[1]} fillOpacity={0.6} />
                         <Line type="monotone" dataKey="objectif" name="Objectif" stroke="#ef4444" strokeWidth={2} dot={false} />
                       </ComposedChart>
                     </ResponsiveContainer>

@@ -70,6 +70,7 @@ export default function SaisieGlobale() {
           Emballage_C1_Palettes: c1?.Nb_Palette || 0,
           Emballage_C1_Reste_m2: c1?.Reste_m2 || 0,
           Emballage_C1_Surface_m2: c1?.Surface_totale_m2 || 0,
+          emballage_c1_calibres: c1?.calibres || [],
           Emballage_C2_Palettes: c2?.Nb_Palette || 0,
           Emballage_C2_Reste_m2: c2?.Reste_m2 || 0,
           Emballage_C2_Surface_m2: c2?.Surface_totale_m2 || 0,
@@ -116,11 +117,17 @@ export default function SaisieGlobale() {
         const updated = await updateJournalier({
           ...createdJournalier,
           Casse_Presse_Casse_kg: entry.presse_casse_kg,
+          Casse_Presse_Poudre_Recyclee_kg: entry.presse_poudre_recyclee_kg,
+          Casse_Presse_Elev_Tamis_kg: entry.presse_elev_tamis_kg,
           Casse_Sortie_Sechoir_kg: entry.sortie_sechoir_kg,
           Casse_Emaillage_kg: entry.emaillage_kg,
           Casse_Projecta_kg: entry.projecta_kg,
           Casse_Entree_Four_kg: entry.entree_four_kg,
-          Casse_Cuite_kg: entry.cuite_kg,
+          Casse_Sortie_Four_kg: entry.sortie_four_kg,
+          Casse_Marteaux_kg: entry.marteaux_kg,
+          Casse_Empileur_kg: entry.empileur_kg,
+          Casse_Robot_kg: entry.robot_kg,
+          Casse_Cuite_kg: (entry.sortie_four_kg || 0) + (entry.marteaux_kg || 0) + (entry.empileur_kg || 0) + (entry.robot_kg || 0),
         });
         if (updated) setCreatedJournalier(updated);
       }
@@ -265,11 +272,17 @@ export default function SaisieGlobale() {
                         const updated = await updateJournalier({
                           ...createdJournalier,
                           Casse_Presse_Casse_kg: entry.presse_casse_kg,
+                          Casse_Presse_Poudre_Recyclee_kg: entry.presse_poudre_recyclee_kg,
+                          Casse_Presse_Elev_Tamis_kg: entry.presse_elev_tamis_kg,
                           Casse_Sortie_Sechoir_kg: entry.sortie_sechoir_kg,
                           Casse_Emaillage_kg: entry.emaillage_kg,
                           Casse_Projecta_kg: entry.projecta_kg,
                           Casse_Entree_Four_kg: entry.entree_four_kg,
-                          Casse_Cuite_kg: entry.cuite_kg,
+                          Casse_Sortie_Four_kg: entry.sortie_four_kg,
+                          Casse_Marteaux_kg: entry.marteaux_kg,
+                          Casse_Empileur_kg: entry.empileur_kg,
+                          Casse_Robot_kg: entry.robot_kg,
+                          Casse_Cuite_kg: (entry.sortie_four_kg || 0) + (entry.marteaux_kg || 0) + (entry.empileur_kg || 0) + (entry.robot_kg || 0),
                         });
                         if (updated) setCreatedJournalier(updated);
                       }

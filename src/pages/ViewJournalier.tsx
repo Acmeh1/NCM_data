@@ -39,15 +39,22 @@ const COLUMNS: { key: string; label: string; type?: "text" | "number" }[] = [
   { key: "Surface_CAR_m2", label: "Surface CAR m²", type: "number" },
   { key: "Cuisson_M2", label: "Production Four m²", type: "number" },
   { key: "Four_Minutes_Vides", label: "Minutes vides Four", type: "number" },
-  { key: "VIDE_f_maintenance", label: "Vide Maintenance", type: "number" },
-  { key: "VIDE_f_production", label: "Vide Production", type: "number" },
+  { key: "type_arret", label: "Type Arrêt", type: "text" },
+  { key: "cause_arret", label: "Cause Arrêt", type: "text" },
+  { key: "impact_arret", label: "Impact Arrêt", type: "text" },
   { key: "Four_Consommation_Kwh", label: "Consommation Four kW/h", type: "number" },
   { key: "Casse_Presse_Casse_kg", label: "Casse Presse (kg)", type: "number" },
+  { key: "Casse_Presse_Poudre_Recyclee_kg", label: "Poudre Recyclée (kg)", type: "number" },
+  { key: "Casse_Presse_Elev_Tamis_kg", label: "Elevateur/Tamis (kg)", type: "number" },
   { key: "Casse_Sortie_Sechoir_kg", label: "Casse Sortie Séchoir (kg)", type: "number" },
   { key: "Casse_Emaillage_kg", label: "Casse Émaillage (kg)", type: "number" },
   { key: "Casse_Projecta_kg", label: "Casse Projecta (kg)", type: "number" },
   { key: "Casse_Entree_Four_kg", label: "Casse Entrée Four (kg)", type: "number" },
-  { key: "Casse_Cuite_kg", label: "Casse Cuite (kg)", type: "number" },
+  { key: "Casse_Sortie_Four_kg", label: "Sortie Four (kg)", type: "number" },
+  { key: "Casse_Marteaux_kg", label: "Marteaux (kg)", type: "number" },
+  { key: "Casse_Empileur_kg", label: "Empileur (kg)", type: "number" },
+  { key: "Casse_Robot_kg", label: "Robot (kg)", type: "number" },
+  { key: "Casse_Cuite_kg", label: "Total Casse Cuite (kg)", type: "number" },
   { key: "Emballage_C1_Palettes", label: "1er Choix (Palettes)", type: "number" },
   { key: "Emballage_C1_Reste_m2", label: "1er Choix (Reste m²)", type: "number" },
   { key: "Emballage_C2_Reste_m2", label: "2ème Choix (Reste m²)", type: "number" },
@@ -68,6 +75,18 @@ const FILTER_CONFIGS = [
   { key: "Horaire", label: "Horaire", type: "select" as const },
   { key: "Modele", label: "Modèle", type: "select" as const },
 ];
+
+function formatCauseArret(value: any) {
+  if (!value) return "—";
+  if (typeof value !== "string") return String(value);
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+       return parsed.map((a: any) => `${a.duree || '?'}m: ${a.cause_arret || '—'}`).join(" | ");
+    }
+  } catch {}
+  return value;
+}
 
 export default function ViewJournalier() {
   const [showVideDetails, setShowVideDetails] = useState(false);
@@ -103,7 +122,7 @@ export default function ViewJournalier() {
   if (!isLoaded || !selectionLoaded) return <p className="text-muted-foreground p-8">Chargement…</p>;
 
   const activeColumns = COLUMNS.filter(c => {
-    if (c.key === "VIDE_f_maintenance" || c.key === "VIDE_f_production") {
+    if (c.key === "type_arret" || c.key === "cause_arret" || c.key === "impact_arret") {
       return showVideDetails;
     }
     return true;
@@ -276,7 +295,9 @@ export default function ViewJournalier() {
                       className={`font-mono text-xs whitespace-nowrap ${hasVideValue ? "cursor-pointer text-primary font-bold hover:bg-primary/5" : ""}`}
                       onClick={() => hasVideValue && setShowVideDetails(!showVideDetails)}
                     >
-                      {typeof val === "number" ? val.toFixed(2) : String(val ?? "—")}
+                      {c.key === "cause_arret" 
+                        ? formatCauseArret(val) 
+                        : typeof val === "number" ? val.toFixed(2) : String(val ?? "—")}
                     </TableCell>
                   );
                 })}
