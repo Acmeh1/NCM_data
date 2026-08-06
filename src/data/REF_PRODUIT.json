@@ -83,6 +83,66 @@
         "Type_Decor": "�"
     }
 ,
+
+ {
+        "CATEGORIE": "SOL",
+        "Cartons_Palette": "72",
+        "Couleur": "MATT",
+        "Finition": "MONO",
+        "Format_Nominal": "45*45",
+        "ID_Modele": "MOD-380",
+        "Largeur_cm": "45",
+        "Longueur_cm": "45",
+        "M2_Carton": "1.21",
+        "M2_PALETTE": "116.64",
+        "Nom_Commercial": "ELYT ",
+        "Pcs_Carton": "5,975,308,642",
+        "Surface_CAR_m2": "0.2025",
+        "Type_Decor": "�"
+    },
+
+ {
+        "CATEGORIE": "SOL",
+        "Cartons_Palette": "72",
+        "Couleur": "",
+        "Finition": "MONO",
+        "Format_Nominal": "45*45",
+        "ID_Modele": "MOD-400",
+        "Largeur_cm": "45",
+        "Longueur_cm": "45",
+        "M2_Carton": "1.21",
+        "M2_PALETTE": "116.64",
+        "Nom_Commercial": "ARIZONA",
+        "Pcs_Carton": "5,975,308,642",
+        "Surface_CAR_m2": "0.2025",
+        "Type_Decor": "�"
+    },
+
+
+
+
+
+
+    
+ {
+        "CATEGORIE": "SOL",
+        "Cartons_Palette": "72",
+        "Couleur": "BEIGE",
+        "Finition": "MONO",
+        "Format_Nominal": "45*45",
+        "ID_Modele": "MOD-401",
+        "Largeur_cm": "45",
+        "Longueur_cm": "45",
+        "M2_Carton": "1.21",
+        "M2_PALETTE": "116.64",
+        "Nom_Commercial": "ORION",
+        "Pcs_Carton": "5,975,308,642",
+        "Surface_CAR_m2": "0.2025",
+        "Type_Decor": "�"
+    },
+
+
+
     {
         "CATEGORIE": "SOL",
         "Cartons_Palette": "72",

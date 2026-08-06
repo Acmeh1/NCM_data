@@ -85,6 +85,40 @@ function getDateDepart(emp: Employee): string | undefined {
   return emp["Date_départ"] || emp["Date_depart"];
 }
 
+// ── Helper: parse robust date ──────────────────────────────────────
+function parseDateRobust(dateStr: string | undefined | null): Date | null {
+  if (!dateStr || String(dateStr).trim() === '' || String(dateStr).trim() === '-') return null;
+  
+  // Try DD/MM/YYYY format
+  if (dateStr.includes('/')) {
+    const parts = dateStr.split('/');
+    if (parts.length >= 3) {
+      const d = parseInt(parts[0]);
+      const m = parseInt(parts[1]);
+      const y = parseInt(parts[2]);
+      const dateObj = new Date(y, m - 1, d);
+      if (!isNaN(dateObj.getTime())) return dateObj;
+    }
+  }
+  
+  // Try YYYY-MM-DD format
+  if (dateStr.includes('-')) {
+    const parts = dateStr.split('T')[0].split('-');
+    if (parts.length >= 3) {
+      const y = parseInt(parts[0]);
+      const m = parseInt(parts[1]);
+      const d = parseInt(parts[2]);
+      const dateObj = new Date(y, m - 1, d);
+      if (!isNaN(dateObj.getTime())) return dateObj;
+    }
+  }
+
+  const fallbackDate = new Date(dateStr);
+  if (!isNaN(fallbackDate.getTime())) return fallbackDate;
+
+  return null;
+}
+
 // ── Hook ───────────────────────────────────────────────────────────
 export function usePointageStore(selectedMonth: Date) {
   const { toast } = useToast();
@@ -128,8 +162,27 @@ export function usePointageStore(selectedMonth: Date) {
     staleTime: 5 * 60 * 1000,
   });
 
-  // All employees (including those with departure dates)
-  const allEmployees = useMemo(() => employees, [employees]);
+  // All employees (filtered to hide those whose departure month is strictly before the selected month)
+  const allEmployees = useMemo(() => {
+    return employees.filter((emp) => {
+      const depDateStr = getDateDepart(emp);
+      if (!depDateStr) return true;
+
+      const depDate = parseDateRobust(depDateStr);
+      if (!depDate) return true;
+
+      const targetMonth = selectedMonth.getMonth();
+      const targetYear = selectedMonth.getFullYear();
+      const departMonth = depDate.getMonth();
+      const departYear = depDate.getFullYear();
+
+      // L'employé reste affiché jusqu'à la fin de son mois de départ
+      if (targetYear > departYear || (targetYear === departYear && targetMonth > departMonth)) {
+        return false;
+      }
+      return true;
+    });
+  }, [employees, selectedMonth]);
 
   // Service list (derived from all employees)
   const services = useMemo(() => {

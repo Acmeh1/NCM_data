@@ -24,7 +24,7 @@ export default function AuthGuard({ children }: { children?: React.ReactNode }) 
         .select("approved")
         .eq("id", user.id)
         .single();
-      setApproved(true); // ON FORCE L'ACCÈS ICI
+      setApproved(data?.approved ?? false);
       setCheckingApproval(false);
     };
 
@@ -36,8 +36,8 @@ export default function AuthGuard({ children }: { children?: React.ReactNode }) 
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${user.id}` },
-        (payload) => {
-          setApproved(true); // ON FORCE L'ACCÈS ICI AUSSI
+        (payload: any) => {
+          setApproved(payload.new?.approved ?? false);
         }
       )
       .subscribe();

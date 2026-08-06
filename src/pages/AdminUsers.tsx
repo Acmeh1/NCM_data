@@ -204,6 +204,27 @@ export default function AdminUsers() {
     }
   };
 
+  const resetPassword = async (userId: string, userName: string) => {
+    const newPassword = window.prompt(`Nouveau mot de passe pour ${userName || 'cet utilisateur'} (min 6 caractères) :`);
+    if (!newPassword) return; // User cancelled
+    if (newPassword.length < 6) {
+      toast.error("Le mot de passe doit contenir au moins 6 caractères.");
+      return;
+    }
+
+    setSaving(userId + "reset");
+    try {
+      const { data, error } = await invokeCloudFunction("reset-password", { user_id: userId, new_password: newPassword });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Mot de passe modifié pour ${userName || "Utilisateur"}`);
+    } catch (e: any) {
+      toast.error("Erreur: " + e.message);
+    } finally {
+      setSaving(null);
+    }
+  };
+
   const toggleRole = async (userId: string, currentRole: string) => {
     setSaving(userId + "role");
     console.log(`Toggling role for ${userId}. Current: ${currentRole}`);
@@ -527,6 +548,16 @@ export default function AdminUsers() {
                           <CheckCircle className="h-4 w-4" />
                           Approuver
                         </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="gap-1.5" 
+                          disabled={saving === u.id + "reset"} 
+                          onClick={() => resetPassword(u.id, u.full_name || u.email || "")}
+                        >
+                          <UserCog className="h-4 w-4" />
+                          Mot de passe
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="destructive" className="gap-1.5" disabled={saving === u.id + "delete"}>
@@ -682,6 +713,15 @@ export default function AdminUsers() {
                             Suspendre
                           </Button>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          disabled={saving === u.id + "reset"}
+                          onClick={() => resetPassword(u.id, u.full_name || u.email || "")}
+                        >
+                          Mot de passe
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
